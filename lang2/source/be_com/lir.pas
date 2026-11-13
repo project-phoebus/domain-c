@@ -3021,7 +3021,7 @@ begin
     lir_4228 := true;
     lir_4222 := true;
     lir_421c := true;
-    if (ord(il_180^.xc[374]) & 16#20) = 0 then begin
+    if not il_180^.blk_atts.resident_proc then begin
       begin_instruction(attrs, ord(opc$and), 0, nil, 0);
       lir_main_760.literal_32_bits_value := -4;
       lir_$build_operand(addr(lir_2f58.opnds[1]), addr(lir_main_760),
@@ -3319,7 +3319,7 @@ var
   lab: lir_label_ptr_t;
 begin
   node := node_p;
-  if not ((node^.kind = tree_node) and (node^.xw[18] = 67)
+  if not ((node^.kind = tree_node) and (node^.tr_op = isc_fio_init)
           and (node^.xw[19] <= 3)) then
     bug_check('LIR_$BEGIN_FORTRAN_IO_SEQUENCE -- bad argument.%$');
   cnt := 0;
@@ -3491,7 +3491,8 @@ begin
   lir_2f58.opc := instr^.opc;
   instr^.l32 := integer32(attrs);
   instr^.l28 := instr^.l28 ! flags;
-  ser := (call^.xw[18] = 30) or (call^.xw[18] = 31) or (call^.xw[18] = 32);
+  ser := (call^.tr_op = isc_call_top) or (call^.tr_op = isc_func_call_top)
+      or (call^.tr_op = isc_func_call_hidden_temp_top);
   regs := addr(instr^.opnds[instr^.h.nopnds + 1]);
   a := addr(instruction_attributes[instr^.opc]);
   n.l := instruction_attributes[instr^.opc].nresults;
@@ -3558,7 +3559,7 @@ begin
       arg := arg^.xp[2];
     end;
   end;
-  if call^.xw[18] = 31 then begin
+  if call^.tr_op = isc_func_call_top then begin
     sol := call_or_svc_argument_register(ord(call^.xc[11]), ord(call^.xc[10]),
                                          false, n, regs^);
     lir_$build_operand(addr(instr^.opnds[n.l]), sol, lir_4190);
@@ -3708,7 +3709,8 @@ begin
   rtn^.w208 := conv^.w20;
   conv^.ip76 := integer32(bv_word_t(conv^.ip76) + [conv^.w20 & 31]);
   node := rtn^.node;
-  rtn^.f226.internal_db := ((ord(node^.xc[379]) & 16#40) = 0) and conv^.nested;
+  rtn^.f226.internal_db := not node^.blk_atts.local_call_different_db and
+                           conv^.nested;
   zero(addr(lir_3b80), 40);
   stmt := node^.xp[25];
   lir_3b80.exception_frame := integer32(stmt^.xp[3]);

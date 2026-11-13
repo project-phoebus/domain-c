@@ -296,12 +296,12 @@ begin
     ok := (n^.kind = function_blk) or (n^.kind = procedure_blk);
   if not ok then
     bug_check('reg_save\registers_consumed_by_routine_block -- not a procedure_blk or function_blk%$');
-  if (rshft(n^.xw[188] & 16#180, 7) = 2) and (ord(n^.xc[294]) = 254) and
+  if (n^.blk_atts.bat = extern_bat) and (ord(n^.xc[294]) = 254) and
      not cargs_$options.xrs then
     registers_consumed_by_routine_block := [0..23]
-  else if (ord(n^.xc[375]) & 1) <> 0 then
+  else if n^.blk_atts.nosave_regs then
     registers_consumed_by_routine_block := [0..23]
-  else if (ord(n^.xc[376]) & 16#20) <> 0 then
+  else if n^.blk_atts.abnorm then
     registers_consumed_by_routine_block := [0..17]
   else
     registers_consumed_by_routine_block := [0, 1, 8, 9, 16, 17];
@@ -590,7 +590,7 @@ begin
       if (t^.opnd[1]^.kind = procedure_blk) or (t^.opnd[1]^.kind = entry_blk)
           or
          (t^.opnd[1]^.kind = function_blk) then
-        if (ord(t^.opnd[1]^.xc[378]) & 16#40) <> 0 then
+        if t^.opnd[1]^.blk_atts.pass_display then
           r := r + [9];
     end;
     set_and_top, set_or_top, set_diff_top:

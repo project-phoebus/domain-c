@@ -33,9 +33,9 @@ type
 
   { A top-level statement node as the optimizer reads it (c_objtype's
     c_top_t): 139 evaluate, 140 assign, 141/142/150 branches, 144 a
-    label, ...  hdr's second byte (+41): deleted (.0) set when
-    general_opts merges an assignment into the one before it,
-    no_prune (.1) keeps an evaluation's operands (make_cse_parent
+    label, ...  hdr's second byte (+41): stmt_eliminated (.0) set
+    when general_opts merges an assignment into the one before it,
+    contains_cse (.1) keeps an evaluation's operands (make_cse_parent
     sets it on a statement given a cse); region (+43, a word) its
     entry of opt_4009c, 0 for a statement of no region (cse looks
     for the nearest one); block (+16) the basic block of an empty
@@ -53,8 +53,9 @@ type
     num (+39) its number in il_120, two bytes of flags (+41, +42: the
     image reads and writes them as one 16-bit field, assign_elim
     `andi.l #0xFF0000FF; ori.l #0x10000' of the longword at +40 for
-    deleted alone, `or.w #2' and `or.w #8' of the word for first and
-    last: perhaps a set in the original), region (+43) and a byte. }
+    stmt_eliminated alone, `or.w #2' and `or.w #8' of the word for
+    begins_basic_block and ends_basic_block: perhaps a set in the
+    original), region (+43) and a byte. }
   g_opt_block_ptr_t = ^g_opt_block_t;
   g_opt_stmt_ptr_t = ^g_opt_stmt_t;
   g_opt_vars_ptr_t = ^g_opt_vars_t;
@@ -87,27 +88,31 @@ type
     hdr: packed record                  { +38 }
       vnum: 0..255;                     { +38 }
       num: 0..65535;                    { +39 }
-      b7: boolean;                      { +41 .7: report_removal
+      { +41, +42: the statement's flags, as list_tree's print_top_node
+        names them (il.ins.pas's il_$stmt_flags_t) }
+      inliner_generated_stmt: boolean;  { +41 .7: report_removal
                                           stays quiet }
-      b6: boolean;                      { .6: for_check's assignment
+      pascal_for_loop: boolean;         { .6: for_check's assignment
                                           (a for loop's index) }
-      b5: boolean;                      { .5: report_removal stays
+      compiler_generated_stmt: boolean; { .5: report_removal stays
                                           quiet }
-      b4, b3: boolean;
-      counted: boolean;                 { .2: liveanalysis took the
+      contains_fp_expr: boolean;        { .4 }
+      loophascalls: boolean;            { .3 }
+      defsubtracted: boolean;           { .2: liveanalysis took the
                                           statement off its variable's
                                           count }
-      no_prune: boolean;                { .1 }
-      deleted: boolean;                 { .0 }
-      b42_7, b42_6: boolean;            { +42 }
-      kills: boolean;                   { .5: buildsets: kills the
+      contains_cse: boolean;            { .1 }
+      stmt_eliminated: boolean;         { .0 }
+      constant_assign: boolean;         { +42 .7 }
+      b42_6: boolean;                   { .6 }
+      contains_call_w_simple_p: boolean;  { .5: buildsets: kills the
                                           variables (109) whose address
                                           may be taken }
-      b42_4: boolean;
-      last: boolean;                    { .3: its block's last_stmt }
-      b42_2: boolean;
-      first: boolean;                   { .1: its block's first_stmt }
-      entry: boolean;                   { .0: a routine's entry (148)
+      contains_user_call: boolean;      { .4 }
+      ends_basic_block: boolean;        { .3: its block's last_stmt }
+      ends_proc: boolean;               { .2 }
+      begins_basic_block: boolean;      { .1: its block's first_stmt }
+      begins_proc: boolean;             { .0: a routine's entry (148)
                                           heading the routine's region
                                           (opt_main's
                                           compute_basic_block_

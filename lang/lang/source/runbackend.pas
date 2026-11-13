@@ -154,7 +154,8 @@ function assert_is_a_call_node(
     n: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if assert_is_a_tree_node(n) then
-    assert_is_a_call_node := (n^.xw[18] = 16) or (n^.xw[18] = 15)
+    assert_is_a_call_node := (n^.tr_op = func_call_top)
+        or (n^.tr_op = call_top)
   else
     assert_is_a_call_node := false;
 end;
@@ -306,7 +307,7 @@ begin
   if k in [4, 5, 6, 9] then begin
     is_routine := routine_reference_class(target, blk, ref) = 0;
     if is_routine then begin
-      blk^.xc[374] := chr(ord(blk^.xc[374]) ! 8);
+      blk^.blk_atts.visible := true;
       is_routine_reference_addr_con := true;
       return;
     end;
@@ -417,7 +418,7 @@ begin
         callee^.xp[63] := il_$node_ptr_t(e);
       end;
   end;
-  if call^.xw[18] = 16 then begin
+  if call^.tr_op = func_call_top then begin
     s := e^.sites;
     while s <> nil do begin
       if s^.site = addr(call) then
@@ -462,7 +463,7 @@ begin
             if a^.kind = fortran_symbol then
               if not assert_is_fortran_array(a) then
                 if assert_is_fortran_array(callee^.xp[3]^.xp[3 * i - 3]) then begin
-                  callee^.xc[375] := chr(ord(callee^.xc[375]) ! 16#40);
+                  callee^.blk_atts.noinline := true;
                   cgerr(62, il_utils_$src_line(cur_stmt), a);
                 end;
           end;
@@ -486,7 +487,7 @@ var
 begin
   case routine_reference_class(call^.xp[10], callee, ref) of
     0: begin
-      if rshft(ord(callee^.xc[377]) & 16#70, 4) = 2 then
+      if callee^.blk_atts.call = call_ftn then
         detect_fortran_param_scalarity_mismatches(call, callee);
       add_call_graph_edge(call, callee, ref);
       build_call_graph_walk_block(callee);
@@ -494,7 +495,7 @@ begin
     1, 3:
       add_call_graph_edge(call, callee, ref);
     2: begin
-      il_180^.xc[379] := chr(ord(il_180^.xc[379]) ! 16#20);
+      il_180^.blk_atts.calls_extern_non_lib_routine := true;
       add_call_graph_edge(call, callee, ref);
     end;
     4: begin
@@ -542,7 +543,7 @@ begin
                  ptr_node, disp_node, cs_node, sym_disp_node] then begin
     if n^.xw[9] = -3 then begin
       if n^.kind = tree_node then
-        if n^.xw[18] = 16 then
+        if n^.tr_op = func_call_top then
           analyze_call_site_for_call_graph(t);
       return;
     end;
@@ -556,11 +557,13 @@ begin
     il_180^.xw[136] := il_180^.xw[136] + 1;
   case n^.kind of
     tree_node, gen_tree_node, cmp_tree_node: begin
-      if (n^.xw[18] = 16) or (n^.xw[18] = 15) then
+      if (n^.tr_op = func_call_top) or (n^.tr_op = call_top) then
         first := 2
       else
         first := 1;
-      if n^.xw[18] in [2, 4, 5, 6, 11, 15, 16, 21, 35, 37] then
+      if n^.tr_op in [sub_top, div_top, divide_top, mod_top, bit_test_top,
+                      call_top, func_call_top, set_diff_top, f_sub_top,
+                      f_div_top] then
         for i := n^.xw[19] downto first do
           build_call_graph_walk_il(n^.xp[9 + i])
       else
@@ -655,8 +658,8 @@ var
 begin
   is_routine := routine_reference_class(b, b, ref) = 0;
   if is_routine then
-    if (ord(b^.xc[379]) & 2) = 0 then begin
-      b^.xc[379] := chr(ord(b^.xc[379]) ! 2);
+    if not b^.blk_atts.visited_depth_first then begin
+      b^.blk_atts.visited_depth_first := true;
       if b^.xp[25] <> nil then
         if b^.xp[25]^.kind = label_node then begin
           saved_block := il_180;
@@ -692,19 +695,19 @@ var
 begin
   b := il_184;
   while b <> nil do begin
-    b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+    b^.blk_atts.visited_depth_first := false;
     b^.xw[132] := 0;
     if (b^.kind = program_blk) or (b^.kind = function_blk)
         or (b^.kind = procedure_blk) then
       if rb_level_ptr_t(b)^.level = 0 then
         if ord(b^.xc[371]) < 128 then
-          b^.xc[374] := chr(ord(b^.xc[374]) ! 8);
+          b^.blk_atts.visible := true;
     b := b^.xp[1];
   end;
   check_static_initializations;
   b := il_184;
   while b <> nil do begin
-    if (ord(b^.xc[374]) & 8) <> 0 then
+    if b^.blk_atts.visible then
       build_call_graph_walk_block(b);
     b := b^.xp[1];
   end;
@@ -724,7 +727,7 @@ begin
     assert_is_inlineable_utility_routine_in_include_file := false
   else if ((b^.kind = program_blk) or (b^.kind = function_blk)
            or (b^.kind = procedure_blk)) and
-          ((ord(b^.xc[375]) & 16#20) <> 0) then
+          b^.blk_atts.inline then
     assert_is_inlineable_utility_routine_in_include_file :=
         not spos_$line_is_in_main_source_file(b^.xw[150])
   else
@@ -756,11 +759,11 @@ begin
   while b <> nil do begin
     if not (((b^.kind = function_blk) or (b^.kind = procedure_blk)
              or (b^.kind = program_blk)) and
-            (b^.xw[132] <= 0) and ((ord(b^.xc[374]) & 8) = 0)) then
+            (b^.xw[132] <= 0) and (not b^.blk_atts.visible)) then
       b := b^.xp[1]
     else begin
       if b^.xw[150] <> 0 then
-        if (ord(b^.xc[374]) & 2) = 0 then
+        if not b^.blk_atts.inlined then
           if not assert_is_inlineable_utility_routine_in_include_file(b) then
             cgerr(46, b^.xw[150], b^.xp[74]);
       p := b^.xp[2];
@@ -859,8 +862,8 @@ begin
       t^.xw[8] := 0;
       for i := t^.xw[19] downto 1 do
         normalize_il(t^.xp[9 + i], fold);
-      if t^.xw[18] = 41 then begin
-        size := t^.xw[12];
+      if t^.tr_op = f_math_top then begin
+        size := t^.tr_rlen;
         case t^.xw[13] of
           10, 11, 21:
             ;
@@ -1031,7 +1034,7 @@ var
   crec: pfm_$cleanup_rec;
   n: integer32;
 begin
-  if (ord(b^.xc[379]) & 4) = 0 then begin
+  if not b^.blk_atts.coded then begin
     perfstart(6);
     n := 0;
     last := b^.xp[25];
@@ -1055,7 +1058,7 @@ begin
     perfstop(6);
     if lex_errors <> 0 then
       at_backend_506 := false;
-    if not (((ord(b^.xc[374]) & 2) <> 0) and ((ord(b^.xc[374]) & 8) = 0) and
+    if not (b^.blk_atts.inlined and (not b^.blk_atts.visible) and
             (b^.xw[132] = 0) and ((b^.kind = function_blk)
                                   or (b^.kind = procedure_blk))) then
       if cargs_$options.tree = 0 then begin
@@ -1079,7 +1082,7 @@ begin
           end;
         end;
         repeat
-          b^.xc[379] := chr(ord(b^.xc[379]) ! 4);
+          b^.blk_atts.coded := true;
           b := b^.xp[1];
         until (b = nil) or else ((b^.kind <> inner_blk)
                                  and (b^.kind <> entry_blk));
@@ -1103,13 +1106,13 @@ var
   ref: il_$node_ptr_t;
   is_routine: boolean;
 begin
-  b^.xc[379] := chr(ord(b^.xc[379]) ! 2);
+  b^.blk_atts.visited_depth_first := true;
   e := rb_edge_ptr_t(b^.xp[61]);
   while e <> nil do begin
     if e^.callee <> nil then
       if e^.callee^.kind in [program_blk, module_blk, procedure_blk,
                              function_blk, inner_blk, blockdata_blk] then
-        if (ord(e^.callee^.xc[379]) & 2) = 0 then begin
+        if not e^.callee^.blk_atts.visited_depth_first then begin
           is_routine := routine_reference_class(e^.callee, blk, ref) = 0;
           if is_routine then
             optimize_and_code_depth_first(e^.callee);
@@ -1141,21 +1144,21 @@ begin
       if e^.callee <> nil then
         if e^.callee^.kind in [program_blk, module_blk, procedure_blk,
                                function_blk, inner_blk, blockdata_blk] then
-          if rshft(e^.callee^.xw[188] & 16#180, 7) = 0 then
+          if e^.callee^.blk_atts.bat = local_bat then
             if (b^.xp[48] = e^.callee^.xp[48]) and then
                at_backend_$can_load_module_db(b) then begin
-              e^.callee^.xc[379] := chr(ord(e^.callee^.xc[379]) ! 16#80);
-              e^.ref^.xc[379] := chr(ord(e^.ref^.xc[379]) ! 16#80);
+              e^.callee^.blk_atts.local_call_same_db := true;
+              e^.ref^.blk_atts.local_call_same_db := true;
             end
             else begin
-              e^.callee^.xc[379] := chr(ord(e^.callee^.xc[379]) ! 16#40);
-              e^.ref^.xc[379] := chr(ord(e^.ref^.xc[379]) ! 16#40);
+              e^.callee^.blk_atts.local_call_different_db := true;
+              e^.ref^.blk_atts.local_call_different_db := true;
             end;
       e := e^.caller_next;
     end;
     if b^.kind = entry_blk then
       at_backend_$initialize_ftn_entry(b);
-    if ord(b^.xc[376]) >= 128 then
+    if b^.blk_atts.need_fp_fcw then
       fcw_seen := true;
     b := b^.xp[1];
   end;
@@ -1281,9 +1284,9 @@ begin
       b := il_184;
       while b <> nil do begin
         if b^.kind = entry_blk then
-          fcw := ord(b^.xp[37]^.xc[376]) >= 128
+          fcw := b^.xp[37]^.blk_atts.need_fp_fcw
         else
-          fcw := ord(b^.xc[376]) >= 128;
+          fcw := b^.blk_atts.need_fp_fcw;
         if fcw then
           adjust_disps_of_formals_for_fcw(b);
         b := b^.xp[1];
@@ -1296,7 +1299,7 @@ begin
     if 6 in cargs_$options.cpu then begin
       b := il_184;
       while b <> nil do begin
-        b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+        b^.blk_atts.visited_depth_first := false;
         b := b^.xp[1];
       end;
     end;
@@ -1305,7 +1308,7 @@ begin
     while s <> nil do begin
       b := s^.xp[2]^.xp[12];
       if (cargs_$options.tree <> 47) and (6 in cargs_$options.cpu) then begin
-        if (ord(b^.xc[379]) & 2) = 0 then
+        if not b^.blk_atts.visited_depth_first then
           optimize_and_code_depth_first(b);
       end
       else

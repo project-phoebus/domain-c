@@ -77,8 +77,9 @@ type
   { A top-level statement (g_opt.ins.pas's g_opt_stmt_t): 139 an
     evaluation, 140 an assignment (op 11 a plain store of asg_desc's
     class), 142 a conditional branch, 144 a label (+72 bits 5..1 its
-    class), 148 a call; flags at +41 (b7 no line report, b5 an
-    assignment the front end made for a loop's index). }
+    class), 148 a call; flags at +41 (inliner_generated_stmt no line
+    report, compiler_generated_stmt an assignment the front end made
+    for a loop's index). }
   ov_stmt_ptr_t = ^ov_stmt_t;
   ov_stmt_t = record
     unused_0: integer;                  { +0 }
@@ -88,12 +89,7 @@ type
     unused_12: array [3..4] of integer32;  { +12 }
     line: integer;                      { +20 }
     unused_22: array [11..19] of integer;  { +22..+39 }
-    hdr: packed record                  { +40 }
-      b40: char;
-      b7, b6, b5, b4, b3, b2, b1, b0: boolean;  { +41 }
-      b42: char;                        { +42 }
-      b43: char;                        { +43 }
-    end;
+    hdr: il_$stmt_flags_t;              { +40: the flags at +41, +42 }
     unused_44: array [22..23] of integer;  { +44 }
     case integer of
       1: (eval_unused_48: integer;      { +48 }
@@ -118,7 +114,7 @@ type
   ov_tree_t = record
     unused_0: integer;                  { +0 }
     kind: il_$kind_t;                   { +2 }
-    flags: set of 0..31;                { +4 }
+    phase: add_node_$phase_t;           { +4 }
     unused_8: integer32;                { +8 }
     unused_12: integer32;               { +12 }
     uses: integer;                      { +16 }
@@ -242,7 +238,7 @@ begin
 end;
 
 { epilog - after the call was made in the loop's mark m: the call kept
-  (flag 12, its +24 cleared); the loop's statements unlinked (the
+  (phase_sd_eff, its +24 cleared); the loop's statements unlinked (the
   statement after the mark linked to the index's last assignment,
   before the closing branch, and that to what follows the loop), the
   index's assignment made a plain store of the trip count (start + 1,
@@ -272,8 +268,8 @@ var
 begin
   if m^.kind = eval_node then begin
     ov_tree_ptr_t(m^.eval_opnd[1])^.desc.rlen := rlen_null;
-    ov_tree_ptr_t(m^.eval_opnd[1])^.flags :=
-      ov_tree_ptr_t(m^.eval_opnd[1])^.flags + [12];
+    ov_tree_ptr_t(m^.eval_opnd[1])^.phase :=
+      ov_tree_ptr_t(m^.eval_opnd[1])^.phase + [phase_sd_eff];
   end;
   n := m^.next;
   n^.next := x^.prev^.prev;
@@ -304,7 +300,7 @@ begin
   while p^.line = spos_$null_position do
     p := p^.prev;
   m^.line := p^.line;
-  if not p^.hdr.b7 then
+  if not p^.hdr.inliner_generated_stmt then
     cgerr(52, p^.line, nil);
 end;
 
@@ -497,7 +493,7 @@ begin
   ov_tree_ptr_t(ops2[1])^.uses := 0;
   ov_tree_ptr_t(g^.asg_rhs)^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(g), 1);
-  g^.hdr.b5 := true;
+  g^.hdr.compiler_generated_stmt := true;
   tmp := g;
   epilog(body, lhs, s, x, a, tmp, start, xp);
   inline_$mark_reference_params(ops2[1], tmp);
@@ -555,7 +551,7 @@ begin
   g^.asg_rhs := buildtreenode(f_add_top, body^.asg_desc, ops, 2);
   ov_tree_ptr_t(g^.asg_rhs)^.uses := 0;
   il_utils_$adjust_uc(il_$node_ptr_t(g), 1);
-  g^.hdr.b5 := true;
+  g^.hdr.compiler_generated_stmt := true;
   tmp := g;
   epilog(body, lhs, s, x, a, tmp, start, xp);
   inline_$mark_reference_params(ops[2], tmp);
@@ -1023,12 +1019,12 @@ begin
   repeat
     x := x^.next;
   until (x^.kind = cbranch_node) and (x^.br_target = s^.next^.next^.next);
-  if not s^.prev^.hdr.b5 then
+  if not s^.prev^.hdr.compiler_generated_stmt then
     return;
   p := x^.prev^.prev;
   if p^.kind <> assign_node then
     return;
-  if not p^.hdr.b5 then
+  if not p^.hdr.compiler_generated_stmt then
     if p^.asg_lhs = s^.prev^.asg_lhs then
       return;
   lhs := s^.prev^.asg_lhs;
@@ -1484,11 +1480,11 @@ begin
     return;
   st := st^.next;
   if st^.kind = label_node then
-    if rshft(ord(il_$node_ptr_t(st)^.xc[72]) & 16#3E, 1) = 11 then
+    if il_$node_ptr_t(st)^.lab_atts.class = lbl_user then
       st := st^.next;
   if st^.kind <> assign_node then
     return;
-  if not st^.hdr.b5 then
+  if not st^.hdr.compiler_generated_stmt then
     return;
   if st^.asg_lhs <> lhs then
     return;
@@ -1531,14 +1527,14 @@ var
   l: il_$node_ptr_t;
 begin
   if 19 in cargs_$options.opt_on then
-    if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+    if il_180^.blk_atts.call = call_ftn then
       if s^.kind = cbranch_node then begin
         c := ov_stmt_ptr_t(s)^.br_cond;
         if c^.kind = cmp_tree_node then
           if ov_tree_ptr_t(c)^.op = compare_top then begin
             l := il_$node_ptr_t(ov_stmt_ptr_t(s)^.br_target);
             if l^.kind = label_node then
-              if rshft(ord(l^.xc[72]) & 16#3E, 1) = 10 then begin
+              if l^.lab_atts.class = lbl_for_exit then begin
                 c := ov_tree_ptr_t(c)^.opnd[1];
                 if c^.kind = fortran_symbol then
                   if (c^.xw[13] & 16#4000) <> 0 then
@@ -1568,7 +1564,7 @@ begin
         r := ov_stmt_ptr_t(s)^.x48;
         if not ((r^.kind = inner_blk) or (r^.kind = entry_blk)) then begin
           il_180 := r;
-          if rshft(ord(r^.xc[377]) & 16#70, 4) <> 2 then
+          if r^.blk_atts.call <> call_ftn then
             return;
         end;
       end;

@@ -835,7 +835,7 @@ var
   loc: univ_ptr;
 begin
   if (7 in cargs_$options.flags_286) and (v^.xw[36] = 3) then begin
-    if (v^.xl[8] & 16#10000) = 0 then begin
+    if not (var_$bss in v^.vr_attr) then begin
       failed := true;
       return;
     end;
@@ -859,12 +859,15 @@ begin
         if (target_properties.p_10 >= 1) and
            (target_properties.p_10 <= 3) then begin
           reg := reg_translate_at(blk^.xw[186], 0);
-          if ((ord(blk^.xc[378]) & 4) <> 0) and
-             ((v^.xl[8] & 16#4000000) = 0) and
+          { bit 10 by mask: the image tests the longword loaded for bit
+            26, `btst #10,D0' (cc.m68k 0x0A8C92); var_$is_formal_parameter
+            in vr_attr loads the word at +34 }
+          if blk^.blk_atts.b378_2 and
+             (not (var_$is_a_register_candidate in v^.vr_attr)) and
              ((v^.xl[8] & 16#400) <> 0) then
             flag := true;
         end
-        else if ((ord(blk^.xc[378]) & 16) = 0) and
+        else if (not blk^.blk_atts.must_have_own_frame) and
                 (v^.xp[7]^.kind = param_name) then
           reg := 15
         else
@@ -886,7 +889,7 @@ begin
           failed := true;
           return;
         end;
-        if (v^.xl[14] <> 0) and ((v^.xl[8] & 16#10000) = 0) then
+        if (v^.xl[14] <> 0) and (not (var_$bss in v^.vr_attr)) then
           bug_check('\\DEBUG_SYM_DMP_\GET_MEMORY_LOC -- Compiler failure, bad address constant.%$');
         loc := loc_build__relative_loc(1, blk^.xp[48]^.xw[21], con^.xl[4],
                                        addr(indirect_cell), nil);
@@ -903,11 +906,11 @@ begin
         if (target_properties.p_10 >= 1) and
            (target_properties.p_10 <= 3) then begin
           reg := reg_translate_at(blk^.xw[186], 0);
-          if ((ord(blk^.xc[378]) & 4) <> 0) and
-             ((v^.xl[8] & 16#4000000) = 0) then
+          if blk^.blk_atts.b378_2 and
+             (not (var_$is_a_register_candidate in v^.vr_attr)) then
             flag := true;
         end
-        else if (ord(blk^.xc[378]) & 16) = 0 then
+        else if not blk^.blk_atts.must_have_own_frame then
           reg := 15
         else
           reg := 14;
@@ -1065,7 +1068,7 @@ begin
   end
   else
     have_list := false;
-  if (v^.xl[8] & 16#4000000) = 0 then begin
+  if not (var_$is_a_register_candidate in v^.vr_attr) then begin
     loc := get_memory_loc(v, blk, failed);
     if failed then begin
       get_var_location_rep := nil;
@@ -1171,7 +1174,7 @@ begin
             end;
           end;
           r := f^.blk;
-          if (r^.xl[60] <> 0) and ((ord(r^.xc[378]) & 16#40) <> 0) then begin
+          if (r^.xl[60] <> 0) and r^.blk_atts.pass_display then begin
             regval := 9;
             list := loc_build__open_list(loc_pool, 0, false);
             loc := loc_build__register_loc(14);
@@ -1418,7 +1421,7 @@ begin
   add_obj_to_loc_fixup_list(vp, blk, r);
   if (ord(vp^.xc[43]) & 1) <> 0 then
     pds_$add_var_attr(r, 1);
-  if (vp^.xl[8] & 16#20000) <> 0 then
+  if var_$strength_reduction in vp^.vr_attr then
     pds_$add_var_attr(r, 3);
   vp^.xp[16] := r;
   if vp^.xp[7]^.kind = fortran_symbol then
@@ -2100,7 +2103,7 @@ begin
       else if o^.kind = const_name then begin
         v := o^.xp[8];
         if ((v^.kind = gen_tree_node) or (v^.kind = tree_node))
-            and (v^.xw[18] = 26) then
+            and (v^.tr_op = addr_top) then
           goto 10;
         t := o^.xp[7];
         if t^.kind = enum_type then
@@ -2191,7 +2194,7 @@ begin
         b := b^.xp[1];
   first := b;
   while b <> nil do begin
-    if ((ord(b^.xc[379]) & 4) <> 0) or (b = first) then begin
+    if b^.blk_atts.coded or (b = first) then begin
       pds_$begin_scope;
       cur_proc := b;
       process_named_objects(b);
@@ -2799,7 +2802,7 @@ begin
   head := nil;
   while b <> nil do begin
     if (b^.kind <> blockdata_blk) and
-       (((ord(b^.xc[379]) & 4) <> 0) or (b = first)) then begin
+       (b^.blk_atts.coded or (b = first)) then begin
       e := mrh_$alloc_fixed(block_heap);
       e^.block := b;
       e^.child := nil;
@@ -2852,9 +2855,9 @@ begin
         b := b^.xp[1];
   first := b;
   while b <> nil do begin
-    if ((ord(b^.xc[379]) & 4) <> 0) or (b = first) then
+    if b^.blk_atts.coded or (b = first) then
       if (dsd_$block_p_t(b)^.level > 0) or
-         ((b^.xw[188] & 384) div 128 = 2) then
+         (b^.blk_atts.bat = extern_bat) then
         add_string(strings_27, b^.xp[74])
       else
         force_add_string(strings_28, b^.xp[74]);

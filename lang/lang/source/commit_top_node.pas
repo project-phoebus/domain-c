@@ -85,12 +85,12 @@ begin
     return;
   if r^.kind = cse_use_ob then
     r := r^.xp[5];
-  if (r^.kind = tree_node) and (r^.xw[18] = 18) then
+  if (r^.kind = tree_node) and (r^.tr_op = extend_top) then
     r := r^.xp[10];
   if r^.kind <> tree_node then
     return;
-  if not ((r^.xw[18] = 10) or (r^.xw[18] = 9) or (r^.xw[18] = 2) or
-          (r^.xw[18] = 1)) then
+  if not ((r^.tr_op = or_top) or (r^.tr_op = and_top) or
+          (r^.tr_op = sub_top) or (r^.tr_op = add_top)) then
     return;
   operand := r^.xp[11];
   if not (operand^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
@@ -116,7 +116,7 @@ begin
     return;
   if il_utils_$trees_equivalent(lhs, operand) > 1 then
     return;
-  if inner^.xw[18] <> 14 then
+  if inner^.tr_op <> unpack_top then
     return;
   if not (inner^.xp[11]^.kind in [blogical_ob..char_ob, char16_ob,
                                   binteger_ob]) then
@@ -129,7 +129,7 @@ begin
   bits := n^.xw[26] * 8;
   mask := rshft(-1, 32 - bits);
   val := 0;
-  if r^.xw[18] = 9 then begin
+  if r^.tr_op = and_top then begin
     shift := bits - width;
     if shift <= 31 then
       val := lshft(mask, shift) & mask;
@@ -138,11 +138,11 @@ begin
       val := val ! rshft(mask, shift);
   end;
   val := val ! lshft(r^.xp[11]^.xl[2], bits - (n^.xw[28] + width));
-  case r^.xw[18] of
-    1: n^.xw[38] := 1;
-    2: n^.xw[38] := 2;
-    9: n^.xw[38] := 3;
-    10: n^.xw[38] := 4;
+  case r^.tr_op of
+    add_top: n^.xw[38] := 1;
+    sub_top: n^.xw[38] := 2;
+    and_top: n^.xw[38] := 3;
+    or_top: n^.xw[38] := 4;
     otherwise
       ;
   end;
@@ -173,7 +173,7 @@ var
   r: il_$node_ptr_t;
 begin
   if slot^.kind = tree_node then
-    if slot^.xw[18] = lhs^.xw[18] then begin
+    if slot^.tr_op = lhs^.tr_op then begin
       if il_utils_$trees_equivalent(n^.xp[16], slot^.xp[10]) <= 1 then begin
         r := slot^.xp[10];
         a := slot^.xp[11];
@@ -181,7 +181,9 @@ begin
         aop_pattern_search := r;
         return;
       end;
-      if slot^.xw[18] in [1, 3, 9, 10, 19, 20, 34, 36, 44, 45, 46] then
+      if slot^.tr_op in [add_top, mul_top, and_top, or_top, set_and_top,
+                         set_or_top, f_add_top, f_mul_top, eor_top,
+                         max_top, min_top] then
         if il_utils_$trees_equivalent(n^.xp[16], slot^.xp[11]) <= 1 then begin
           r := slot^.xp[11];
           a := slot^.xp[10];
@@ -189,9 +191,15 @@ begin
           aop_pattern_search := r;
           return;
         end;
-      if slot^.xw[18] in [1, 3, 9, 10, 34, 36] then
-        if (slot^.xw[18] in [0..10, 13, 14, 17, 18, 27..29, 33, 43..46,
-                              49..53, 57, 59..62, 74..77, 86]) or
+      if slot^.tr_op in [add_top, mul_top, and_top, or_top, f_add_top,
+                         f_mul_top] then
+        if (slot^.tr_op in [nop_top..or_top, index_top, unpack_top, value_top,
+                              extend_top, lshf_top..abs_top, isc_mul_top,
+                              expon_top..min_top, alshf_top..cc_logand_ptop,
+                              cc_lognot_ptop,
+                              signed_div_top..unsigned_mod_top,
+                              isc_signed_rem_top..isc_unsigned_mod_top,
+                              ada_expon_top]) or
            cargs_$options.fpra then begin
           r := aop_pattern_search(n, lhs, slot^.xp[10], a, b);
           if r <> nil then begin
@@ -247,7 +255,7 @@ begin
   end;
   e := n^.xp[17];
   slot := addr(n^.xp[17]);
-  while (e^.kind = tree_node) and (e^.xw[18] = 18) do begin
+  while (e^.kind = tree_node) and (e^.tr_op = extend_top) do begin
     slot := addr(e^.xp[10]);
     e := e^.xp[10];
   end;
@@ -255,39 +263,40 @@ begin
   if r = nil then
     return;
   if n^.xw[38] = 6 then
-    if e^.xw[18] in [1, 2, 8, 9, 10, 44] then begin
+    if e^.tr_op in [add_top, sub_top, not_top, and_top, or_top,
+                    eor_top] then begin
       if n^.xl[12] > 4 then
         return;
       n^.xw[26] := n^.xw[25];
     end;
-  case e^.xw[18] of
-    1: n^.xw[38] := 1;
-    2: n^.xw[38] := 2;
-    7: begin
+  case e^.tr_op of
+    add_top: n^.xw[38] := 1;
+    sub_top: n^.xw[38] := 2;
+    neg_top: begin
       x := smcontk(integer_ob, 0);
       n^.xw[38] := 14;
     end;
-    8: begin
+    not_top: begin
       x := smcontk(integer_ob, 0);
       n^.xw[38] := 13;
     end;
-    9: n^.xw[38] := 3;
-    10: n^.xw[38] := 4;
-    19:
+    and_top: n^.xw[38] := 3;
+    or_top: n^.xw[38] := 4;
+    set_and_top:
       if n^.xl[12] > 4 then
         n^.xw[38] := 7
       else begin
         n^.xw[26] := n^.xw[25];
         n^.xw[38] := 3;
       end;
-    20:
+    set_or_top:
       if n^.xl[12] > 4 then
         n^.xw[38] := 8
       else begin
         n^.xw[26] := n^.xw[25];
         n^.xw[38] := 4;
       end;
-    21:
+    set_diff_top:
       if n^.xl[12] > 4 then
         n^.xw[38] := 9
       else begin
@@ -297,21 +306,21 @@ begin
         x := buildtreenode(not_top, n^.xl[12], tmp, 1);
         x^.xw[8] := 0;
       end;
-    27: begin
+    lshf_top: begin
       n^.xw[38] := 15;
       n^.xw[27] := y^^.xw[13];
       n^.xw[28] := y^^.xw[14];
     end;
-    28: begin
+    rshf_top: begin
       n^.xw[38] := 16;
       n^.xw[27] := y^^.xw[13];
       n^.xw[28] := y^^.xw[14];
     end;
-    34: n^.xw[38] := 19;
-    35: n^.xw[38] := 20;
-    36: n^.xw[38] := 21;
-    37: n^.xw[38] := 22;
-    44: n^.xw[38] := 5;
+    f_add_top: n^.xw[38] := 19;
+    f_sub_top: n^.xw[38] := 20;
+    f_mul_top: n^.xw[38] := 21;
+    f_div_top: n^.xw[38] := 22;
+    eor_top: n^.xw[38] := 5;
     otherwise
       return;
   end;
@@ -351,7 +360,7 @@ begin
       r := true;
   end
   else if b^.kind = tree_node then begin
-    if (b^.xw[18] = 16) or (b^.xw[18] = 15) then
+    if (b^.tr_op = func_call_top) or (b^.tr_op = call_top) then
       first := 2
     else
       first := 1;
@@ -424,7 +433,7 @@ var
 begin
   if (t = nil) or else (t^.kind <> assign_node) then
     bug_check('IL_UTILS_$CONVERT_AOPS_TO__AOP_TO_MEM --- node^.kind is not an assign_node.%.');
-  if (ord(t^.xc[41]) & 1) <> 0 then
+  if t^.st_flags.stmt_eliminated then
     return;
   op := t^.xw[38];
   if op in [26, 31, 32, 33, 34] then

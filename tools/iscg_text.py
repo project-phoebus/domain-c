@@ -1433,20 +1433,20 @@ def _blk(name, il, addr):
   proper_subtree il_%s, no children: a routine's block (its
   address) is rewritten as an address constant (a node of kind 146
   over make_new_addr_con of the block in il_180's section: kind 2 when
-  the block's two bits at +376 (16#180 of the word) are not zero, else
-  kind 6 unless it is the current routine's own, +188 against il_180's)
-  and that node's solutions; the current routine's own block with the
-  bits clear has none.
+  the block's allocation (bat, +376 bits 8..7 of the word) is not
+  local_bat, else kind 6 unless it is the current routine's own, +188
+  against il_180's) and that node's solutions; the current routine's
+  own local block has none.
 
-  %s, 0x228 bytes: D0 the bits (`and.w #384', `lsr.w #7'), tested
-  again after the comparison (`tst.w d0'); each branch has its own
-  trace, the make_new_addr_con call and the rest shared (Rev 8.89
+  %s, 0x228 bytes: D0 the allocation (`and.w #384', `lsr.w #7'),
+  tested again after the comparison (`tst.w d0'); each branch has its
+  own trace, the make_new_addr_con call and the rest shared (Rev 8.89
   cross-jumping); A2 il.
 
-  Not known from the original: the bits' name; how the conditions were
-  written.''' % (il, addr), '''
+  Not known from the original: the local's name; how the conditions
+  were written.''' % (il, addr), '''
 var
-  bits: integer;
+  bat: il_$bat_t;
   n1, n2: univ_ptr;
   inh_1: inherited_attributes_ptr_t;
 begin
@@ -1454,9 +1454,9 @@ begin
   no_solutions := false;
   il_kind := ord(il_%s);
   number_of_children := 0;
-  bits := rshft(isc_node_ptr_t(il)^.xw[188] & 384, 7);
-  if (bits <> 0) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
-    if bits <> 0 then begin
+  bat := isc_node_ptr_t(il)^.bk_atts.bat;
+  if (bat <> local_bat) or (isc_node_ptr_t(il)^.xp[47] <> isc_node_ptr_t(il_180)^.xp[47]) then begin
+    if bat <> local_bat then begin
       @TRACE
       n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
     end

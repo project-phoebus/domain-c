@@ -710,13 +710,13 @@ var
 begin
   lir_$reinitialize(rtn);
   isc_user_routines_358 := not ((13 in cargs_$options.flags_286)
-                                or ((ord(il_180^.xc[374]) & 16#10) <> 0));
+                                or il_180^.blk_atts.no_fp);
   lir_main_c8b := false;
   lm_second_entry := nil;
   blk := rtn^.node;
   lm_nconvs := 1;
   lm_convs[1] := call_conv_$ptr_t(blk^.xp[32]);
-  if ((ord(blk^.xc[377]) & 16#70) div 16 = 2)
+  if (blk^.blk_atts.call = call_ftn)
      and not ((ord(blk^.xc[294]) > 0) and (ord(blk^.xc[294]) < 128)) then begin
     ent_reg := nil;
     ent_mem := nil;
@@ -736,7 +736,8 @@ begin
             case arg^.f20.kind of
               0, 1, 2: begin
                 sym := arg^.sym;
-                if (sym^.xl[6] & 16#80000) = 0 then begin
+                if not (var_$already_seen_this_formal in sym^.fs_attr)
+                then begin
                   sym^.xc[25] := chr(ord(sym^.xc[25]) ! 8);
                   sym^.xl2[14] := arg^.offset;
                 end;
@@ -856,7 +857,7 @@ begin
     v := make_expression_temporary(122, 32);
     x^.xp[6] := v;
     v^.xp[1] := x;
-    v^.xl[8] := 16#4000;
+    v^.vr_attr := [var_$temporary];
     v^.xp[7] := isc_user_routines_34c;
   end;
   lr := isc_$get_home_solution(v)^.live_range;
@@ -1527,7 +1528,10 @@ begin
           sym := arg^.sym;
           if (sym^.kind = fortran_symbol)
              or ((sym^.kind = var_name)
-                 and ((sym^.xl[8] & 16#12400041) <> 0)) then
+                 and (sym^.vr_attr * [var_$volatile, var_$initialized,
+                                      var_$force_to_memory, var_$isc_was_here,
+                                      var_$mentioned_in_sym_disp] <> []))
+                 then
             if arg^.f18.loc = ord(arg_loc$fp_reg_quad) then
               n := n + 4
             else if arg^.f18.loc = ord(arg_loc$fp_reg_pair) then
@@ -1553,7 +1557,11 @@ begin
           sym := arg^.sym;
           takes := (sym^.kind = fortran_symbol)
                    or ((sym^.kind = var_name)
-                       and ((sym^.xl[8] & 16#12400041) <> 0));
+                       and (sym^.vr_attr * [var_$volatile, var_$initialized,
+                                            var_$force_to_memory,
+                                            var_$isc_was_here,
+                                            var_$mentioned_in_sym_disp]
+                            <> []));
         end;
       if takes then begin
         case formal_local_transfer_setup(addr(lm_epilog_xfer), arg,
@@ -2106,9 +2114,9 @@ begin
     r2 := r2 - 2;
   until r < 0;
   blk := rtn^.node;
-  sl := ((ord(blk^.xc[378]) & 16#20) <> 0) and not conv^.b30;
+  sl := blk^.blk_atts.save_static_link_in_frame and not conv^.b30;
   nregs := nregs + ord(sl);
-  nregs := nregs + ord((ord(blk^.xc[378]) & 8) <> 0);
+  nregs := nregs + ord(blk^.blk_atts.sb_12_in_use);
   if npairs <> 0 then begin
     if nsingles = 0 then
       nregs := nregs + (nregs & 1)
@@ -2145,7 +2153,7 @@ begin
   if rtn^.f226.needs_frame then begin
     if not sl then
       rtn^.w222 := pick_register(rtn, conv^.w14);
-    if (ord(blk^.xc[378]) & 8) = 0 then
+    if not blk^.blk_atts.sb_12_in_use then
       rtn^.w224 := pick_register(rtn, conv^.w14);
     if rtn^.f226.quad_aligned or (npairs <> 0) then begin
       if rtn^.w222 >= 0 then

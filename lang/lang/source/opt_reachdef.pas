@@ -497,8 +497,8 @@ begin
   if il_124 <> 0 then
     if opt_max_vars > 0 then
       if not ((il_180^.kind = function_blk) and
-              ((ord(il_180^.xc[376]) & 8) <> 0) and
-              (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2)) then
+              il_180^.blk_atts.local_name_only and
+              (il_180^.blk_atts.call = call_ftn)) then
         mem_$empty_pool(opt_main_14);
 end;
 
@@ -542,8 +542,8 @@ begin
   if il_124 <> 0 then
     if opt_max_vars > 0 then
       if not ((il_180^.kind = function_blk) and
-              ((ord(il_180^.xc[376]) & 8) <> 0) and
-              (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2)) then begin
+              il_180^.blk_atts.local_name_only and
+              (il_180^.blk_atts.call = call_ftn)) then begin
         var_defs := mem_$alloc(opt_main_14, (opt_max_vars + 1) * 4);
         kill_base := alloc_rdset;
         gen_base := alloc_rdset;
@@ -666,7 +666,7 @@ begin
         otherwise
       end;
     entry_blk, function_blk, procedure_blk:
-      case rshft(ord(r^.xc[377]) & 16#70, 4) of
+      case r^.blk_atts.call of
         1, 6:
           if k <= ord(r^.xc[293]) then begin
             p := r^.xp[3];
@@ -674,7 +674,7 @@ begin
               p := p^.xp[1];
             c := p^.xw[22];
           end
-          else if (ord(r^.xc[377]) & 2) <> 0 then
+          else if r^.blk_atts.val_param_flag then
             c := 2;
         3:
           c := 2;
@@ -994,7 +994,7 @@ begin
   on_lhs := false;
   s := opt_4009c[opt_region];
   while s <> nil do begin
-    if not s^.hdr.deleted then
+    if not s^.hdr.stmt_eliminated then
       case s^.kind of
         nlbranch_node, label_node, use_def_ob:
           ;
@@ -1099,10 +1099,12 @@ var
     if value^[v] = nil then
       return;
     if t^.kind = var_name then
-      if (t^.xl[8] & 16#201101) <> 0 then
+      if t^.vr_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                       var_$nooptimize] <> [] then
         return;
     if t^.kind = fortran_symbol then
-      if (t^.xl[6] & 16#201101) <> 0 then
+      if t^.fs_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                       var_$nooptimize] <> [] then
         return;
     bn := opt_4009c[cur]^.block^.num;
     if (t^.kind = fortran_symbol) or (t^.kind = var_name) then
@@ -1344,8 +1346,8 @@ begin
                  (a^.xp[6]^.xw[36] = 5) and
                  (a^.xp[6]^.xp[7]^.kind = param_name) and
                  (a^.xp[6]^.xp[7]^.xw[22] in [1, 3, 4]) and
-                 ((rshft(ord(il_180^.xc[377]) & 16#70, 4) = 1) or
-                  (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 6)) and
+                 ((il_180^.blk_atts.call = call_pas) or
+                  (il_180^.blk_atts.call = 6)) and
                  (paramclass(t, i - 1) in [1, 3, 4]) then begin
                 v := find_var(a^.xp[6]);
                 if v <> 0 then begin
@@ -1416,7 +1418,7 @@ begin
           kfold(t, eval_opnd[i]);
       end;
     return_node: with g_opt_stmt_ptr_t(t)^ do
-      if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3 then
+      if il_180^.blk_atts.call <> call_c then
         evalforeffect(x48, depth - 1)
       else begin
         if x48 <> nil then
@@ -1620,7 +1622,7 @@ var
   { init_block - the values known at block bn's top from the
     definitions reaching it: a definition storing a constant (for an
     operator that does not read the left side) marks the statement
-    (hdr.b42_7); a call (188) of a Fortran COMMON variable (110, +44 bit
+    (hdr.constant_assign); a call (188) of a Fortran COMMON variable (110, +44 bit
     3) not stored through a pointer takes its DATA value when it has
     one; a marked definition whose value the variable already holds is
     added to its definitions, a first one evaluated (the variable's
@@ -1650,7 +1652,7 @@ var
                                          char_string_ob, char32_string_ob,
                                          char16_ob, set_con_ob, rec_const_ob,
                                          dpcomplex_ob, binteger_ob]) then
-                  s^.hdr.b42_7 := true
+                  s^.hdr.constant_assign := true
                 else if s^.kind = use_def_ob then
                   if s^.arg_call = nil then begin
                     a := s^.x48;
@@ -1664,6 +1666,10 @@ var
                                   if ftn_data_init(s^.x48) then
                                     next;
                             var_name:
+                              { by mask: the image loads the longword,
+                                `move.l (32,A4),D1; btst #6,D1' (cc.m68k
+                                0x0E4540), where var_$initialized in
+                                vr_attr is a btst of the byte }
                               if (s^.x48^.xl[8] & 16#40) <> 0 then
                                 if ftn_data_init(s^.x48) then
                                   next;
@@ -1673,7 +1679,7 @@ var
                           value^[vv] := nil;
                         end;
                   end;
-                if s^.hdr.b42_7 then begin
+                if s^.hdr.constant_assign then begin
                   if seen^[vv] then begin
                     if value^[vv] = s^.asg_rhs then
                       add_def_stmt(vv)
@@ -1775,12 +1781,12 @@ begin
                       if s^.arg_call = nil then begin
                         n := s^.x48;
                         if n^.kind = fortran_symbol then
-                          mark := ((n^.xl[6] & 16#800000) <> 0) or
+                          mark := (var_$display_ptr in n^.fs_attr) or
                                   (n^.xp[7] <> nil) or
                                   (rshft(ord(n^.xc[11]) & 16#F0, 4) <> 1)
                         else if n^.kind = var_name then
                           mark := (n^.xw[36] <> 1) or
-                                  ((n^.xl[8] & 16#800000) <> 0)
+                                  (var_$display_ptr in n^.vr_attr)
                         else
                           mark := false;
                       end;
@@ -1890,7 +1896,7 @@ begin
     seen^[v] := false;
     n := s0^.vars^[v]^.node;
     if n^.kind = var_name then begin
-      conv := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+      conv := il_180^.blk_atts.call;
       if conv in [3, 4] then
         if n^.xp[1] = il_180^.xp[74] then
           seen^[v] := true;
@@ -1913,13 +1919,19 @@ begin
           for v := 1 to nvars do
             if v in d^.vset^ then begin
               if d^.hdr.vnum = v then
-                if d^.hdr.b5 or d^.hdr.b7 then
+                if d^.hdr.compiler_generated_stmt or
+                   d^.hdr.inliner_generated_stmt then
                   next;
-              conv := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+              conv := il_180^.blk_atts.call;
               if conv = 2 then
+                { by mask, as the variable's below (`move.l (24,A3),D0;
+                  btst #14,D0', 0x0E501E) }
                 if (d^.vars^[v]^.node^.xl[6] & 16#4000) <> 0 then
                   next;
               if conv <> 2 then
+                { by mask: `move.l (32,A4),D0; btst #14,D0' (cc.m68k
+                  0x0E5046), where var_$temporary in vr_attr loads the
+                  word at +34 }
                 if (d^.vars^[v]^.node^.xl[8] & 16#4000) <> 0 then
                   next;
               if (d^.vars^[v]^.ud = nil) and
@@ -1935,14 +1947,16 @@ begin
                   next;
                 end;
                 if n^.kind = var_name then begin
-                  if (n^.xl[8] & 16#201001) = 0 then
-                    if not d^.hdr.b7 then
+                  if n^.vr_attr * [var_$volatile, var_$address_exposed,
+                                   var_$nooptimize] = [] then
+                    if not d^.hdr.inliner_generated_stmt then
                       if not statement_contained_by_unreachable_basic_block(d) then
                         cgerr(21, il_d0, d^.vars^[v]^.node);
                 end
                 else if n^.kind = fortran_symbol then begin
-                  if (n^.xl[6] & 16#201001) = 0 then
-                    if not d^.hdr.b7 then
+                  if n^.fs_attr * [var_$volatile, var_$address_exposed,
+                                   var_$nooptimize] = [] then
+                    if not d^.hdr.inliner_generated_stmt then
                       if not statement_contained_by_unreachable_basic_block(d) then
                         cgerr(21, il_d0, d^.vars^[v]^.node);
                 end
@@ -1968,10 +1982,12 @@ begin
                 if n^.xp[1] = il_180^.xp[74] then
                   next;
               if n^.kind = var_name then
-                if (n^.xl[8] & 16#201001) <> 0 then
+                if n^.vr_attr * [var_$volatile, var_$address_exposed,
+                                 var_$nooptimize] <> [] then
                   next;
               if n^.kind = fortran_symbol then begin
-                if (n^.xl[6] & 16#201001) <> 0 then
+                if n^.fs_attr * [var_$volatile, var_$address_exposed,
+                                 var_$nooptimize] <> [] then
                   next;
                 if (ord(n^.xc[44]) & 4) <> 0 then
                   next;
@@ -2001,7 +2017,7 @@ begin
                   end
                   else if conv = 1 then
                     if c^.stmt^.kind = assign_node then
-                      if c^.stmt^.hdr.b6 then
+                      if c^.stmt^.hdr.pascal_for_loop then
                         if c^.stmt^.hdr.vnum = v then begin
                           ok := false;
                           exit;
@@ -2023,7 +2039,7 @@ begin
             else if d^.hdr.vnum = v then
               seen^[v] := true;
   end;
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+  if il_180^.blk_atts.call <> call_ftn then
     for v := 1 to nvars do
       if not seen^[v] then begin
         n := s0^.vars^[v]^.node;

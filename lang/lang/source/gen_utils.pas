@@ -101,7 +101,7 @@ begin
   end;
   rb := il_184;
   if rb <> nil then
-    if rshft(ord(rb^.xc[377]) & 16#70, 4) = 3 then
+    if rb^.blk_atts.call = call_c then
       prtcats(s, ' ', 1);
   if severity = 0 then
     code := 30
@@ -417,7 +417,7 @@ begin
     end;
     if (kind = 4) and ((sym^.kind = function_blk)
                        or (sym^.kind = procedure_blk)) and
-       (rshft(sym^.xw[188] & 384, 7) = 2) then begin
+       (sym^.blk_atts.bat = extern_bat) then begin
       flags := 4 ! opt;
       if objutil_$inlib_lookup_symbol(name, sym^.xp[74]^.idnt_len, flags,
                                       info) then begin
@@ -618,7 +618,7 @@ begin
     v^.xp[5] := blk;
     v^.xp[7] := runbackend_0c;
     v^.xw[36] := 2;
-    v^.xl[8] := 16#44000;
+    v^.vr_attr := [var_$temporary, var_$allocated];
     v^.xl[9] := 32;
     v^.xw[22] := 2;
   end;
@@ -835,7 +835,7 @@ begin
         return;
       end;
       rb := il_184;
-      if (rshft(ord(rb^.xc[377]) & 16#70, 4) <> 6)
+      if (rb^.blk_atts.call <> 6)
           or (sym^.kind = lib_dsc) then
       begin
         get_transfer_vector := p;

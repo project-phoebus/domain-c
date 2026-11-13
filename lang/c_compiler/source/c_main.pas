@@ -178,7 +178,7 @@ begin
   b := m^.xp[7];
   if b^.kind <> function_blk then
     return;
-  if rshft(b^.xw[188] & 16#180, 7) <> 0 then
+  if b^.blk_atts.bat <> local_bat then
     return;
   saved_type_opt := cargs_$options.type_opt;
   cargs_$options.type_opt := false;

@@ -894,14 +894,14 @@ var
     if is_goto then
       merge_state(deflab)
     else begin
-      deflab^.xc[72] := chr(ord(deflab^.xc[72]) & 16#C1 ! 28);
+      deflab^.lab_atts.class := lbl_temp;
       address(deflab, 0, t);
       emit(32, 5, t, cg_null_ads, 0);
     end;
     cg_tree_ptr_t(s)^.uses := 0;
     repeat
       cur := cur^.xp[2];
-      if odd(rshft(ord(cur^.xc[42]), 1)) and (il_11c <> nil) then
+      if cur^.st_flags.begins_basic_block and (il_11c <> nil) then
         basicblock;
     until cur^.xp[2] = nx;
   end;
@@ -1089,7 +1089,7 @@ var
       if cg_addr_used[i] then
         cg_blk_regs_ptr_t(il_180)^.unused :=
             cg_blk_regs_ptr_t(il_180)^.unused - [i];
-    il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
+    il_180^.blk_atts.use_db := true;
     if (rshft(il_180^.xl2[93], 11) & 258) <> 258 then
       cg_blk_regs_ptr_t(il_180)^.unused :=
           cg_blk_regs_ptr_t(il_180)^.unused + [13]
@@ -1101,7 +1101,7 @@ var
     else
       cg_blk_regs_ptr_t(il_180)^.unused :=
           cg_blk_regs_ptr_t(il_180)^.unused - [13];
-    if (ord(il_180^.xc[376]) >= 128) and
+    if il_180^.blk_atts.need_fp_fcw and
         (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) then begin
       m := 0;
       n := 0;
@@ -1110,7 +1110,7 @@ var
           n := n + 1;
           m := m + rshft(128, i - 16);
         end;
-      if (n = 0) or odd(ord(il_180^.xc[375])) then begin
+      if (n = 0) or il_180^.blk_atts.nosave_regs then begin
         anyconst(0, 4, zero);
         emit(0, 4, cg_push_ads, zero, 0);
         unlock(zero);
@@ -1137,7 +1137,7 @@ var
       end;
     end;
     nbytes := 0;
-    if odd(ord(il_180^.xc[375])) then
+    if il_180^.blk_atts.nosave_regs then
       cg_blk_regs_ptr_t(il_180)^.unused :=
           cg_blk_regs_ptr_t(il_180)^.unused + [2..7, 10..12, 18..23];
     if cg_blk_regs_ptr_t(il_180)^.unused <> [2..7, 10..13, 18..23] then begin
@@ -1221,7 +1221,7 @@ var
         emit(0, 5, fr, cg_top_f8, 0);
       end;
     end;
-    if odd(rshft(ord(il_180^.xc[376]), 6)) then begin
+    if il_180^.blk_atts.nlgoto then begin
       address_reg(cg_data_reg, cg_top_f8);
       address_reg(14, fr);
       if cg_top_128 = 0 then begin
@@ -1400,8 +1400,8 @@ var
     if r.value <> nil then begin
       address_reg(0, d0a);
       address_reg(8, a0a);
-      if (rshft(ord(il_180^.xc[377]) & 112, 4) = 3) and (r.size = 5) and
-          not odd(rshft(ord(il_180^.xc[375]), 4)) then begin
+      if (il_180^.blk_atts.call = call_c) and (r.size = 5) and
+          not il_180^.blk_atts.a0_ptr_ret then begin
         address(r.value, 4, cg_top_f8);
         if not ((cg_top_f8.f1 = 1) and (cg_top_f8.f2 = 0)) then
           emit(0, 4, d0a, cg_top_f8, 0);
@@ -1427,7 +1427,7 @@ var
         if size = 5 then begin
           if not ((cg_top_f8.f1 = 1) and (cg_top_f8.f2 = 8)) then
             emit(0, 5, a0a, cg_top_f8, 0);
-          if odd(rshft(ord(il_180^.xc[375]), 2)) then
+          if il_180^.blk_atts.d0_ptr_ret then
             if not ((cg_top_f8.f1 = 1) and (cg_top_f8.f2 = 0)) then
               emit(0, 4, d0a, a0a, 0);
         end
@@ -1448,7 +1448,7 @@ var
               emit_load_store(497, cg_top_f8, d0a, size)
             else
               emit(0, size, d0a, cg_top_f8, 0);
-          if odd(rshft(ord(il_180^.xc[375]), 4)) then
+          if il_180^.blk_atts.a0_ptr_ret then
             if not ((cg_top_f8.f1 = 1) and (cg_top_f8.f2 = 8)) then
               emit(0, 4, a0a, d0a, 0);
         end;
@@ -1564,7 +1564,7 @@ var
     end;
     address_reg(14, cg_top_f8);
     emit(26, 5, cg_top_f8, cg_null_ads, 0);
-    if (ord(il_180^.xc[376]) >= 128) and
+    if il_180^.blk_atts.need_fp_fcw and
         (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) then begin
       address_reg(15, cg_top_f8);
       address(smcontk(integer_ob, 4), 0, a96);
@@ -1605,7 +1605,7 @@ var
     same: boolean;
   begin
     init_peb;
-    if (ord(lab^.xc[74]) >= 128) or not odd(rshft(ord(lab^.xc[72]), 6)) then
+    if (ord(lab^.xc[74]) >= 128) or not lab^.lab_atts.fwrd then
       cg_top_13a := cg_top_13a + 1;
     if lab^.xp[1] <> nil then
       if not ((lab^.xp[1]^.kind = nlbranch_node)
@@ -1615,7 +1615,7 @@ var
       cg_addr_$init_regs(false);
       merge_state(cg_stmt);
     end;
-    if (cg_pass = 1) and not odd(rshft(ord(lab^.xc[72]), 6)) then begin
+    if (cg_pass = 1) and not lab^.lab_atts.fwrd then begin
       for i := 0 to 15 do
         edit_register(i, cg_state_ptr_t(lab^.xp[16])^.regs[i]);
       if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
@@ -1696,7 +1696,7 @@ var
         if not same then
           cgerr(13, cg_line, cg_stmt);
       end;
-    if odd(rshft(ord(lab^.xc[72]), 6)) or at_backend_506 then begin
+    if lab^.lab_atts.fwrd or at_backend_506 then begin
       cg_state_ptr_t(lab^.xp[16])^.regs[0].obj := runbackend_08;
       runbackend_08 := lab^.xp[16];
       lab^.xp[16] := nil;
@@ -1722,7 +1722,7 @@ var
           cg_addr_regs[i].w14 := 0;
         end;
     if ord(cg_stmt^.xc[75]) >= 128 then
-      il_180^.xc[376] := chr(ord(il_180^.xc[376]) ! 16#40);
+      il_180^.blk_atts.nlgoto := true;
   end;
 
   { emit_a_line_eop - in the last pass, the statement's line cell when
@@ -1792,19 +1792,23 @@ begin
                   cg_addr_regs[r].obj2 := nil;
           if cg_addr_regs[r].obj <> nil then
             if cg_addr_regs[r].obj^.kind = var_name then
-              if (cg_addr_regs[r].obj^.xl[8] & 9) <> 0 then
+              if cg_addr_regs[r].obj^.vr_attr * [var_$volatile,
+                                                 var_$dev_read] <> [] then
                 cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
             if cg_addr_regs[r].obj2^.kind = var_name then
-              if (cg_addr_regs[r].obj2^.xl[8] & 17) <> 0 then
+              if cg_addr_regs[r].obj2^.vr_attr * [var_$volatile,
+                                                  var_$dev_write] <> [] then
                 cg_addr_regs[r].obj2 := nil;
           if cg_addr_regs[r].obj <> nil then
             if cg_addr_regs[r].obj^.kind = fortran_symbol then
-              if (cg_addr_regs[r].obj^.xl[6] & 9) <> 0 then
+              if cg_addr_regs[r].obj^.fs_attr * [var_$volatile,
+                                                 var_$dev_read] <> [] then
                 cg_addr_regs[r].obj := nil;
           if cg_addr_regs[r].obj2 <> nil then
             if cg_addr_regs[r].obj2^.kind = fortran_symbol then
-              if (cg_addr_regs[r].obj2^.xl[6] & 17) <> 0 then
+              if cg_addr_regs[r].obj2^.fs_attr * [var_$volatile,
+                                                  var_$dev_write] <> [] then
                 cg_addr_regs[r].obj2 := nil;
           if cg_addr_locks[r] <> 0 then begin
             cgerr(4, cg_line, nil);
@@ -1823,7 +1827,7 @@ begin
           cg_addr_$init_regs(false)
         else if cargs_$options.frnd then
           cg_addr_$init_regs(true);
-        if odd(rshft(ord(cg_stmt^.xc[42]), 1)) and (il_11c <> nil) then
+        if cg_stmt^.st_flags.begins_basic_block and (il_11c <> nil) then
           basicblock;
         case cg_stmt^.kind of
           reg_list_ob: reg_list_proc(cg_stmt);
@@ -1879,7 +1883,7 @@ begin
               emit(21, 5, cg_top_f8, cg_null_ads, 0);
           end;
           nlbranch_node: begin
-            il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
+            il_180^.blk_atts.use_db := true;
             if cg_stmt^.xp[12]^.kind <> label_name then begin
               cg_addr_$merge_state_of_assigned_goto_targets(cg_stmt);
               load_operand(cg_stmt^.xp[12], 5, cg_top_f8);
@@ -1919,7 +1923,7 @@ begin
             end
             else begin
               if cg_addr_used[13] or (cg_code_bytes >= 5000) then
-                il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
+                il_180^.blk_atts.use_db := true;
               if at_backend_506 then begin
                 updatestacksize;
                 if cg_top_124 <> nil then begin

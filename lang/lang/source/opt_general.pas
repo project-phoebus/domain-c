@@ -149,7 +149,7 @@ procedure opt_gen_$prune_eval_operands(
 var
   j: integer;
 begin
-  if not s^.hdr.no_prune then
+  if not s^.hdr.contains_cse then
     for j := 1 to s^.eval_count do
       if assert_is_explicitly_useless_object(
              g_opt_tree_ptr_t(s^.eval_opnd[j])) then
@@ -406,7 +406,7 @@ begin
                       end;
                       p^.asg_rhs := smcontk(integer_ob, v);
                       adjust_uc(p^.asg_lhs, -1);
-                      st^.hdr.deleted := true;
+                      st^.hdr.stmt_eliminated := true;
                       p^.next := st^.next;
                       st^.next^.prev := p;
                     end;

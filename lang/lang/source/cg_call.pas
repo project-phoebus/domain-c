@@ -104,7 +104,7 @@ begin
   case n^.kind of
     disp_node, ptr_node: r := true;
     function_blk, procedure_blk: begin
-      if rshft(n^.xw[188] & 16#180, 7) = 3 then
+      if n^.blk_atts.bat = param_bat then
         r := true;
     end;
     cc_call: begin
@@ -173,7 +173,7 @@ var
   t: call_type_exp_t;
   v: il_$node_ptr_t;
 begin
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then begin
+  if il_180^.blk_atts.call = call_ftn then begin
     if d.class = 1 then begin
       if d.sym <> nil then
         if d.sym^.kind = fortran_symbol then
@@ -185,7 +185,7 @@ begin
         d.size := delay_378[runbackend_18[ord(v^.xc[10]) & 15]]
       else if (v^.kind = tree_node) or (v^.kind = cmp_tree_node)
           or (v^.kind = gen_tree_node) then
-        d.size := delay_378[v^.xw[12]];
+        d.size := delay_378[v^.tr_rlen];
     end;
   end
   else begin
@@ -565,9 +565,9 @@ begin
     else if (desig^.kind = func__type) or (desig^.kind = proc__type) then
       params := desig^.xp[1];
     pass_len := false;
-    if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+    if il_180^.blk_atts.call = call_ftn then
       if pass_char_len_diff(desig) and not lib then
-        if (n^.xw[13] <> 0) and (n^.xw[12] = 9) then
+        if (n^.xw[13] <> 0) and (n^.tr_rlen = rlen_cs) then
           pass_len := true;
 
     for i := last downto first do begin
@@ -593,7 +593,7 @@ begin
       b := false;
       if (i = first + 1) and pass_len then
         cls := 2
-      else if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) and not lib and
+      else if (il_180^.blk_atts.call = call_ftn) and not lib and
           (last - n^.xw[13] + ord(pass_len) < i) then begin
         if pass_char_len_diff(desig) then
           cls := 2
@@ -611,9 +611,9 @@ begin
             nparams := nparams - 1;
           end;
           entry_blk, function_blk, procedure_blk: begin
-            if rshft(ord(desig^.xc[377]) & 16#70, 4) = 4 then
+            if desig^.blk_atts.call = call_c_std then
               b := true
-            else if n^.xw[12] = 9 then begin
+            else if n^.tr_rlen = rlen_cs then begin
               if i = first then
                 cls := 11
               else
@@ -633,7 +633,7 @@ begin
           uinteger_ob, integer_ob: begin
             if ((desig^.kind = procedure_blk) or (desig^.kind = entry_blk) or
                 (desig^.kind = function_blk)) and
-                (rshft(ord(desig^.xc[377]) & 16#70, 4) = 4) then
+                (desig^.blk_atts.call = call_c_std) then
               cls := 8
             else if cargs_$options.i_star_2 then
               cls := 8
@@ -711,7 +711,8 @@ begin
           end
           else begin
             moved := false;
-            if (arg^.kind = var_name) and ((arg^.xl[8] & 16#20000) <> 0) and
+            if (arg^.kind = var_name)
+                and (var_$strength_reduction in arg^.vr_attr) and
                 (arg^.xp[14] = nil) and (cls >= 7) then begin
               w := call_link_ptr_t(arg^.xp[13]^.xp[2])^.p^.xw[26];
               if chk_assign(arg, w) <> 31 then begin
@@ -731,7 +732,7 @@ begin
                 v := arg^.xp[5]
               else
                 v := arg;
-              w := v^.xw[12];
+              w := v^.tr_rlen;
               r := peek(arg, w);
               nint := false;
               if (r <> 31) and (v^.kind = gen_tree_node) then begin
@@ -781,7 +782,7 @@ begin
   { The result's temporary. }
   result_temp := false;
   if n <> nil then
-    if (n^.xw[12] >= 7) and (n^.xw[12] <> 9) then begin
+    if (n^.tr_rlen >= rlen_r8) and (n^.tr_rlen <> rlen_cs) then begin
       get_temp(n, false);
       n^.kind := gen_tree_node;
       address(n, 0, op1);
@@ -789,10 +790,10 @@ begin
       pushed := pushed + 4;
       result_temp := true;
     end;
-  if not cargs_$options.xrs or odd(ord(il_180^.xc[375])) then
+  if not cargs_$options.xrs or il_180^.blk_atts.nosave_regs then
     keep := true;
   if (callee^.kind = function_blk) or (callee^.kind = procedure_blk) then
-    if odd(ord(callee^.xc[375])) then
+    if callee^.blk_atts.nosave_regs then
       keep := true;
   if n <> nil then begin
     v := cg_tree_ptr_t(n)^.opnd[1];
@@ -819,7 +820,7 @@ begin
   address_reg(8, areg);
   called := false;
   if procvar then begin
-    if keep or not cargs_$options.xrs or odd(ord(il_180^.xc[375])) then
+    if keep or not cargs_$options.xrs or il_180^.blk_atts.nosave_regs then
         begin
       cg_addr_next_areg := 8;
       address(callee, 5, op1);
@@ -838,26 +839,26 @@ begin
   end
   else if (callee^.kind = procedure_blk) or (callee^.kind = entry_blk) or
       (callee^.kind = function_blk) then begin
-    if rshft(callee^.xw[188] & 16#180, 7) = 0 then
+    if callee^.blk_atts.bat = local_bat then
       if not cg_call_$att_in_any_entry(1, callee) then begin
-        if (callee^.xw[189] & 4) <> 0 then begin
+        if callee^.blk_atts.coded then begin
           if cg_call_$att_in_any_entry(8, callee) then
-            il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
+            il_180^.blk_atts.use_db := true;
         end
         else if callee <> il_180 then begin
           t := il_180^.xp[48];
           if (t^.xl[5] + t^.xl[6] - t^.xl[4] = 0) and
               (7 in cargs_$options.flags_286) then
-            callee^.xc[376] := chr(ord(callee^.xc[376]) ! 16)
+            callee^.blk_atts.save_db := true
           else
-            il_180^.xc[375] := chr(ord(il_180^.xc[375]) ! 8);
+            il_180^.blk_atts.use_db := true;
         end;
       end;
     if not cg_call_$att_in_any_entry(1, callee) and
         (cg_level_ptr_t(callee)^.level > 0) then
       if callee^.xp[48] <> il_180^.xp[48] then
         cgerr(27, cg_line, callee);
-    if (ord(callee^.xc[378]) & 64) <> 0 then begin
+    if callee^.blk_atts.pass_display then begin
       if cg_level_ptr_t(callee)^.level > cg_level_ptr_t(il_180)^.level then
         address_reg(14, op1)
       else begin
@@ -871,7 +872,7 @@ begin
       emit(0, 5, link, op1, 0);
       release(op1);
     end;
-    if rshft(callee^.xw[188] & 16#180, 7) = 0 then begin
+    if callee^.blk_atts.bat = local_bat then begin
       if 7 in cargs_$options.flags_286 then begin
         if il_180^.xp[47] <> callee^.xp[47] then begin
           address(callee, 5, op1);
@@ -884,7 +885,7 @@ begin
         if il_180^.xp[48] = callee^.xp[48] then begin
           if cg_call_$att_in_any_entry(1, callee) then begin
             go := true;
-            if (il_180 = callee) or ((callee^.xw[189] & 4) <> 0) then
+            if (il_180 = callee) or callee^.blk_atts.coded then
               go := cg_call_$att_in_any_entry(8, callee);
             if go then begin
               address_reg(13, op1);
@@ -896,7 +897,7 @@ begin
         end
         else begin
           go := true;
-          if (callee = il_180) or ((callee^.xw[189] & 4) <> 0) then begin
+          if (callee = il_180) or callee^.blk_atts.coded then begin
             b := cg_call_$att_in_any_entry(8, callee);
             go := cg_call_$att_in_any_entry(1, callee) and b;
           end;
@@ -1024,7 +1025,7 @@ begin
   { The result's register. }
   if n <> nil then begin
     cg_tree_ptr_t(n)^.opnd[1] := saved;
-    w := n^.xw[12];
+    w := n^.tr_rlen;
     if w <= 6 then
       if (w = 5) and (cg_tree_ptr_t(n)^.opnd[1]^.kind = cc_call) then begin
         t := cg_tree_ptr_t(n)^.opnd[1]^.xp[4];
@@ -1034,20 +1035,20 @@ begin
             v := v^.xp[6];
           if v^.kind = cc_func_returning_type then begin
             if (v^.xw[3] & 16#200) = 0 then begin
-              setresult(0, n, n^.xw[12]);
-              cg_addr_regs[0].size := n^.xw[12];
+              setresult(0, n, n^.tr_rlen);
+              cg_addr_regs[0].size := n^.tr_rlen;
             end
             else
-              setresult(8, n, n^.xw[12]);
+              setresult(8, n, n^.tr_rlen);
           end
           else
-            setresult(0, n, n^.xw[12]);
+            setresult(0, n, n^.tr_rlen);
         end
         else if (t^.kind = function_blk)
             or (t^.kind = procedure_blk) then begin
-          if (ord(t^.xc[375]) & 16) = 0 then begin
+          if not t^.blk_atts.a0_ptr_ret then begin
             setresult(0, n, w);
-            cg_addr_regs[0].size := n^.xw[12];
+            cg_addr_regs[0].size := n^.tr_rlen;
           end
           else
             setresult(8, n, w);
@@ -1057,7 +1058,7 @@ begin
       end
       else begin
         atts := get_atts(cg_tree_ptr_t(n)^.opnd[1]);
-        if n^.xw[12] = 5 then begin
+        if n^.tr_rlen = rlen_addr then begin
           if ((atts & 16#200) <> 0) or ((atts & 16#80) = 0) then
             setresult(8, n, 5)
           else
@@ -1067,10 +1068,10 @@ begin
           address_reg(8, op2);
           address_reg(0, op4);
           emit(0, 4, op4, op2, 0);
-          setresult(0, n, n^.xw[12]);
+          setresult(0, n, n^.tr_rlen);
         end
         else
-          setresult(0, n, n^.xw[12]);
+          setresult(0, n, n^.tr_rlen);
       end;
   end;
 end;

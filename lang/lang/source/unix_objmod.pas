@@ -473,7 +473,7 @@ begin
     p := p^.xp[37];
   if 7 in cargs_$options.flags_286 then
     has_ecb := false
-  else if target_properties.p_7f and ((ord(p^.xc[375]) & 8) = 0) then
+  else if target_properties.p_7f and (not p^.blk_atts.use_db) then
     has_ecb := false
   else
     has_ecb := true;
@@ -1260,7 +1260,7 @@ var
                 reloc_absolute_addr_con:
                   emit_abs_addr_con(t, 0); { forward }
                 tree_node:
-                  if t^.xw[18] = 26 then
+                  if t^.tr_op = addr_top then
                     emit_tree_node_const(t)
                   else
                     cgerr_no_source(20, integer32(idntk(id_ob, 'rec_const',
@@ -1352,12 +1352,12 @@ var
     case t^.kind of
       var_name:
         if t^.xw[36] = 3 then begin
-          if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
+          if il_$node_ptr_t(il_184)^.blk_atts.call = 6 then
             blk := t^.xl[5];
           if not find_global_id(t^.xp[1], id, univ_ptr(blk)) then
             cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)))
           else if (11 in cargs_$options.flags_286) and
-                  ((t^.xl[8] & 16#10000) <> 0) then
+                  (var_$bss in t^.vr_attr) then
             value := value + t^.xl[14];
         end
         else if (t^.xw[36] = 7) or (t^.xw[36] = 8) then begin
@@ -1402,7 +1402,7 @@ var
         store_fixup_info(p^.xp[3], off, v);
       end;
       function_blk, procedure_blk: begin
-        k := (t^.xw[188] & 384) div 128;
+        k := ord(t^.blk_atts.bat);
         if k = 0 then begin
           value := value + t^.xp[25]^.xl[14];
           v := value;
@@ -1413,7 +1413,7 @@ var
           store_fixup_info(t^.xp[47], off, v);
         end
         else if k = 2 then begin
-          if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
+          if il_$node_ptr_t(il_184)^.blk_atts.call = 6 then
             blk := t^.xl[2];
           if not find_global_id(t^.xp[74], id, univ_ptr(blk)) then
             cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
@@ -1524,7 +1524,7 @@ var
         end
         else if (t^.kind = var_name) and (t^.xw[36] = 3) and
                 (11 in cargs_$options.flags_286) and
-                ((t^.xl[8] & 16#10000) <> 0) then
+                (var_$bss in t^.vr_attr) then
           value := value + t^.xl[14];
         t := p^.xp[2];
         if (t^.kind = var_name) and (t^.xw[36] = 10) then begin
@@ -1548,7 +1548,7 @@ var
         t := p^.xp[2];
         if ((t^.kind = entry_blk) or (t^.kind = function_blk)
             or (t^.kind = procedure_blk)) and
-           ((t^.xw[188] & 384) div 128 = 0) then
+           (t^.blk_atts.bat = local_bat) then
           if has_ecb(t) then begin
             t := p^.xp[2];
             value := t^.xl[27] - t^.xp[48]^.xl[4];
@@ -1759,7 +1759,7 @@ var
             v := v ! 16#103F0000;
             emit_32(v);
           end
-          else if ((ord(r^.xc[377]) & 16#70) div 16 = 3) and
+          else if (r^.blk_atts.call = call_c) and
                   (15 in cargs_$options.flags_286) then
             emit_32(16#103F201A)
           else
@@ -1769,7 +1769,7 @@ var
             if (r^.xw[185] & 16#2000) <> 0 then
               v := (lshft(r^.xw[186] & 16#FFFF, 16) ! 16#38200000) +
                    (128 - size)
-            else if ((ord(r^.xc[377]) & 16#70) div 16 = 3) and
+            else if (r^.blk_atts.call = call_c) and
                     (15 in cargs_$options.flags_286) then
               v := 128 - size + 16#383A0000
             else
@@ -1792,7 +1792,7 @@ var
       end;
       0: begin
         if (ord(r^.xc[294]) > 127) or (ord(r^.xc[294]) = 0) or
-           ((ord(r^.xc[376]) & 16) <> 0) then begin
+           r^.blk_atts.save_db then begin
           emit_16(16#41F9);
           v := r^.xp[48]^.xl[9] - r^.xp[48]^.xl[4];
           emit_32(v);
@@ -1817,7 +1817,7 @@ var
         store_rel_info(data_section_node, off, sym);
         nrelocs_5c58 := nrelocs_5c58 + 1;
         if (ord(r^.xc[294]) > 0) and (ord(r^.xc[294]) <= 127) and
-           ((ord(r^.xc[376]) & 16) = 0) then begin
+           (not r^.blk_atts.save_db) then begin
           emit_16(0);
           emit_32(0);
         end;
@@ -1894,17 +1894,17 @@ var
         end
         else begin
           name := p^.xp[1];
-          if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
+          if il_$node_ptr_t(il_184)^.blk_atts.call = 6 then
             blk := p^.xl[5];
         end;
       entry_blk, function_blk, procedure_blk:
-        if (p^.xw[188] & 384) div 128 = 0 then begin
+        if p^.blk_atts.bat = local_bat then begin
           create_global_reference := 0;
           return;
         end
         else begin
           name := p^.xp[74];
-          if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
+          if il_$node_ptr_t(il_184)^.blk_atts.call = 6 then
             blk := p^.xl[2];
         end;
       fortran_symbol:
@@ -2179,14 +2179,14 @@ var
                 if only_externals then
                   k2 := create_global_reference(t)
                 else begin
-                  if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
+                  if il_$node_ptr_t(il_184)^.blk_atts.call = 6 then
                     blk := t^.xl[5];
                   if find_global_id(t^.xp[1], id, univ_ptr(blk)) then
                     patched := true
                   else
                     cgerr_no_source(20, integer32(idntk(id_ob, 'CASE', 4)));
                   if (11 in cargs_$options.flags_286) and
-                     ((q^.target^.xl[8] & 16#10000) <> 0) then begin
+                     (var_$bss in q^.target^.vr_attr) then begin
                     p := putobj(q^.vaddr, 4);
                     p^ := p^ + q^.target^.xl[14];
                   end;
@@ -2274,7 +2274,7 @@ var
                 patched := true;
               end;
             entry_blk, function_blk, procedure_blk: begin
-              k := (t^.xw[188] & 384) div 128;
+              k := ord(t^.blk_atts.bat);
               if (k = 0) and not only_externals then begin
                 p := putobj(q^.vaddr, 4);
                 p^ := get_load_addr(q^.target^.xp[47]^.xw[33]) +
@@ -2286,7 +2286,7 @@ var
                 if only_externals then
                   k2 := create_global_reference(t)
                 else begin
-                  if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 6 then
+                  if il_$node_ptr_t(il_184)^.blk_atts.call = 6 then
                     blk := t^.xl[2];
                   if find_global_id(t^.xp[74], id, univ_ptr(blk)) then
                     patched := true
@@ -2844,7 +2844,7 @@ var
             emit_addr_con(c, 0)
           else if c^.kind = reloc_absolute_addr_con then
             emit_abs_addr_con(c, 0)
-          else if (c^.kind = tree_node) and (c^.xw[18] = 26) then
+          else if (c^.kind = tree_node) and (c^.tr_op = addr_top) then
             emit_tree_node_const(c)
           else
             cgerr(20, line, idntk(id_ob, 'initial_value', 13));
@@ -3034,7 +3034,7 @@ var
           h^.s_flags := h^.s_flags + [unix_objmod_$styp_data]
         else
           h^.s_flags := h^.s_flags + [unix_objmod_$styp_compressed, unix_objmod_$styp_bss];
-        if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 3 then
+        if il_$node_ptr_t(il_184)^.blk_atts.call = call_c then
           if (ord(p^.xc[54]) > 127) or
              not (7 in cargs_$options.flags_286) then
             h^.s_flags := h^.s_flags + [unix_objmod_$styp_lookup];
@@ -3244,7 +3244,7 @@ var
       e^.value := uobj_hp_standard;
       freeobj(e);
     end;
-    if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 3 then
+    if il_$node_ptr_t(il_184)^.blk_atts.call = call_c then
       if (kg_$lookup('EV_$GET_VAR                     ') <> nil) and
          (kg_$lookup('C_$DECODE_VERSION               ') <> nil) then begin
         nsri := nsri + 1;
@@ -3321,11 +3321,11 @@ var
     m^.module_name_offset := temp_string_count + 4;
     r := il_184;
     if r^.kind = module_blk then
-      if (ord(r^.xc[377]) & 16#70) div 16 = 3 then
+      if r^.blk_atts.call = call_c then
         r := il_17c
       else
         r := r^.xp[1];
-    if (ord(il_$node_ptr_t(il_184)^.xc[377]) & 16#70) div 16 = 3 then
+    if il_$node_ptr_t(il_184)^.blk_atts.call = call_c then
       r := il_$node_ptr_t(il_184)^.xp[1];
     change_name_lower_case(r^.xp[74], name);
     for i := 1 to r^.xp[74]^.idnt_len do
@@ -4254,7 +4254,7 @@ begin
     t := ecb_cursor^.xp[3];
     if (((t^.kind = program_blk) or (t^.kind = procedure_blk)
          or (t^.kind = entry_blk) or
-         (t^.kind = function_blk)) and ((t^.xw[188] & 384) div 128 = 2)) or
+         (t^.kind = function_blk)) and (t^.blk_atts.bat = extern_bat)) or
        ((t^.kind = var_name) and (t^.xw[36] = 3)) then
       k := create_global_reference(t);
     ecb_cursor := ecb_cursor^.xp[1];
@@ -4293,7 +4293,7 @@ begin
   obj_map_5d18 := a;
   main_routine := il_184;
   if main_routine^.kind = module_blk then
-    if (ord(main_routine^.xc[377]) & 16#70) div 16 = 3 then
+    if main_routine^.blk_atts.call = call_c then
       main_routine := il_17c
     else
       main_routine := il_$node_ptr_t(il_184)^.xp[1];

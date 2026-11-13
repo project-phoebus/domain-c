@@ -173,29 +173,29 @@ begin
   n^.prev := p;
   n^.next := s;
   s^.prev := n;
-  n^.hdr.b7 := false;
-  n^.hdr.b6 := false;
-  n^.hdr.b5 := true;
-  n^.hdr.b4 := false;
-  n^.hdr.b3 := false;
-  n^.hdr.counted := false;
-  n^.hdr.no_prune := false;
-  n^.hdr.deleted := false;
-  n^.hdr.b42_7 := false;
+  n^.hdr.inliner_generated_stmt := false;
+  n^.hdr.pascal_for_loop := false;
+  n^.hdr.compiler_generated_stmt := true;
+  n^.hdr.contains_fp_expr := false;
+  n^.hdr.loophascalls := false;
+  n^.hdr.defsubtracted := false;
+  n^.hdr.contains_cse := false;
+  n^.hdr.stmt_eliminated := false;
+  n^.hdr.constant_assign := false;
   n^.hdr.b42_6 := false;
-  n^.hdr.kills := false;
-  n^.hdr.b42_4 := false;
-  n^.hdr.b42_2 := false;
-  n^.hdr.entry := false;
+  n^.hdr.contains_call_w_simple_p := false;
+  n^.hdr.contains_user_call := false;
+  n^.hdr.ends_proc := false;
+  n^.hdr.begins_proc := false;
   n^.line := spos_$null_position;
-  if (s^.kind = label_node) and s^.hdr.first then begin
-    n^.prev^.hdr.last := false;
-    n^.hdr.first := false;
-    n^.hdr.last := true;
+  if (s^.kind = label_node) and s^.hdr.begins_basic_block then begin
+    n^.prev^.hdr.ends_basic_block := false;
+    n^.hdr.begins_basic_block := false;
+    n^.hdr.ends_basic_block := true;
   end
   else begin
-    n^.hdr.last := false;
-    s^.hdr.first := false;
+    n^.hdr.ends_basic_block := false;
+    s^.hdr.begins_basic_block := false;
   end;
   n^.hdr.region := 0;
 end;
@@ -304,10 +304,10 @@ begin
     alloc_stmt(8, s);
     k := t^.hdr.region;
     if k <> 0 then
-      if opt_4009c[k]^.hdr.deleted then begin
+      if opt_4009c[k]^.hdr.stmt_eliminated then begin
         repeat
           k := k + 1;
-        until not opt_4009c[k]^.hdr.deleted;
+        until not opt_4009c[k]^.hdr.stmt_eliminated;
         t := opt_4009c[k];
       end;
     insert_stmt(t, s);
@@ -339,7 +339,7 @@ begin
   m := 7;
   repeat
     if (t^.kind = disp_node) or (t^.kind = ptr_node) then begin
-      if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 3) and
+      if (il_180^.blk_atts.call = call_c) and
          (t^.xp[7]^.kind = integer_type) then begin
         m := 2;
         exit;
@@ -354,7 +354,7 @@ begin
       exit
     else if (t^.kind = function_blk) or (t^.kind = procedure_blk)
         or (t^.kind = entry_blk) then begin
-      lang := rshft(ord(t^.xc[377]) & 16#70, 4);
+      lang := t^.blk_atts.call;
       if lang = 2 then
         m := 7
       else if lang = 3 then
@@ -473,8 +473,8 @@ var
         return;
       if (how & 8) <> 0 then begin
         if (s^.kind = label_node) and
-           (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) and
-           (rshft(ord(il_$node_ptr_t(s)^.xc[72]) & 16#3E, 1) = 4) then begin
+           (il_180^.blk_atts.call = call_ftn) and
+           (il_$node_ptr_t(s)^.lab_atts.class = lbl_while_exit) then begin
           x := s^.next;
           if x^.kind <> reg_list_ob then begin
             alloc_stmt(8, n);
@@ -482,9 +482,9 @@ var
             insert_stmt(s^.next, n);
           end;
           if x <> nil then
-            if x^.hdr.first then begin
-              x^.hdr.first := false;
-              x^.next^.hdr.first := true;
+            if x^.hdr.begins_basic_block then begin
+              x^.hdr.begins_basic_block := false;
+              x^.next^.hdr.begins_basic_block := true;
             end;
         end
         else begin
@@ -684,11 +684,11 @@ var
                         act(r, 8, st^.prev, st);
                   q := nextrealstmt(s);
                   if test_stmt(r, 2 * s + 1) then
-                    if not st^.hdr.last then
+                    if not st^.hdr.ends_basic_block then
                       if not test_stmt(r, 2 * q + 1) then begin
                         x := opt_4009c[q];
                         if x^.block = st^.block then
-                          if not x^.hdr.last then
+                          if not x^.hdr.ends_basic_block then
                             act(r, 32, x^.next, x^.next);
                       end;
                 end;
@@ -710,7 +710,7 @@ var
                     act(r, 8, st^.next, st^.next);
                 how := how & ~8;
                 if not test_stmt(r, 2 * s + 1) then
-                  if not st^.hdr.last then
+                  if not st^.hdr.ends_basic_block then
                     act(r, how, st^.next, st^.next);
               end;
 
@@ -719,14 +719,14 @@ var
                                  dindex_node..disp_node, addr_con,
                                  cse_parent_ob, reloc_absolute_addr_con] then
               if not test_stmt(r, 2 * (s + 1)) then
-                if not st^.hdr.last then begin
+                if not st^.hdr.ends_basic_block then begin
                   if assert_fortran_lvalue_not_in_areg(r) then
                     how := how ! 8;
                   act(r, how, st^.next, st^.next);
                 end;
 
             { The block's exits. }
-            if st^.hdr.last then begin
+            if st^.hdr.ends_basic_block then begin
               nb := st^.block;
               if assert_fortran_lvalue_not_in_areg(r) then
                 how := how ! 8;
@@ -797,7 +797,7 @@ begin
         if opt_4009c[rr^.first]^.block^.flags.latch then begin
           st := opt_4009c[rr^.first];
           if (rr^.node^.kind = dindex_node) or
-             (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2) or
+             (il_180^.blk_atts.call <> call_ftn) or
              (2 in rr^.flags) then begin
             desc.rlen := rr^.rlen;
             rr^.node := buildtreenode(addr_top, desc, rr^, 1);

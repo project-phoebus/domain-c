@@ -98,7 +98,7 @@ begin
   end
   else begin
     lab^.xp[20] := il_$node_ptr_t(cell);
-    lab^.xc[72] := chr(ord(lab^.xc[72]) ! 16#80);
+    lab^.lab_atts.def := true;
     if ord(lab^.xc[74]) >= 16#80 then
       cell^.ads2.f5 := cell^.ads2.f5 ! 1;
   end;

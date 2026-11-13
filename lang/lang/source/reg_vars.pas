@@ -537,7 +537,7 @@ var
     end;
     x := opt_4009c[s];
     ln := x^.line;
-    lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+    lang := il_180^.blk_atts.call;
     cf := lang in [2, 3];
     if ln = spos_$null_position then begin
       x := x^.prev;
@@ -886,8 +886,8 @@ var
       if opt_region <= k then
         if opt_4009c[k]^.x48 <> nil then begin
           cls := opt_4009c[k]^.asg_rlen;
-          if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 3 then begin
-            if (cls = 5) and ((ord(il_180^.xc[375]) & 16#10) <> 0) then
+          if il_180^.blk_atts.call = call_c then begin
+            if (cls = 5) and il_180^.blk_atts.a0_ptr_ret then
               reg := 8
             else
               reg := 0;

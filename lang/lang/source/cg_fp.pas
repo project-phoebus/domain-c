@@ -86,7 +86,7 @@ begin
   m := n;
   if m <> nil then
     if (m^.kind = disp_node) and (m^.xl[8] = 0) then
-      if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+      if il_180^.blk_atts.call = call_ftn then
         m := m^.xp[6];
   skip_zero_disps := m;
 end;
@@ -569,10 +569,10 @@ begin
     if at_backend_506 then begin
       v^.kind := gen_tree_node;
       if t^.kind = alloc_temp then
-        stack_fp(63, v^.xw[12], t)
+        stack_fp(63, v^.tr_rlen, t)
       else begin
         get_temp(v, false);
-        stack_fp(63, v^.xw[12], v^.xp[10]);
+        stack_fp(63, v^.tr_rlen, v^.xp[10]);
       end;
     end;
 end;

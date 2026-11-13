@@ -1061,7 +1061,7 @@ begin
   trace := at_backend_switches.level <> 0;
   if trace then
     vfmt_$write('%/%/TRACE OF LIR_UTILS_$FIX_STORE_THROUGH_LRS%/%.');
-  handlers := ((ord(il_180^.xc[379]) & 16#10) <> 0) or lir_main_c8c;
+  handlers := il_180^.blk_atts.never_entered_recursively or lir_main_c8c;
   if handlers then begin
     if trace then
       vfmt_$write('%.');
@@ -1473,7 +1473,7 @@ begin
       lr := lr^.next;
     end;
     if not any then begin
-      il_180^.xc[379] := chr(ord(il_180^.xc[379]) & 16#EF);
+      il_180^.blk_atts.never_entered_recursively := false;
       lir_main_c8c := false;
     end;
   end;

@@ -4325,7 +4325,7 @@ begin
         inst := 12
       else
         inst := 15;
-      m := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+      m := il_180^.blk_atts.call;
       if ((m = 1) or (m = 6)) and ((n^.desc.flags & 16#4000) = 0) then
         if inst = 12 then
           inst := 2
@@ -4606,7 +4606,7 @@ begin
       tree_walk(p^.xp[4]);
     cse_parent_ob: begin
       t := p^.xp[1];
-      size := t^.xw[12];
+      size := t^.tr_rlen;
       r := chk_assign(p^.xp[1], size);
       if t^.kind = gen_tree_node then begin
         if r = 31 then
@@ -4632,7 +4632,7 @@ begin
     end;
     cse_use_ob: begin
       t := p^.xp[5];
-      size := t^.xw[12];
+      size := t^.tr_rlen;
       r := chk_assign(t, size);
       if t^.kind = gen_tree_node then begin
         if r <> 31 then

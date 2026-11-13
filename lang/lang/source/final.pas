@@ -2325,7 +2325,7 @@ begin
     else if a^.kind = gen_tree_node then begin
       if a = b then
         r := true
-      else if (a^.xw[18] = b^.xw[18]) and (a^.xl[5] = b^.xl[5]) and
+      else if (a^.tr_op = b^.tr_op) and (a^.xl[5] = b^.xl[5]) and
               (a^.xl[6] = b^.xl[6]) and (a^.xl[7] = b^.xl[7]) and
               (a^.xl[8] = b^.xl[8]) then begin
         r := true;
@@ -5327,12 +5327,12 @@ begin
     nx := p^.next;
     detach(p);
     rtn := il_180;
-    rtn^.xc[378] := chr(ord(rtn^.xc[378]) & 16#EF);
+    rtn^.blk_atts.must_have_own_frame := false;
     l := nil;
-    if rshft(ord(rtn^.xc[377]) & 112, 4) <> 2 then
+    if rtn^.blk_atts.call <> call_ftn then
       l := rtn^.xp[3];
     for i := 1 to ord(rtn^.xc[293]) do begin
-      if rshft(ord(il_180^.xc[377]) & 112, 4) = 2 then
+      if il_180^.blk_atts.call = call_ftn then
         v := parm_tab_ptr_t(il_180^.xp[3])^[i].n
       else begin
         n := il_180^.xp[4];
@@ -5535,7 +5535,7 @@ var
       if n^.xp[20] = nil then begin
         unpack_ads(a, u);
         n^.xp[20] := il_$node_ptr_t(fnl_slct(32, 5, 0, u, cg_null_ads));
-        n^.xc[72] := chr(ord(n^.xc[72]) & 16#7F);
+        n^.lab_atts.def := false;
       end;
       a.y := integer32(getrefcell(integer32(c), codegen_$cell_ptr_t(n^.xp[20])));
     end;

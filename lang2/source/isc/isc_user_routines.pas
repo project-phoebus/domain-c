@@ -1871,9 +1871,11 @@ begin
                          cse_use_ob, sym_disp_node] then
     is_device := ((node^.xl[1] & 8) <> 0) or ((node^.xl[1] & 16#10) <> 0)
   else if node^.kind = fortran_symbol then
-    is_device := ((node^.xl[6] & 8) <> 0) or ((node^.xl[6] & 16#10) <> 0)
+    is_device := (var_$dev_read in node^.fs_attr) or
+                 (var_$dev_write in node^.fs_attr)
   else if node^.kind = var_name then
-    is_device := ((node^.xl[8] & 8) <> 0) or ((node^.xl[8] & 16#10) <> 0)
+    is_device := (var_$dev_read in node^.vr_attr) or
+                 (var_$dev_write in node^.vr_attr)
   else
     is_device := false;
 end;
@@ -3271,12 +3273,12 @@ begin
   n := node;
   case n^.kind of
     assign_node: a := isc_readonly_tables.rlen_w[n^.xw[26]];
-    cmp_tree_node: a := isc_readonly_tables.rlen_w[n^.xw[12]];
+    cmp_tree_node: a := isc_readonly_tables.rlen_w[n^.tr_rlen];
     cse_parent_ob: a := ord(arithmetic_from_il_node(n^.xp[1]));
     cse_use_ob: a := ord(arithmetic_from_il_node(n^.xp[5]));
     dindex_node: a := isc_readonly_tables.rlen_w[n^.xw[21]];
     return_node: a := isc_readonly_tables.rlen_w[n^.xw[26]];
-    gen_tree_node, tree_node: a := isc_readonly_tables.rlen_w[n^.xw[12]];
+    gen_tree_node, tree_node: a := isc_readonly_tables.rlen_w[n^.tr_rlen];
     ptr_node, disp_node: a := 3;
     set_con_ob, rec_const_ob, char_string_ob: a := 3;
     slogical_ob, usinteger_ob, sinteger_ob, llogical_ob, ulinteger_ob,
@@ -3328,12 +3330,12 @@ begin
   n := node;
   case n^.kind of
     assign_node: p := isc_$precision_from_rlen_and_size(n^.xw[26], n^.xl[12]);
-    cmp_tree_node: p := isc_$precision_from_rlen_and_size(n^.xw[12], n^.xl[5]);
+    cmp_tree_node: p := isc_$precision_from_rlen_and_size(n^.tr_rlen, n^.xl[5]);
     cse_parent_ob: p := precision_from_il_node(n^.xp[1]);
     cse_use_ob: p := precision_from_il_node(n^.xp[5]);
     dindex_node: p := isc_$precision_from_rlen_and_size(n^.xw[21], -1);
     return_node: p := isc_$precision_from_rlen_and_size(n^.xw[26], -1);
-    gen_tree_node, tree_node: p := isc_$precision_from_rlen_and_size(n^.xw[12],
+    gen_tree_node, tree_node: p := isc_$precision_from_rlen_and_size(n^.tr_rlen,
         n^.xl[5]);
     disp_node: p := precision_from_il_node(n^.xp[6]) - n^.xl[8] * 8;
     ptr_node: p := precision_from_il_node(n^.xp[6]);
@@ -4081,7 +4083,7 @@ begin
       end;
       cmp_tree_node: begin
         write('<cmp_tree_node = ');
-        write(il_$top_t(n^.xw[18]));
+        write(n^.tr_op);
         write('>');
       end;
       common_block_name: begin
@@ -4190,7 +4192,7 @@ begin
         write('>');
       end;
       tree_node: begin
-        write(il_$top_t(n^.xw[18]):1);
+        write(n^.tr_op:1);
         write('(');
         write(')');
       end;

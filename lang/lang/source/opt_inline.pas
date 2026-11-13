@@ -281,7 +281,7 @@ function inline_$is_fortran_asf(
     b: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
   if (language = 2) and (b^.kind = function_blk) then
-    inline_$is_fortran_asf := (ord(b^.xc[376]) & 8) <> 0
+    inline_$is_fortran_asf := b^.blk_atts.local_name_only
   else
     inline_$is_fortran_asf := false;
 end;
@@ -393,7 +393,7 @@ begin
   while (n <> nil) and not done do begin
     if ((n^.kind = function_blk) or (n^.kind = procedure_blk))
         and (n^.xw[132] = 0) and
-       ((ord(n^.xc[374]) & 8) = 0) then begin
+       (not n^.blk_atts.visible) then begin
       lev := oi_level_ptr_t(n)^.level;
       repeat
         n := n^.xp[1];
@@ -662,7 +662,7 @@ begin
         next := n^.xp[3];
       cmp_tree_node, tree_node: begin
         d.size := n^.xl[5];
-        d.rlen := n^.xw[12];
+        d.rlen := n^.tr_rlen;
         if d.size = 8 then
           if d.rlen = rlen_agg then
             d.rlen := rlen_r8;
@@ -791,7 +791,7 @@ procedure inline_$mark_reference_params(
         cs_node:
           get_referenced_symbol := get_referenced_symbol(t^.xp[5]);
         tree_node:
-          if t^.xw[18] = 26 then
+          if t^.tr_op = addr_top then
             get_referenced_symbol := get_referenced_symbol(t^.xp[10])
           else
             get_referenced_symbol := nil;
@@ -810,7 +810,7 @@ var
 begin
   if not ((t^.kind = cmp_tree_node) or (t^.kind = tree_node)) then
     return;
-  if not ((t^.xw[18] = 16) or (t^.xw[18] = 15)) then
+  if not ((t^.tr_op = func_call_top) or (t^.tr_op = call_top)) then
     return;
   n := t^.xw[19];
   r := t^.xp[10];
@@ -818,18 +818,18 @@ begin
     r := r^.xp[7];
   if r^.kind = pf_call then
     r := r^.xp[5];
-  if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2)
+  if (il_180^.blk_atts.call = call_ftn)
       and (r^.kind <> lib_dsc) then begin
     for j := 1 to n - 1 do begin
       v := get_referenced_symbol(t^.xp[10 + j]);
       if v <> nil then
         if v^.kind = var_name then begin
           v^.xc[34] := chr(ord(v^.xc[34]) ! 32);
-          s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+          s^.st_flags.b42_6 := true;
         end
         else if v^.kind = fortran_symbol then begin
           v^.xc[26] := chr(ord(v^.xc[26]) ! 32);
-          s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+          s^.st_flags.b42_6 := true;
         end;
     end;
     return;
@@ -846,7 +846,7 @@ begin
           k := k + 1;
       end;
       entry_blk, function_blk, procedure_blk:
-        if rshft(ord(r^.xc[377]) & 16#70, 4) = 4 then
+        if r^.blk_atts.call = call_c_std then
           cls := 9
         else
           cls := r^.xw[197 + j];
@@ -861,12 +861,12 @@ begin
         if v^.kind = var_name then begin
           v^.xc[34] := chr(ord(v^.xc[34]) ! 32);
           if r^.kind <> lib_dsc then
-            s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+            s^.st_flags.b42_6 := true;
         end
         else if v^.kind = fortran_symbol then begin
           v^.xc[26] := chr(ord(v^.xc[26]) ! 32);
           if r^.kind <> lib_dsc then
-            s^.xc[42] := chr(ord(s^.xc[42]) ! 64);
+            s^.st_flags.b42_6 := true;
         end;
     end;
   end;
@@ -1113,7 +1113,7 @@ procedure coerce(
         return;
     n := t;
     if n^.kind = tree_node then
-      if (n^.xw[18] = 39) or (n^.xw[18] = 18) then
+      if (n^.tr_op = f_extend_top) or (n^.tr_op = extend_top) then
         if n^.xw[13] = want then begin
           t := n^.xp[10];
           return;
@@ -1332,7 +1332,7 @@ begin
   s^.xp[1] := stream_tail;
   stream_tail^.xp[2] := s;
   stream_tail := s;
-  stream_tail^.xc[41] := chr(ord(stream_tail^.xc[41]) ! 128);
+  stream_tail^.st_flags.inliner_generated_stmt := true;
 end;
 
 { actual_actual - the object an actual t refers to through
@@ -1421,8 +1421,9 @@ begin
     end;
     done := false;
     if a^.kind = tree_node then
-      if (a^.xw[18] = 12) or (a^.xw[18] = 23) or (a^.xw[18] = 40) or
-         (a^.xw[18] = 24) then
+      if (a^.tr_op = compare_top) or (a^.tr_op = set_compare_top)
+          or (a^.tr_op = f_compare_top) or
+         (a^.tr_op = agg_compare_top) then
         done := true;
     if not done then
       if d1.rlen <> d2.rlen then begin
@@ -1754,7 +1755,7 @@ var
   x: il_$node_ptr_t;
   y: il_$node_ptr_t;
 begin
-  if (t^.kind <> tree_node) or (t^.xw[18] <> 26) then
+  if (t^.kind <> tree_node) or (t^.tr_op <> addr_top) then
     cgerr_no_source(28, integer32(token_$make_string_token(
       'set_address_exposed --- top is not addr_top.')));
   x := t^.xp[10];
@@ -1787,7 +1788,7 @@ var
 begin
   r := t;
   if r^.kind = tree_node then
-    if r^.xw[18] = 63 then
+    if r^.tr_op = align_top then
       r := r^.xp[10];
   inliner_actual := r;
 end;
@@ -1856,8 +1857,8 @@ procedure process_parameters(
       end;
       if not done then
         if (rhs^.kind = cmp_tree_node) or (rhs^.kind = tree_node) then
-          if rhs^.xw[12] <> d.rlen then
-            coerce(e, s^.xp[17], rhs^.xw[12], d.rlen,
+          if rhs^.tr_rlen <> d.rlen then
+            coerce(e, s^.xp[17], rhs^.tr_rlen, d.rlen,
                    (ord(rhs^.xc[30]) & 64) <> 0);
     end;
     if (s^.xw[26] = 6) or (s^.xw[26] = 7) or (s^.xw[26] = 12) or
@@ -2029,7 +2030,7 @@ begin
         val := v;
         put_on_il_stream(assign(e, v, a, k));
         if a^.kind = tree_node then
-          if a^.xw[18] = 26 then
+          if a^.tr_op = addr_top then
             set_address_exposed(a);
       end;
       3: begin
@@ -2077,7 +2078,7 @@ begin
           c := pv;
         end;
         if adr^.kind = tree_node then
-          if adr^.xw[18] = 26 then
+          if adr^.tr_op = addr_top then
             set_address_exposed(adr);
         sub := 1;
         val := pv;
@@ -2149,7 +2150,7 @@ begin
       end;
     end
     else if sub = 1 then begin
-      if (val^.kind = tree_node) and (val^.xw[18] = 26) then
+      if (val^.kind = tree_node) and (val^.tr_op = addr_top) then
         val := val^.xp[10]
       else begin
         val := add_pn(val, c, 2, 0);
@@ -2336,7 +2337,7 @@ begin
           else if v^.kind = fortran_symbol then begin
             k := rshft(ord(v^.xc[11]) & 16#F0, 4);
             if k in [1, 2, 6, 7] then
-              if (v^.xl[6] & 16#800000) = 0 then begin
+              if not (var_$display_ptr in v^.fs_attr) then begin
                 nv := copy_var(e, v);
                 put_on_bct(e, cb, nv);
                 if v^.xp[7] <> nil then begin
@@ -2377,7 +2378,7 @@ begin
         end
         else if (nv = nil) and (v^.kind = var_name) then
           if v^.xw[36] in [1, 2, 6, 7] then
-            if (v^.xl[8] & 16#800000) = 0 then begin
+            if not (var_$display_ptr in v^.vr_attr) then begin
               nv := copy_var(e, v);
               put_on_bct(e, cb, nv);
               if v^.xw[36] in [2, 6] then
@@ -2576,7 +2577,7 @@ var
         s := n;
         if val <> nil then begin
           s := val;
-          if (s^.kind = tree_node) and (s^.xw[18] = 26) then
+          if (s^.kind = tree_node) and (s^.tr_op = addr_top) then
             s := s^.xp[10];
           if s^.kind = reloc_absolute_addr_con then
             s := s^.xp[3];
@@ -2732,26 +2733,27 @@ var
           boff := b.v^.xl[14];
         end;
       end
-      else if (n^.kind = fortran_symbol) and ((n^.xl[6] & 16#800000) <> 0) and
+      else if (n^.kind = fortran_symbol) and
+              (var_$display_ptr in n^.fs_attr) and
               (oi_level_ptr_t(e^.caller)^.level <
                oi_level_ptr_t(e^.callee)^.level) then begin
         boff := b.v^.xl[3];
         cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
         aoff := a.v^.xl[3];
       end
-      else if (n^.kind = var_name) and ((n^.xl[8] & 16#800000) <> 0) and
+      else if (n^.kind = var_name) and (var_$display_ptr in n^.vr_attr) and
               (n^.xp[1] = e^.caller^.xp[74]) then begin
         aoff := a.v^.xl[14];
         boff := b.v^.xl[14];
         cls := b.v^.xw[36];
       end
-      else if (n^.kind = tree_node) and (n^.xw[18] = 26) and
+      else if (n^.kind = tree_node) and (n^.tr_op = addr_top) and
               (n^.xp[10]^.kind = fortran_symbol) then begin
         cls := rshft(ord(b.v^.xc[11]) & 16#F0, 4);
         boff := b.v^.xl[3];
         rebase := false;
       end
-      else if (n^.kind = tree_node) and (n^.xw[18] = 26) and
+      else if (n^.kind = tree_node) and (n^.tr_op = addr_top) and
               (n^.xp[10]^.kind = var_name) then begin
         boff := b.v^.xl[14];
         cls := b.v^.xw[36];
@@ -2897,7 +2899,7 @@ var
         ctx.subst := true;
       done := false;
       if (t^.kind = ptr_node) and (base^.kind = fortran_symbol) and
-         ((base^.xl[6] & 16#800000) <> 0) and
+         (var_$display_ptr in base^.fs_attr) and
          (oi_level_ptr_t(e^.caller)^.level <
           oi_level_ptr_t(e^.callee)^.level) then begin
         if ctx.sdn = nil then begin
@@ -2913,7 +2915,7 @@ var
         done := true;
       end
       else if (t^.kind = ptr_node) and (base^.kind = var_name) and
-              ((base^.xl[8] & 16#800000) <> 0) and
+              (var_$display_ptr in base^.vr_attr) and
               (base^.xp[1] = e^.caller^.xp[74]) then begin
         if ctx.sdn = nil then begin
           d := disp_offset(ctx.dnode) - off;
@@ -2929,7 +2931,7 @@ var
       end
       else if (t^.kind = ptr_node) and (base^.kind = ptr_node) and
               (base^.xp[6]^.kind = fortran_symbol) and
-              ((base^.xp[6]^.xl[6] & 16#800000) <> 0) and
+              (var_$display_ptr in base^.xp[6]^.fs_attr) and
               (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = fortran_symbol) and
               (integer(rshft(ord(ctx.sdn^.xp[8]^.xc[11]) & 16#F0, 4)) in [2, 5]) and
               (ctx.sdn^.xp[8]^.xl[3] > 0) and
@@ -2942,7 +2944,7 @@ var
       end
       else if (t^.kind = ptr_node) and (base^.kind = ptr_node) and
               (base^.xp[6]^.kind = var_name) and
-              ((base^.xp[6]^.xl[8] & 16#800000) <> 0) and
+              (var_$display_ptr in base^.xp[6]^.vr_attr) and
               (ctx.sdn <> nil) and (ctx.sdn^.xp[8]^.kind = var_name) and
               (ctx.sdn^.xp[8]^.xw[36] in [2, 5]) and
               (ctx.sdn^.xp[8]^.xl[14] > 0) and
@@ -2953,7 +2955,7 @@ var
         done := true;
       end
       else if (t^.kind = ptr_node) and (t^.xp[6]^.kind = tree_node) and
-              (t^.xp[6]^.xw[18] = 13) and
+              (t^.xp[6]^.tr_op = index_top) and
               (t^.xp[6]^.xp[10]^.kind = sb_register) and (cls in [1,
                   7]) then begin
         p := t;
@@ -3051,7 +3053,7 @@ begin
     end;
     assign_node:
       if (orig^.xp[16]^.kind = fortran_symbol) and
-         ((orig^.xp[16]^.xl[6] & 16#800000) <> 0) then
+         (var_$display_ptr in orig^.xp[16]^.fs_attr) then
         t := nil
       else if (t^.xp[17]^.kind = display_register) and
               not inline_$is_fortran_asf(e^.caller) then begin
@@ -3124,7 +3126,7 @@ begin
       t := n;
       if ctx.subst then
         t^.xw[8] := ctx.uses;
-      if (t^.xw[18] = 16) or (t^.xw[18] = 15) then begin
+      if (t^.tr_op = func_call_top) or (t^.tr_op = call_top) then begin
         ctx.call := t;
         process_operand(e, x, t^.xp[10], ctx, r);
         ctx.call := nil;
@@ -3132,7 +3134,7 @@ begin
           process_operand(e, x, t^.xp[9 + i], ctx, r);
         inline_$mark_reference_params(t, cur_stmt);
       end
-      else if t^.xw[18] = 13 then begin
+      else if t^.tr_op = index_top then begin
         if ctx.base = nil then
           ctx.base := orig;
         get_sym_ind_info(e, x, ctx, raw, sub);
@@ -3159,7 +3161,7 @@ begin
         t^.xw[8] := ctx.uses;
       process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
       if (t^.kind = ptr_node) and (t^.xp[6]^.kind = tree_node) and
-         (t^.xp[6]^.xw[18] = 26) then
+         (t^.xp[6]^.tr_op = addr_top) then
         t := t^.xp[6]^.xp[10];
       if r.node = orig then
         apply_disp(e, orig, ctx, r, t)
@@ -3214,7 +3216,8 @@ begin
       process_operand(e, x, t^.xp[8], ctx, r);
       if t^.xp[8]^.kind = ptr_node then
         t^.xp[8] := t^.xp[8]^.xp[6]
-      else if (t^.xp[8]^.kind = tree_node) and (t^.xp[8]^.xw[18] = 26) then
+      else if (t^.xp[8]^.kind = tree_node) and
+              (t^.xp[8]^.tr_op = addr_top) then
         t^.xp[8] := t^.xp[8]^.xp[10];
       process_opr_ind(e, x, t, t^.xp[6], t^.xp[7], ctx, r, orig);
       if t^.xp[8] = nil then
@@ -3342,7 +3345,7 @@ var
   info: oi_info_t;
 begin
   e^.callee^.xw[132] := e^.callee^.xw[132] - 1;
-  e^.callee^.xc[374] := chr(ord(e^.callee^.xc[374]) ! 2);
+  e^.callee^.blk_atts.inlined := true;
   cal := e^.callee;
   caller_blk := gspace(396);
   caller_blk^.kind := inner_blk;
@@ -3352,7 +3355,7 @@ begin
   caller_blk^.xw[188] := caller_blk^.xw[188] & 16#FE7F;
   caller_blk^.xc[377] := chr((ord(caller_blk^.xc[377]) & 16#8F) !
                              (ord(cal^.xc[377]) & 16#70));
-  caller_blk^.xc[378] := chr(ord(caller_blk^.xc[378]) ! 128);
+  caller_blk^.blk_atts.sb_display := true;
   caller_blk^.xp[47] := cal^.xp[47];
   caller_blk^.xp[48] := cal^.xp[48];
   oi_level_ptr_t(caller_blk)^.level := oi_level_ptr_t(cal)^.level;
@@ -3413,8 +3416,8 @@ begin
     until w = nil;
     e^.scope^.xp[5] := v;
   end;
-  if ord(e^.callee^.xc[376]) >= 128 then
-    e^.caller^.xc[376] := chr(ord(e^.caller^.xc[376]) ! 128);
+  if e^.callee^.blk_atts.need_fp_fcw then
+    e^.caller^.blk_atts.need_fp_fcw := true;
 end;
 
 { cleanup_expansion - block b's storage after expansions: the data
@@ -3476,12 +3479,12 @@ var
   found: boolean;
 begin
   cal := e^.callee;
-  if ord(cal^.xc[375]) < 128 then begin
+  if not cal^.blk_atts.inlineable then begin
     call_status := 27;
     return;
   end;
   if e^.caller^.xp[47] <> cal^.xp[47] then
-    if (ord(cal^.xc[375]) & 32) = 0 then begin
+    if not cal^.blk_atts.inline then begin
       call_status := 43;
       return;
     end;
@@ -3573,7 +3576,7 @@ begin
     call_status := 39;
     return;
   end;
-  if ((ord(cal^.xc[375]) & 32) = 0) and not cargs_$options.force_inline then
+  if (not cal^.blk_atts.inline) and not cargs_$options.force_inline then
     if (cal^.xw[136] & 16#FFFF) > 100 then begin
       call_status := 39;
       return;
@@ -3581,7 +3584,7 @@ begin
   v := cal^.xp[4];
   found := false;
   while (v <> nil) and not found do
-    if rshft(ord(e^.callee^.xc[377]) & 16#70, 4) = 2 then begin
+    if e^.callee^.blk_atts.call = call_ftn then begin
       found := (v^.xw[13] & 16#100) <> 0;
       v := v^.xp[1];
     end
@@ -3682,10 +3685,10 @@ begin
   if not ((b^.kind = procedure_blk) or (b^.kind = function_blk)
           or (b^.kind = program_blk)) then
     return;
-  if odd(ord(b^.xc[374])) then
+  if b^.blk_atts.expanded then
     return;
-  b^.xc[374] := chr(ord(b^.xc[374]) ! 1);
-  b^.xc[379] := chr(ord(b^.xc[379]) ! 2);
+  b^.blk_atts.expanded := true;
+  b^.blk_atts.visited_depth_first := true;
   expanded := false;
   ed := oi_edge_ptr_t(b^.xp[61]);
   while ed <> nil do begin
@@ -3695,9 +3698,9 @@ begin
       if ed^.callee^.kind in [program_blk..function_blk, inner_blk,
                               blockdata_blk] then begin
         c := ed^.callee;
-        if (ord(c^.xc[379]) & 2) <> 0 then begin
-          if ((ord(c^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
-            if ord(c^.xc[375]) >= 128 then
+        if c^.blk_atts.visited_depth_first then begin
+          if c^.blk_atts.inline or cargs_$options.force_inline then
+            if c^.blk_atts.inlineable then
               if x.line <> 0 then
                 cgerr(38, x.line, c^.xp[74]);
         end
@@ -3720,8 +3723,8 @@ begin
           end
           else if st <> 27 then begin
             c := ed^.callee;
-            if ((ord(c^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
-              if ord(c^.xc[375]) >= 128 then
+            if c^.blk_atts.inline or cargs_$options.force_inline then
+              if c^.blk_atts.inlineable then
                 if x.line <> 0 then
                   cgerr(st, x.line, c^.xp[74]);
           end;
@@ -3735,7 +3738,7 @@ begin
     cleanup_expansion(b);
     cleanup_hash(b, 1);
   end;
-  b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+  b^.blk_atts.visited_depth_first := false;
 end;
 
 { check_call_sites_and_expand - the heap set up ('opt_inline'), the
@@ -3760,14 +3763,14 @@ begin
   end;
   b := il_184;
   while b <> nil do begin
-    b^.xc[379] := chr(ord(b^.xc[379]) & 16#FD);
+    b^.blk_atts.visited_depth_first := false;
     b^.xw[145] := il_utl_$count_vars(b);
     b := b^.xp[1];
   end;
   nil_out_dispinfo(empty_info);
   b := il_184;
   while b <> nil do begin
-    if (ord(b^.xc[374]) & 8) <> 0 then
+    if b^.blk_atts.visible then
       dfs_walk(b);
     b := b^.xp[1];
   end;
@@ -3967,7 +3970,7 @@ begin
     return;
   if not ((b^.kind = function_blk) or (b^.kind = procedure_blk)) then
     return;
-  if (ord(b^.xc[375]) & 64) <> 0 then
+  if b^.blk_atts.noinline then
     return;
   if inline_$is_fortran_asf(b) then begin
     if not (25 in cargs_$options.opt_on) then
@@ -3976,7 +3979,7 @@ begin
   else begin
     if not (24 in cargs_$options.opt_on) then
       return;
-    if (ord(b^.xc[375]) & 32) = 0 then
+    if not b^.blk_atts.inline then
       if not (26 in cargs_$options.opt_on) then
         return;
   end;
@@ -3994,7 +3997,7 @@ begin
   if b^.xp[48]^.xl[5] > 24576 then
     if not (3 in cargs_$options.cpu) then
       return;
-  if ((ord(b^.xc[375]) & 32) = 0) and not cargs_$options.force_inline then
+  if (not b^.blk_atts.inline) and not cargs_$options.force_inline then
     if (b^.xw[136] & 16#FFFF) > 100 then
       return;
   n := b^.xp[1];
@@ -4082,7 +4085,7 @@ begin
       p := p^.xp[1];
   end;
   callee_status := 36;
-  if (ord(b^.xc[374]) & 32) <> 0 then
+  if b^.blk_atts.resident_proc then
     return;
   v := function_return(b);
   if v <> nil then
@@ -4120,18 +4123,18 @@ begin
     if il_d4^.kind = label_node then
       if il_d4^.xp[2]^.kind = block_entry_node then begin
         b := il_d4^.xp[2]^.xp[12];
-        language := rshft(ord(b^.xc[377]) & 16#70, 4);
+        language := b^.blk_atts.call;
         if language in [1..4] then
           if (cargs_$options.opt_on * [24..26]) <> [] then begin
             b := il_184;
             while b <> nil do begin
               status := callee_status(b);
               if status = 63 then begin
-                b^.xc[375] := chr(ord(b^.xc[375]) ! 128);
+                b^.blk_atts.inlineable := true;
                 any := true;
               end
               else if status <> 27 then
-                if ((ord(b^.xc[375]) & 32) <> 0) or cargs_$options.force_inline then
+                if b^.blk_atts.inline or cargs_$options.force_inline then
                   if b^.xw[150] <> 0 then begin
                     if inline_$is_fortran_asf(b) then
                       report := 25 in cargs_$options.opt_on
@@ -4184,26 +4187,26 @@ begin
     if (b^.kind = program_blk) or (b^.kind = function_blk)
         or (b^.kind = procedure_blk) then begin
       if ed = nil then begin
-        if (ord(b^.xc[379]) & 32) = 0 then
-          b^.xc[379] := chr(ord(b^.xc[379]) ! 16)
+        if not b^.blk_atts.calls_extern_non_lib_routine then
+          b^.blk_atts.never_entered_recursively := true
         else
-          b^.xc[379] := chr(ord(b^.xc[379]) & 16#EF);
-        b^.xc[379] := chr(ord(b^.xc[379]) & 16#F7);
+          b^.blk_atts.never_entered_recursively := false;
+        b^.blk_atts.b379_3 := false;
       end
       else
         while ed <> nil do begin
           inline_$mark_reference_params(ed^.call, ed^.stmt);
           if ed^.callee = b then
-            b^.xc[379] := chr(ord(b^.xc[379]) ! 8);
+            b^.blk_atts.b379_3 := true;
           ed := ed^.caller_next;
         end;
       if b^.kind = program_blk then begin
-        b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
-        b^.xc[379] := chr(ord(b^.xc[379]) & 16#F7);
+        b^.blk_atts.never_entered_recursively := true;
+        b^.blk_atts.b379_3 := false;
       end;
     end;
     if target_properties.p_10 = 0 then
-      b^.xc[378] := chr(ord(b^.xc[378]) ! 16);
+      b^.blk_atts.must_have_own_frame := true;
     b := b^.xp[1];
   end;
   repeat
@@ -4212,38 +4215,38 @@ begin
     while b <> nil do begin
       if (b^.kind = program_blk) or (b^.kind = function_blk)
           or (b^.kind = procedure_blk) then begin
-        if (ord(b^.xc[379]) & 32) = 0 then begin
+        if not b^.blk_atts.calls_extern_non_lib_routine then begin
           all := true;
           ed := oi_edge_ptr_t(b^.xp[61]);
           while ed <> nil do begin
             if all and (ed^.callee <> nil) then
-              all := (ord(ed^.callee^.xc[379]) & 16) <> 0
+              all := ed^.callee^.blk_atts.never_entered_recursively
             else
               all := false;
             ed := ed^.caller_next;
           end;
-          if all and ((ord(b^.xc[379]) & 16) = 0) then begin
-            b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+          if all and (not b^.blk_atts.never_entered_recursively) then begin
+            b^.blk_atts.never_entered_recursively := true;
             done := false;
           end;
         end;
-        if (ord(b^.xc[374]) & 8) = 0 then begin
+        if not b^.blk_atts.visible then begin
           all := true;
           ed := oi_edge_ptr_t(b^.xp[63]);
           while ed <> nil do begin
-            all := all and ((ord(ed^.caller^.xc[379]) & 16) <> 0);
+            all := all and ed^.caller^.blk_atts.never_entered_recursively;
             ed := ed^.callee_next;
           end;
-          if all and ((ord(b^.xc[379]) & 16) = 0) then begin
-            b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+          if all and (not b^.blk_atts.never_entered_recursively) then begin
+            b^.blk_atts.never_entered_recursively := true;
             done := false;
           end;
         end;
         r := b;
       end;
       if b^.kind = inner_blk then
-        if (ord(r^.xc[379]) & 16) <> 0 then
-          b^.xc[379] := chr(ord(b^.xc[379]) ! 16);
+        if r^.blk_atts.never_entered_recursively then
+          b^.blk_atts.never_entered_recursively := true;
       b := b^.xp[1];
     end;
   until done;

@@ -368,7 +368,7 @@ var
       available := [0..7, 24..26]
     else if 2 in r^.flags then
       available := [8..12, 27..29]
-    else if (4 in r^.flags) and ((ord(il_180^.xc[376]) & 16#80) <> 0) and
+    else if (4 in r^.flags) and il_180^.blk_atts.need_fp_fcw and
             not cargs_$options.frnd then
       available := [16..23, 30..31]
     else
@@ -408,7 +408,7 @@ var
     fewest := 32767;
     for s := r^.first to r^.last do begin
       st := opt_4009c[s];
-      if st^.hdr.deleted then
+      if st^.hdr.stmt_eliminated then
         next;
       if (r^.node = nil) or (r^.node^.kind <> cse_parent_ob) then
         if not test_stmt(r, s * 2) then
@@ -638,7 +638,7 @@ begin
           paint(y, col);
         end
         else begin
-          if (2 in y^.flags) and (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2) then
+          if (2 in y^.flags) and (il_180^.blk_atts.call <> call_ftn) then
             y^.flags := y^.flags + [3]
           else
             y^.flags := y^.flags + [0];
@@ -682,15 +682,15 @@ begin
           paint(x, pickcolor(x));
           t := x^.node;
           if t^.kind = cse_parent_ob then
-            t^.xp[1]^.xw[12] := 4
+            t^.xp[1]^.tr_rlen := rlen_long
           else if t^.kind = fortran_symbol then begin
-            if (t^.xl[6] & 16#20000) <> 0 then
+            if var_$strength_reduction in t^.fs_attr then
               t^.xc[10] := chr((ord(t^.xc[10]) & 16#F0) ! 3);
           end
           else if t^.kind = tree_node then
-            t^.xw[12] := 4
+            t^.tr_rlen := rlen_long
           else if t^.kind = cse_use_ob then
-            t^.xp[5]^.xw[12] := 4;
+            t^.xp[5]^.tr_rlen := rlen_long;
           x^.rlen := rlen_long;
         end;
       end;

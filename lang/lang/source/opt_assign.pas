@@ -324,7 +324,8 @@ var
     k := v^.kind;
     if (k = fortran_symbol) or (k = var_name) then
       if (k = var_name) and (v^.xp[7]^.kind <> procedure_blk) and
-         ((v^.xl[8] & 16#201001) = 0) then begin
+         (v^.vr_attr * [var_$volatile, var_$address_exposed,
+                        var_$nooptimize] = []) then begin
         type_exp(v, addr(te));
         if ((v^.xw[36] = 5) and (v^.xp[7]^.kind = param_name))
             or te.flags.ranged or
@@ -353,7 +354,8 @@ var
                 begin
                   f := rshft(ord(v^.xc[11]) & 16#F0, 4);
                   if not (f in [3, 4, 8]) then
-                    if (v^.xl[6] & 16#201001) = 0 then
+                    if v^.fs_attr * [var_$volatile, var_$address_exposed,
+                                     var_$nooptimize] = [] then
                       var_is_ok := false;
                 end;
       end;
@@ -388,21 +390,21 @@ var
       return;
     if t^.asg_op in [strcat_aop..strncpy_aop] then
       return;
-    if t^.hdr.no_prune or t^.hdr.deleted then
+    if t^.hdr.contains_cse or t^.hdr.stmt_eliminated then
       return;
-    if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) and
+    if (il_180^.blk_atts.call = call_ftn) and
        (18 in cargs_$options.opt_on) then
       return;
     lhs := t^.asg_lhs;
     if lhs^.kind = fortran_symbol then
-      if (lhs^.xl[6] & 16#200000) <> 0 then
+      if var_$nooptimize in lhs^.fs_attr then
         return;
     if lhs^.kind = var_name then
-      if (lhs^.xl[8] & 16#200000) <> 0 then
+      if var_$nooptimize in lhs^.vr_attr then
         return;
     if (getphase(t^.asg_rhs) + getphase(t^.asg_lhs)) * [phase_vol, phase_volexpr] <> [] then
       return;
-    if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+    if il_180^.blk_atts.call = call_ftn then
       if (t^.asg_rhs^.kind = cs_node)
           or (t^.asg_rhs^.kind = char_string_ob) then
         return;
@@ -484,7 +486,7 @@ var
           else
             return;
         ptr_node: begin
-          f := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+          f := il_180^.blk_atts.call;
           if (a^.xp[6] <> b^.xp[6]) or (a^.xp[7] <> b^.xp[7]) or
              (f in [3, 4]) then
             return;
@@ -562,7 +564,7 @@ begin
       if at_offset(prev^.asg_lhs, size_a, t^.asg_lhs, tsize, diff) = 2 then begin
         merge_assignments(prev, t, diff);
         adjust_uc(t^.asg_lhs, -1);
-        t^.hdr.deleted := true;
+        t^.hdr.stmt_eliminated := true;
         t^.prev^.next := t^.next;
         t^.next^.prev := t^.prev;
         t := t^.next;
@@ -706,7 +708,7 @@ begin
         q := q^.next;
       adjust_uc(q^.asg_rhs, -1);
       adjust_uc(q^.asg_lhs, -1);
-      q^.hdr.deleted := true;
+      q^.hdr.stmt_eliminated := true;
       q := q^.next;
     end;
     if t^.prev^.kind = use_def_ob then

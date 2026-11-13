@@ -357,7 +357,7 @@ var
 begin
   for k := 1 to n do begin
     v := r^[k].node;
-    if (v^.kind = var_name) and ((v^.xl[8] & 16#40000) = 0) then begin
+    if (v^.kind = var_name) and (not (var_$allocated in v^.vr_attr)) then begin
       if (2 in r^[k].flags) or (r^[k].avail * [8..11] <> []) then
         short := false
       else if v^.xp[7] = runbackend_10 then
@@ -385,7 +385,7 @@ begin
     k := 1;
     repeat
       v := r^[k].node;
-      if (v^.kind = var_name) and ((v^.xl[8] & 16#40000) = 0) and
+      if (v^.kind = var_name) and (not (var_$allocated in v^.vr_attr)) and
          (v^.xw[36] <> 3) and (v^.xl[14] = 0) and (v^.xw[36] <> 10) and
          not ((v^.xp[7]^.kind = function_blk)
               or (v^.xp[7]^.kind = procedure_blk)) then begin
@@ -396,7 +396,7 @@ begin
         if odd(d.size) then
           d.size := d.size + 1;
         if d.size >= a then begin
-          v^.xl[8] := v^.xl[8] ! 16#40000;
+          v^.vr_attr := v^.vr_attr + [var_$allocated];
           if (v^.xw[36] = 1) or (v^.xw[36] = 4) then begin
             sect := il_180^.xp[48];
             if (sect^.xl[5] + d.size > 24576) and
@@ -484,7 +484,7 @@ begin
       if v^.kind = fortran_symbol then
         if il_utils_$is_strength_reduction_temp(v) then
           if r^[k].reg = 31 then
-            if (r^[k].node^.xl[6] & 16#40000) = 0 then begin
+            if not (var_$allocated in r^[k].node^.fs_attr) then begin
               sz := 0;
               case ord(v^.xc[10]) & 15 of
                 1: sz := 1;
@@ -499,7 +499,7 @@ begin
               if sz >= a then begin
                 v^.xc[11] := chr((ord(v^.xc[11]) & 16#0F) ! 16#60);
                 v := r^[k].node;
-                v^.xl[6] := v^.xl[6] ! 16#40000;
+                v^.fs_attr := v^.fs_attr + [var_$allocated];
                 cls := rshft(ord(v^.xc[11]) & 16#F0, 4);
                 if cls in [1, 4, 7, 8, 11] then begin
                   sect := il_180^.xp[48];
@@ -738,7 +738,8 @@ var
       return;
     t := e^.node;
     if t^.kind = var_name then begin
-      if (t^.xl[8] & 16#201101) <> 0 then
+      if t^.vr_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                       var_$nooptimize] <> [] then
         return;
       if opt_var_types^[v].base = nil then
         return;
@@ -749,7 +750,7 @@ var
       if opt_var_types^[v].base^.kind = real_type then begin
         if cargs_$options.cpu * [2, 4, 8..10] = [] then
           return;
-        if (ord(il_180^.xc[376]) & 16#80) = 0 then
+        if not il_180^.blk_atts.need_fp_fcw then
           return;
       end;
       if (opt_4009c[opt_region]^.vars^[v]^.flags & 8) <> 0 then
@@ -769,11 +770,12 @@ var
         return;
       if (t^.xw[13] & 16#100) <> 0 then
         return;
-      if (t^.xl[6] & 16#201001) <> 0 then
+      if t^.fs_attr * [var_$volatile, var_$address_exposed,
+                       var_$nooptimize] <> [] then
         return;
       if t^.xl[8] <> 0 then
         if rshft(ord(t^.xc[11]) & 16#F0, 4) = 5 then
-          t^.xl[6] := t^.xl[6] & ~16#200000;
+          t^.fs_attr := t^.fs_attr - [var_$nooptimize];
       t := e^.node;
       sz := ord(t^.xc[10]) & 15;
       if sz in [6, 13] then
@@ -783,7 +785,7 @@ var
       if (cls <> 5) and (sz in [4, 5]) then begin
         if cargs_$options.cpu * [2, 4, 8..10] = [] then
           return;
-        if (ord(il_180^.xc[376]) & 16#80) = 0 then
+        if not il_180^.blk_atts.need_fp_fcw then
           return;
       end;
       if cls = 7 then
@@ -807,14 +809,14 @@ var
       ch := e^.du;
       while ch <> nil do begin
         st := ch^.stmt;
-        if st^.hdr.b4 then begin
+        if st^.hdr.contains_fp_expr then begin
           defined_var := true;
           return;
         end;
         if (st^.kind = use_def_ob) or (st^.kind = assign_node) then begin
           if st^.kind = assign_node then
             if st^.asg_rhs <> e^.node then
-              if st^.hdr.b4 then begin
+              if st^.hdr.contains_fp_expr then begin
                 defined_var := true;
                 return;
               end;
@@ -825,7 +827,7 @@ var
         end;
         ch := ch^.next;
       end;
-      e^.node^.xl[6] := e^.node^.xl[6] ! 16#200000;
+      e^.node^.fs_attr := e^.node^.fs_attr + [var_$nooptimize];
     end
     else
       defined_var := true;
@@ -1027,7 +1029,7 @@ begin
                              'final edition', 13);
             insert_reg_stmts(reg_ranges, reg_nranges);
             editregassign(reg_ranges, reg_nranges);
-            if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+            if il_180^.blk_atts.call <> call_ftn then
               alloc_comp_vars(reg_ranges, reg_nranges)
             else
               alloc_ftn_vars(reg_ranges, reg_nranges);

@@ -99,7 +99,7 @@ begin
   if s^.line = spos_$null_position then begin
     p := start;
     while (p^.prev <> nil) and
-          ((p^.line = spos_$null_position) or p^.hdr.b7) do
+          ((p^.line = spos_$null_position) or p^.hdr.inliner_generated_stmt) do
       p := p^.prev;
   end;
   opt_livevar_$find_nearest_spos_node := p;
@@ -161,7 +161,7 @@ procedure opt_livevar_$report_removal(
 var
   p: g_opt_stmt_ptr_t;
 begin
-  if not (s^.hdr.b7 or s^.hdr.b5) then
+  if not (s^.hdr.inliner_generated_stmt or s^.hdr.compiler_generated_stmt) then
     if not opt_livevar_$formal_value_param_copy(s) then
       if not opt_livevar_$store_to_stack_temp(s) then begin
         p := opt_livevar_$find_nearest_spos_node(s, start);
@@ -317,7 +317,7 @@ begin
     dead := true;
     while u <> nil do begin
       us := u^.u_ent;
-      if not us^.hdr.deleted then
+      if not us^.hdr.stmt_eliminated then
         if not ((us^.kind = eval_node) and (us^.eval_count = 1) and
                 (us^.eval_opnd[1]^.kind = integer_ob)) then
           dead := false;
@@ -328,7 +328,7 @@ begin
     p := p^.p_next;
   end;
   if opt_4009c[r]^.cses = nil then
-    opt_4009c[r]^.hdr.no_prune := false;
+    opt_4009c[r]^.hdr.contains_cse := false;
 end;
 
 { build_du_chains - for each region statement r (from opt_region on, in
@@ -594,7 +594,9 @@ begin
         if n^.kind = var_name then begin
           if n^.xw[36] = 5 then
             keep := true
-          else if (n^.xl[8] & 16#201101) <> 0 then
+          else if n^.vr_attr * [var_$volatile, var_$uplevel,
+                                var_$address_exposed,
+                                var_$nooptimize] <> [] then
             keep := true
           else begin
             if n^.xw[36] in [1, 3, 4, 7, 8, 10, 11] then
@@ -602,7 +604,7 @@ begin
                  ((ord(n^.xc[35]) & 16#40) <> 0) then
                 keep := true;
             if not keep then
-              if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 3 then
+              if il_180^.blk_atts.call = call_c then
                 if s^.asg_rhs^.kind = integer_ob then
                   if n^.xp[1] = il_180^.xp[74] then
                     keep := true;
@@ -611,7 +613,9 @@ begin
         else if n^.kind = fortran_symbol then begin
           if rshft(ord(n^.xc[44]) & 16#F0, 4) = 3 then begin
             f := rshft(ord(n^.xc[11]) & 16#F0, 4);
-            if (f = 5) or ((n^.xl[6] & 16#201101) <> 0) or
+            if (f = 5) or (n^.fs_attr * [var_$volatile, var_$uplevel,
+                                         var_$address_exposed,
+                                         var_$nooptimize] <> []) or
                ((ord(n^.xc[44]) & 16#04) <> 0) then
               keep := true
             else if f in [1, 3, 4, 7, 8, 10, 11] then
@@ -634,7 +638,8 @@ begin
         adjust_uc(s^.asg_lhs, -1);
         ph := getphase(s^.asg_rhs);
         if (ph * [phase_vol, phase_volexpr, phase_sd_eff] <> []) or
-           (s^.hdr.first and s^.hdr.last) or s^.hdr.no_prune then begin
+           (s^.hdr.begins_basic_block and s^.hdr.ends_basic_block) or
+           s^.hdr.contains_cse then begin
           { An evaluation of the right side in its place. }
           x := s^.asg_rhs;
           if ph * [phase_vol, phase_volexpr] <> [] then begin
@@ -648,12 +653,13 @@ begin
           lv_head_ptr_t(addr(t^.prev))^ := lv_head_ptr_t(addr(opt_4009c[r]^.prev))^;
           t^.hdr.vnum := 0;
           if ph * [phase_vol, phase_volexpr, phase_sd_eff] = [] then
-            if s^.hdr.no_prune then begin
+            if s^.hdr.contains_cse then begin
               rr := r;
               check_cse_uses(rr);
             end;
-          if (ph * [phase_vol, phase_volexpr, phase_sd_eff] = []) and s^.hdr.first and s^.hdr.last and
-             not s^.hdr.no_prune then begin
+          if (ph * [phase_vol, phase_volexpr, phase_sd_eff] = []) and
+             s^.hdr.begins_basic_block and s^.hdr.ends_basic_block and
+             not s^.hdr.contains_cse then begin
             { A lone store of no effects: an evaluation of 0. }
             opt_4009c[r] := t;
             t^.prev^.next := t;
@@ -670,9 +676,9 @@ begin
             t^.prev^.next := t;
             t^.next^.prev := t;
             g_opt_nodes_ptr_t(il_120)^[s^.hdr.num] := il_$node_ptr_t(t);
-            if s^.hdr.first then
+            if s^.hdr.begins_basic_block then
               s^.block^.first_stmt := t;
-            if s^.hdr.last then
+            if s^.hdr.ends_basic_block then
               s^.block^.last_stmt := t;
             opt_4009c[r]^.eval_opnd[1] := x;
           end;
@@ -684,12 +690,17 @@ begin
                 if t^.eval_opnd[1]^.kind = integer_ob then
                   if t^.eval_opnd[1]^.int_value = 0 then begin
                     with s^.hdr do begin
-                      b7 := false; b6 := false; b5 := false; b4 := false;
-                      b3 := false; counted := false; no_prune := false;
-                      deleted := true;
-                      b42_7 := false; b42_6 := false; kills := false;
-                      b42_4 := false; last := false; b42_2 := false;
-                      first := false; entry := false;
+                      inliner_generated_stmt := false;
+                      pascal_for_loop := false;
+                      compiler_generated_stmt := false;
+                      contains_fp_expr := false; loophascalls := false;
+                      defsubtracted := false; contains_cse := false;
+                      stmt_eliminated := true;
+                      constant_assign := false; b42_6 := false;
+                      contains_call_w_simple_p := false;
+                      contains_user_call := false; ends_basic_block := false;
+                      ends_proc := false; begins_basic_block := false;
+                      begins_proc := false;
                     end;
                     if s^.vset <> nil then
                       if s^.vset^ <> [] then begin
@@ -702,27 +713,27 @@ begin
         else begin
           { Unlinked. }
           adjust_uc(s^.asg_rhs, -1);
-          if s^.hdr.first then begin
+          if s^.hdr.begins_basic_block then begin
             nr := s^.next^.hdr.region;
-            s^.hdr.first := false;
+            s^.hdr.begins_basic_block := false;
             if (nr = 0) and (s^.next^.kind = assign_node) and
                il_utils_$is_strength_reduction_temp(s^.next^.asg_lhs) then begin
               s^.block^.first_stmt := s^.next;
-              s^.next^.hdr.first := true;
+              s^.next^.hdr.begins_basic_block := true;
             end
             else begin
-              opt_4009c[nr]^.hdr.first := true;
+              opt_4009c[nr]^.hdr.begins_basic_block := true;
               s^.block^.first_stmt := opt_4009c[nr];
             end;
           end
-          else if s^.hdr.last then begin
+          else if s^.hdr.ends_basic_block then begin
             nr := s^.prev^.hdr.region;
-            s^.hdr.last := false;
+            s^.hdr.ends_basic_block := false;
             if (nr = 0) and (s^.prev^.kind = assign_node) and
                il_utils_$is_strength_reduction_temp(s^.prev^.asg_lhs) then
               s^.block^.last_stmt := s^.prev
             else begin
-              opt_4009c[nr]^.hdr.last := true;
+              opt_4009c[nr]^.hdr.ends_basic_block := true;
               s^.block^.last_stmt := opt_4009c[nr];
             end;
           end;
@@ -736,12 +747,14 @@ begin
           if s^.vset <> nil then
             s^.vset^ := [];
           with s^.hdr do begin
-            b7 := false; b6 := false; b5 := false; b4 := false;
-            b3 := false; counted := false; no_prune := false;
-            deleted := true;
-            b42_7 := false; b42_6 := false; kills := false;
-            b42_4 := false; last := false; b42_2 := false;
-            first := false; entry := false;
+            inliner_generated_stmt := false; pascal_for_loop := false;
+            compiler_generated_stmt := false; contains_fp_expr := false;
+            loophascalls := false; defsubtracted := false;
+            contains_cse := false; stmt_eliminated := true;
+            constant_assign := false; b42_6 := false;
+            contains_call_w_simple_p := false; contains_user_call := false;
+            ends_basic_block := false; ends_proc := false;
+            begins_basic_block := false; begins_proc := false;
           end;
         end;
       end;
@@ -873,7 +886,8 @@ begin
         add_constant(c, opt_4009c[lv_cur]^.block);
       end;
       if v <> 0 then begin
-        if (n^.xl[8] & 16#201001) <> 0 then
+        if n^.vr_attr * [var_$volatile, var_$address_exposed,
+                         var_$nooptimize] <> [] then
           if not odd(ff) then
             return;
         if (opt_4009c[opt_region]^.vars^[v]^.flags & 4) <> 0 then
@@ -922,10 +936,11 @@ begin
               opt_used^[k] := opt_used^[k] + [v];
         if s^.hdr.vnum = v then
           opt_not_killed^[k] := opt_not_killed^[k] - [v];
-        if s^.hdr.kills then begin
+        if s^.hdr.contains_call_w_simple_p then begin
           n := opt_4009c[opt_region]^.vars^[v]^.node;
           if n^.kind = var_name then
-            if (n^.xl[8] & 16#201101) <> 0 then
+            if n^.vr_attr * [var_$volatile, var_$uplevel,
+                             var_$address_exposed, var_$nooptimize] <> [] then
               opt_not_killed^[k] := opt_not_killed^[k] - [v];
         end;
       end;
@@ -957,7 +972,7 @@ var
   sn: g_opt_num_t;
   live: g_opt_varset_t;
 begin
-  is_c := rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2;
+  is_c := il_180^.blk_atts.call = call_ftn;
   repeat
     stable := true;
     i := opt_last_block;
@@ -1015,7 +1030,7 @@ begin
       return;
     if s = nil then
       return;
-  until (s^.kind = assign_node) and s^.hdr.b6;
+  until (s^.kind = assign_node) and s^.hdr.pascal_for_loop;
   lhs := s^.asg_lhs;
   v := s^.hdr.vnum;
   if v <= 0 then
@@ -1170,8 +1185,8 @@ begin
       end;
       e := opt_4009c[lv_cur];
       if e^.hdr.vnum <> 0 then
-        if not e^.hdr.counted then begin
-          e^.hdr.counted := true;
+        if not e^.hdr.defsubtracted then begin
+          e^.hdr.defsubtracted := true;
           if e^.vars <> nil then
             if e^.vars^[e^.hdr.vnum] <> nil then
               with e^.vars^[e^.hdr.vnum]^ do
@@ -1188,10 +1203,10 @@ begin
       b := g_opt_blocks_ptr_t(il_11c)^[k];
       if b^.flags.header then
         if 11 in cargs_$options.opt_on then
-          if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 1) or
-             (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 6) then
+          if (il_180^.blk_atts.call = call_pas) or
+             (il_180^.blk_atts.call = 6) then
             if b^.first_stmt^.kind = label_node then
-              if rshft(ord(il_$node_ptr_t(b^.first_stmt)^.xc[72]) & 16#3E, 1) = 8 then
+              if il_$node_ptr_t(b^.first_stmt)^.lab_atts.class = lbl_for_start then
                 for_check(k);
       if b^.flags.b7 or b^.flags.skip then
         for v := 1 to il_180^.xw[145] do

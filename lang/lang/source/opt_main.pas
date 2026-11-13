@@ -335,7 +335,7 @@ begin
     if il_d4^.kind = label_node then begin
       e := il_d4^.xp[2];
       if e^.kind = block_entry_node then begin
-        k := rshft(ord(g_opt_stmt_ptr_t(e)^.x48^.xc[377]) & 16#70, 4);
+        k := g_opt_stmt_ptr_t(e)^.x48^.blk_atts.call;
         assert_language_on_il_spine_is_ada := k in [5];
       end;
     end;
@@ -578,7 +578,7 @@ function assert_is_artificial_label(
 begin
   if assert_is_label(n) then
     assert_is_artificial_label :=
-      rshft(ord(n^.xc[72]) & 16#3E, 1) in [1..10, 16]
+      n^.lab_atts.class in [lbl_endif..lbl_for_exit, lbl_case_endte]
   else
     assert_is_artificial_label := false;
 end;
@@ -598,7 +598,8 @@ begin
     l := g_opt_stmt_ptr_t(n)^.br_target;
     if assert_is_label(l) then
       assert_is_unconditional_branch_to_artificial_label :=
-        rshft(ord(l^.xc[72]) & 16#3E, 1) in [1..10, 12, 16];
+        l^.lab_atts.class in [lbl_endif..lbl_for_exit, lbl_return,
+                                 lbl_case_endte];
   end;
 end;
 
@@ -617,7 +618,8 @@ begin
     l := g_opt_stmt_ptr_t(n)^.br_target;
     if assert_is_label(l) then
       assert_is_conditional_branch_to_artificial_label :=
-        rshft(ord(l^.xc[72]) & 16#3E, 1) in [2..10, 12, 16];
+        l^.lab_atts.class in [lbl_while_start..lbl_for_exit, lbl_return,
+                                 lbl_case_endte];
   end;
 end;
 
@@ -1017,7 +1019,7 @@ function assert_is_entry_label(
 begin
   if not assert_is_label(n) then
     assert_is_entry_label := false
-  else if rshft(ord(n^.xc[72]) & 16#3E, 1) = 13 then
+  else if n^.lab_atts.class = lbl_proc then
     assert_is_entry_label := assert_is_entry_block_entry(n^.xp[2])
   else
     assert_is_entry_label := false;
@@ -1067,7 +1069,7 @@ begin
 end;
 
 { assert_reached_by_linear_flow_from_previous_basic_block - s starts a
-  block (hdr.first) and the statement before it does not leave by an
+  block (hdr.begins_basic_block) and the statement before it does not leave by an
   unconditional branch or the end of a routine (149, not of a 172).
 
   0x0DB818, 0x5A bytes. }
@@ -1079,7 +1081,7 @@ var
 begin
   assert_reached_by_linear_flow_from_previous_basic_block := false;
   if assert_is_top_level_statement(il_$node_ptr_t(s)) then
-    if s^.hdr.first then
+    if s^.hdr.begins_basic_block then
       if not assert_is_unconditional_branch(il_$node_ptr_t(s^.prev)) then
         if s^.prev <> nil then begin
           p := s^.prev;
@@ -1091,7 +1093,7 @@ begin
         end;
 end;
 
-{ mark_if_begins_basic_block - s starts a basic block (hdr.first) when
+{ mark_if_begins_basic_block - s starts a basic block (hdr.begins_basic_block) when
   it is a label, or follows a branch, or is an empty evaluation (after
   any statement).
 
@@ -1103,12 +1105,12 @@ begin
   if not assert_is_top_level_statement(il_$node_ptr_t(s)) then
     bug_check('OPT_MAIN_\MARK_IF_BEGINS_BASIC_BLOCK -- statement not a top level object%.');
   if assert_is_label(il_$node_ptr_t(s)) then
-    s^.hdr.first := true
+    s^.hdr.begins_basic_block := true
   else if s^.prev <> nil then
     if assert_is_branch(il_$node_ptr_t(s^.prev)) then
-      s^.hdr.first := true
+      s^.hdr.begins_basic_block := true
     else if assert_is_childless_eval(il_$node_ptr_t(s)) then
-      s^.hdr.first := true;
+      s^.hdr.begins_basic_block := true;
 end;
 
 { mark_begins_basic_block - s starts a basic block.
@@ -1120,7 +1122,7 @@ procedure mark_begins_basic_block(
 begin
   if not assert_is_top_level_statement(il_$node_ptr_t(s)) then
     bug_check('OPT_MAIN_\MARK_BEGINS_BASIC_BLOCK -- statement not a top level object%.');
-  s^.hdr.first := true;
+  s^.hdr.begins_basic_block := true;
 end;
 
 { new_basic_block - a basic block numbered num (116 bytes and npreds
@@ -1287,7 +1289,7 @@ begin
         l := b^.succ^[k]^.first_stmt;
         if assert_is_label(il_$node_ptr_t(l)) then
           if assert_is_lexically_earlier_statement(l, s) then
-            il_$node_ptr_t(l)^.xc[72] := chr(ord(il_$node_ptr_t(l)^.xc[72]) & 16#BF);
+            il_$node_ptr_t(l)^.lab_atts.fwrd := false;
       end;
     end;
   end;
@@ -1321,7 +1323,7 @@ begin
     if e^.kind = block_entry_node then begin
       il_180 := e^.x48;
       n := e^.vars^[v]^.node;
-      if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then begin
+      if il_180^.blk_atts.call = call_ftn then begin
         types^[v].low := -1;
         types^[v].high := -1;
         types^[v].base := nil;
@@ -1477,7 +1479,7 @@ var
   l: il_$node_ptr_t;
   t: g_opt_block_ptr_t;
 begin
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then begin
+  if il_180^.blk_atts.call = call_ftn then begin
     if b = nil then
       bug_check('OPT_MAIN_\RESOLVE_NLBRANCH_TARGETS -- NIL block%.');
     l := il_180^.xp[4];
@@ -1529,7 +1531,7 @@ begin
       if s^.x48^.kind = inner_blk then
         add_successor(b, next);
     nlbranch_node:
-      if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+      if il_180^.blk_atts.call = call_ftn then
         resolve_nlbranch_targets(b);
     otherwise
       add_successor(b, next);
@@ -1592,12 +1594,12 @@ begin
     p := g_opt_tree_ptr_t(n)^.opnd[1];
     case p^.kind of
       function_blk, procedure_blk:
-        r := (ord(p^.xc[376]) & 16#20) <> 0;
+        r := p^.blk_atts.abnorm;
       cc_call:
         if assert_is_pointer_deref_of_volatile_object(p) then
           r := true
         else
-          r := (ord(p^.xp[4]^.xc[376]) & 16#20) <> 0;
+          r := p^.xp[4]^.blk_atts.abnorm;
       pf_call:
         r := (ord(p^.xp[5]^.xc[79]) & 16#20) <> 0;
       fortran_symbol:
@@ -1647,7 +1649,7 @@ begin
         s := b^.succ^[k];
         s^.flags.skip := true;
         compute_successors(b^.succ^[k]);
-        lang := rshft(ord(il_180^.xc[377]) & 16#70, 4);
+        lang := il_180^.blk_atts.call;
         done := false;
         if lang in [1, 2, 6] then begin
           e := s^.last_stmt;
@@ -1729,11 +1731,11 @@ begin
   om_stmt_num := n;
   s := g_opt_stmt_ptr_t(il_d4);
   while s <> nil do begin
-    if opt_4009c[om_stmt_num]^.hdr.entry then begin
+    if opt_4009c[om_stmt_num]^.hdr.begins_proc then begin
       opt_region := om_stmt_num;
       il_180 := opt_4009c[om_stmt_num]^.x48;
     end;
-    if s^.hdr.first then begin
+    if s^.hdr.begins_basic_block then begin
       n := n + 1;
       b := g_opt_blocks_ptr_t(il_11c)^[n];
       if assert_reached_by_linear_flow_from_previous_basic_block(s) then
@@ -1895,7 +1897,7 @@ begin
     if g_opt_blocks_ptr_t(il_11c)^[i]^.semi = nil then
       depth_first_dom(il_180, g_opt_blocks_ptr_t(il_11c)^[i]);
   dominators(il_180, g_opt_blocks_ptr_t(il_11c)^[opt_first_block]);
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+  if il_180^.blk_atts.call = call_ftn then
     if a or b then
       check_dominators;
   compute_dominator_matrix;
@@ -1970,7 +1972,7 @@ var
   s: g_opt_stmt_ptr_t;
   one: g_opt_varset_t;
 begin
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+  if il_180^.blk_atts.call <> call_ftn then
     for i := opt_first_block to opt_last_block do
       for j := g_opt_blocks_ptr_t(il_11c)^[i]^.first to
                g_opt_blocks_ptr_t(il_11c)^[i]^.last do begin
@@ -1979,7 +1981,7 @@ begin
           r := g_opt_tree_ptr_t(t)^.opnd[1];
           if (r^.kind = procedure_blk) or (r^.kind = entry_blk)
               or (r^.kind = function_blk) then
-            if (ord(r^.xc[378]) & 16#40) <> 0 then
+            if r^.blk_atts.pass_display then
               if ord(r^.xc[294]) <= ord(il_180^.xc[294]) then begin
                 v := il_180^.xp[60];
                 for k := 1 to ord(il_180^.xc[294]) - ord(r^.xc[294]) do
@@ -2036,7 +2038,7 @@ begin
   while s <> nil do begin
     if not opt_track_lines then
       mark_if_begins_basic_block(s);
-    if s^.hdr.first then
+    if s^.hdr.begins_basic_block then
       il_124 := il_124 + 1;
     code := false;
     quiet := true;
@@ -2052,7 +2054,7 @@ begin
           stop := true;
         end
         else if (t^.kind = label_node) and
-                ((rshft(ord(il_$node_ptr_t(t)^.xc[72]) & 16#3E, 1) <> 11) or
+                ((il_$node_ptr_t(t)^.lab_atts.class <> lbl_user) or
                  (il_$node_ptr_t(t)^.xc[74] <> chr(0)) or
                  (il_$node_ptr_t(t)^.xw[25] <> 0)) then begin
           s^.next := t;
@@ -2063,7 +2065,8 @@ begin
           stop := true
         else begin
           code := true;
-          if not (t^.hdr.b7 or t^.hdr.b5) then
+          if not (t^.hdr.inliner_generated_stmt or
+                  t^.hdr.compiler_generated_stmt) then
             quiet := false;
           if t^.kind = assign_node then
             if t^.asg_lhs^.kind = var_name then
@@ -2131,7 +2134,7 @@ begin
       r^.post_last := nil;
     end;
     if assert_is_artificial_statement(il_$node_ptr_t(s)) then
-      s^.hdr.b5 := true;
+      s^.hdr.compiler_generated_stmt := true;
     if (s^.kind = assign_node) and (s^.next^.kind <> assign_node) then
       assign_opt(s)
     else if (s^.kind = assign_node) and (s^.next^.kind = assign_node) then
@@ -2160,7 +2163,7 @@ var
   r: il_$node_ptr_t;
   al: integer;
 begin
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then
+  if il_180^.blk_atts.call <> call_ftn then
     if t <> nil then begin
       n := t;
       if (n^.kind = ptr_node) and ((n^.xl[1] & 30) = 0) then begin
@@ -2934,7 +2937,7 @@ begin
     for i := opt_region to runbackend_16 do begin
       s := opt_4009c[i];
       if (s^.kind <> branch_node) and (s^.kind <> label_node)
-          and not s^.hdr.deleted and
+          and not s^.hdr.stmt_eliminated and
          (s^.kind <> nlbranch_node) then
         for v := 1 to il_180^.xw[145] do begin
           s := opt_4009c[i];
@@ -2977,7 +2980,7 @@ begin
   s := opt_4009c[opt_region];
   while s <> nil do begin
     if s^.kind = use_def_ob then begin
-      s^.hdr.deleted := true;
+      s^.hdr.stmt_eliminated := true;
       if s^.line <> spos_$null_position then
         if s^.next^.line = spos_$null_position then
           s^.next^.line := s^.line;
@@ -2985,8 +2988,8 @@ begin
       n := s^.next;
       p^.next := n;
       n^.prev := p;
-      if s^.hdr.first then
-        n^.hdr.first := true;
+      if s^.hdr.begins_basic_block then
+        n^.hdr.begins_basic_block := true;
       s := n;
     end
     else
@@ -3062,7 +3065,7 @@ begin
   end;
   n^.x48 := v;
   n^.arg_stmt := at;
-  n^.hdr.b5 := true;
+  n^.hdr.compiler_generated_stmt := true;
   n^.hdr.b45 := p^.hdr.b45;
   n^.arg_call := call;
   n^.arg_num := num;
@@ -3072,8 +3075,8 @@ begin
         n^.hdr.b45 := s^.prev^.hdr.b45;
       n^.line := p^.line;
       p^.line := spos_$null_position;
-      n^.hdr.first := p^.hdr.first;
-      p^.hdr.first := false;
+      n^.hdr.begins_basic_block := p^.hdr.begins_basic_block;
+      p^.hdr.begins_basic_block := false;
       n^.prev := p^.prev;
       n^.next := p;
       p^.prev^.next := n;
@@ -3081,7 +3084,7 @@ begin
     end;
     3, 2: begin
       n^.line := spos_$null_position;
-      n^.hdr.first := false;
+      n^.hdr.begins_basic_block := false;
       n^.prev := p;
       n^.next := p^.next;
       p^.next^.prev := n;
@@ -3224,7 +3227,7 @@ var
   t: il_$node_ptr_t;
   k: integer;
 begin
-  if rshft(ord(blk^.xc[377]) & 16#70, 4) = 2 then begin
+  if blk^.blk_atts.call = call_ftn then begin
     cls := rshft(ord(v^.xc[11]) & 16#F0, 4);
     if cls = 5 then
       if opt_main_$var_is_param_of_routine(v, rtn) >= 0 then begin
@@ -3263,7 +3266,7 @@ begin
     if (v^.xw[36] = 5) and (t^.kind = param_name) then
       if (ord(te.c[25]) & 16#40) <> 0 then
         return;
-    if (v^.xl[8] & 320) <> 0 then
+    if v^.vr_attr * [var_$initialized, var_$uplevel] <> [] then
       return;
     k := v^.xw[36];
     if k in [1, 3, 4, 7, 8, 10, 11] then
@@ -3308,7 +3311,7 @@ begin
   while b <> nil do begin
     v := b^.xp[4];
     while v <> nil do
-      if rshft(ord(rtn^.xc[377]) & 16#70, 4) = 2 then begin
+      if rtn^.blk_atts.call = call_ftn then begin
         if not opt_track_lines then
           if rshft(ord(v^.xc[44]) & 16#F0, 4) = 3 then
             if assert_defined_on_entry(v, te, rtn, rtn) then
@@ -3445,8 +3448,8 @@ begin
   if s <> nil then
     if s^.kind = block_entry_node then begin
       r := s^.x48;
-      if rshft(ord(r^.xc[377]) & 16#70, 4) = 2 then
-        if (ord(r^.xc[376]) & 8) <> 0 then
+      if r^.blk_atts.call = call_ftn then
+        if r^.blk_atts.local_name_only then
           opt_main_$is_fortran_asf := r^.kind <> inner_blk;
     end;
 end;
@@ -3491,7 +3494,7 @@ begin
     first := false;
   end;
   opt_region := om_stmt_num;
-  opt_4009c[om_stmt_num]^.hdr.entry := true;
+  opt_4009c[om_stmt_num]^.hdr.begins_proc := true;
   il_180 := s^.x48;
   r := il_180;
   while r <> nil do begin
@@ -3501,7 +3504,7 @@ begin
         v^.xw[8] := 0;
         v := v^.xp[1];
       end
-      else if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
+      else if il_180^.blk_atts.call <> call_ftn then begin
         if v^.kind = var_name then
           v^.xw[37] := 0;
         v := v^.xp[4];
@@ -3538,7 +3541,8 @@ begin
     while (k <= om_nvars) and (v <> nil) and (om_nvars > 0) do begin
       ok := false;
       if v^.kind = var_name then
-        if (v^.xl[8] & 16#201101) = 0 then
+        if v^.vr_attr * [var_$volatile, var_$uplevel, var_$address_exposed,
+                         var_$nooptimize] = [] then
           type_exp(v, addr(te));
       case il_utl_$classify_variable(v, te, r, next) of
         4, 5, 6: begin
@@ -3597,7 +3601,7 @@ begin
           v^.xw[8] := 0;
         v := v^.xp[1];
       end
-      else if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
+      else if il_180^.blk_atts.call <> call_ftn then begin
         if v^.kind = var_name then
           if v^.xw[37] < 0 then
             v^.xw[37] := 0;
@@ -3631,7 +3635,7 @@ begin
   s := opt_4009c[r];
   b := s^.block;
   while s <> nil do begin
-    while opt_4009c[r]^.hdr.deleted do
+    while opt_4009c[r]^.hdr.stmt_eliminated do
       r := r + 1;
     if s^.kind <> reg_list_ob then
       while (r < runbackend_16) and (opt_4009c[r] <> s) do begin
@@ -3639,12 +3643,12 @@ begin
           if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
             exit;
         if r > opt_region then
-          opt_4009c[r]^.hdr.deleted := true;
+          opt_4009c[r]^.hdr.stmt_eliminated := true;
         r := r + 1;
       end;
     if r > runbackend_16 then
       cgerr(3, opt_4009c[runbackend_16]^.line, opt_4009c[runbackend_16]);
-    if s^.hdr.first then begin
+    if s^.hdr.begins_basic_block then begin
       b := opt_4009c[r]^.block;
       b^.first_stmt := s;
     end;
@@ -3663,7 +3667,7 @@ begin
     b^.last_stmt := s;
     s := s^.next;
     if assert_is_label(il_$node_ptr_t(s)) then
-      if rshft(ord(il_$node_ptr_t(s)^.xc[72]) & 16#3E, 1) = 13 then
+      if il_$node_ptr_t(s)^.lab_atts.class = lbl_proc then
         if s^.next^.kind = block_entry_node then
           if (s^.next^.x48^.kind <> entry_blk) and
              (s^.next^.x48^.kind <> inner_blk) then
@@ -3832,12 +3836,12 @@ var
             abn := false;
             case f^.kind of
               function_blk, procedure_blk:
-                abn := (ord(f^.xc[376]) & 16#20) <> 0;
+                abn := f^.blk_atts.abnorm;
               cc_call: begin
                 x := f^.xp[4];
                 if not ((x^.kind = disp_node) or (x^.kind = ptr_node) or
                         (x^.kind = dindex_node) or (x^.kind = tree_node)) then
-                  abn := (ord(x^.xc[376]) & 16#20) <> 0;
+                  abn := x^.blk_atts.abnorm;
               end;
               pf_call:
                 abn := (ord(f^.xp[5]^.xc[79]) & 16#20) <> 0;
@@ -3876,7 +3880,7 @@ var
               e^.prev^.next := e;
               s^.prev := e;
               s^.line := spos_$null_position;
-              s^.hdr.first := false;
+              s^.hdr.begins_basic_block := false;
               c := s^.br_cond;
               if c^.kind = cmp_tree_node then
                 c^.kind := tree_node
@@ -3927,7 +3931,7 @@ var
               e^.prev^.next := e;
               s^.prev := e;
               s^.line := spos_$null_position;
-              s^.hdr.first := false;
+              s^.hdr.begins_basic_block := false;
               e^.eval_opnd[1] := t;
               m^.uses := m^.uses + 1;
               il_126 := il_126 + 1;
@@ -4134,7 +4138,7 @@ var
             end;
           end;
         nlbranch_node:
-          if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+          if il_180^.blk_atts.call = call_ftn then
             if not opt_track_lines then begin
               na := na + 1;
               if nb = 0 then begin
@@ -4230,18 +4234,18 @@ var
               new_postorder_node_list_entry(cnt, n);
               if m^.opnd[j]^.kind = ptr_node then
                 add_interior_node_to_postorder_node_list(m^.opnd[j]);
-              e^.hdr.kills := true;
+              e^.hdr.contains_call_w_simple_p := true;
             end
             else
               add_interior_node_to_postorder_node_list(x);
           end;
-          e^.hdr.b42_4 := true;
+          e^.hdr.contains_user_call := true;
           add_interior_node_to_postorder_node_list(m^.opnd[1]);
         end
         else begin
           if (m^.rlen = rlen_r4) or (m^.rlen = rlen_r8) or (m^.rlen = rlen_c16) or
              (m^.rlen = rlen_c8) then
-            e^.hdr.b4 := true;
+            e^.hdr.contains_fp_expr := true;
           if m^.op in [sub_top, div_top..mod_top, bit_test_top, call_top..func_call_top, set_diff_top, f_sub_top, f_div_top] then
             for j := m^.count downto 1 do begin
               add_interior_node_to_postorder_node_list(m^.opnd[j]);
@@ -4376,8 +4380,8 @@ var
     while cur <> nil do begin
       cur^.regs := cur^.regs * reg_save(il_$node_ptr_t(cur));
       cur^.hdr.region := om_stmt_num;
-      cur^.hdr.last := false;
-      if cur^.hdr.first then
+      cur^.hdr.ends_basic_block := false;
+      if cur^.hdr.begins_basic_block then
         if opt_track_lines then begin
           om_block_num := om_block_num + 1;
           blk := cur^.block;
@@ -4390,26 +4394,26 @@ var
           if p <> nil then
             if p^.kind <> branch_node then
               if (p^.kind <> nlbranch_node) or
-                 (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) then
+                 (il_180^.blk_atts.call = call_ftn) then
                 if p^.kind <> blk_end_node then
                   npred := 1
                 else if p^.x48^.kind = inner_blk then
                   npred := 1;
           if (cur^.kind = label_node)
               and (il_$node_ptr_t(cur)^.xc[74] = chr(0)) and
-             (rshft(ord(il_$node_ptr_t(cur)^.xc[72]) & 16#3E, 1) = 11) and
+             (il_$node_ptr_t(cur)^.lab_atts.class = lbl_user) and
              (il_$node_ptr_t(cur)^.xw[25] = 0) then begin
             t := cur;
             tmp := cur^.prev;
             cur := cur^.next;
             tmp^.next := cur;
             cur^.prev := tmp;
-            t^.hdr.first := false;
-            t^.hdr.deleted := true;
-            if cur^.hdr.first then
+            t^.hdr.begins_basic_block := false;
+            t^.hdr.stmt_eliminated := true;
+            if cur^.hdr.begins_basic_block then
               il_124 := il_124 - 1
             else if new_block(cur) then
-              cur^.hdr.first := true
+              cur^.hdr.begins_basic_block := true
             else
               il_124 := il_124 - 1;
             if blk <> nil then
@@ -4418,7 +4422,7 @@ var
             next;
           end;
           om_block_num := om_block_num + 1;
-          if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+          if il_180^.blk_atts.call = call_ftn then
             if cur^.kind = label_node then
               if (il_$node_ptr_t(cur)^.xc[75] <> chr(0)) or
                  (il_$node_ptr_t(cur)^.xc[74] <> chr(0)) then
@@ -4438,7 +4442,7 @@ var
       case cur^.kind of
         return_node, nlbranch_node: begin
           if cur^.kind = nlbranch_node then
-            if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+            if il_180^.blk_atts.call = call_ftn then
               nsucc := nsucc + nb;
           x := cur^.x48;
           if x <> nil then
@@ -4480,8 +4484,8 @@ var
           if cur^.x48^.kind <> inner_blk then begin
             if om_stmt_num - opt_region + 1 > opt_max_stmts then
               opt_max_stmts := om_stmt_num - opt_region + 1;
-            opt_4009c[om_stmt_num]^.hdr.b42_2 := true;
-            opt_4009c[om_stmt_num]^.hdr.last := true;
+            opt_4009c[om_stmt_num]^.hdr.ends_proc := true;
+            opt_4009c[om_stmt_num]^.hdr.ends_basic_block := true;
             if max_blocks <= nblk then
               max_blocks := nblk;
             k := cnt - g_opt_blocks_ptr_t(il_11c)^[rtn_block]^.first;
@@ -4520,9 +4524,9 @@ var
                   else
                     e^.vars^[k] := nil;
               end;
-      if cur^.hdr.first then
+      if cur^.hdr.begins_basic_block then
         if cur^.prev <> nil then
-          cur^.prev^.hdr.last := true;
+          cur^.prev^.hdr.ends_basic_block := true;
       blk^.last_stmt := cur;
       blk^.last := cnt;
       cur^.block := blk;
@@ -4569,7 +4573,7 @@ begin
   opt_track_lines := false;
   entry_block := false;
   if il_180^.kind = program_blk then
-    il_180^.xc[379] := chr(ord(il_180^.xc[379]) ! 16#10);
+    il_180^.blk_atts.never_entered_recursively := true;
   prfpkg_$activate_phase(14);
   coalesce_adjacent_and_eliminate_dead_assignments;
   if 21 in cargs_$options.opt_on then
@@ -4605,7 +4609,7 @@ begin
   prfpkg_$activate_phase(7);
   compute_basic_block_relationships;
   prfpkg_$activate_phase(18);
-  if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
+  if il_180^.blk_atts.call = call_ftn then
     compute_label_backward_refs_due_to_assigned_goto;
   pas_$new(om_live_out_tab, max_blocks * 32);
   pas_$new(om_used_tab, max_blocks * 32);
@@ -4633,7 +4637,7 @@ begin
       s := s^.next;
       next;
     end;
-    if e^.hdr.entry then begin
+    if e^.hdr.begins_proc then begin
       opt_first_block := e^.block^.num;
       opt_region := r;
       il_180 := e^.x48;
@@ -4643,7 +4647,7 @@ begin
       opt_live_out := adjust_ptr(om_live_out_tab, 32);
       opt_dfs_number := adjust_ptr(om_dfs_number_tab, 2);
     end;
-    if not e^.hdr.b42_2 then begin
+    if not e^.hdr.ends_proc then begin
       s := s^.next;
       next;
     end;

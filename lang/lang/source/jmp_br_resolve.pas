@@ -453,7 +453,7 @@ var
           (il_$node_ptr_t(b^.pc)^.kind = inner_blk) do
       b := b^.prev;
     blk := il_$node_ptr_t(b^.pc);
-    if (ord(blk^.xc[375]) & 8) = 0 then
+    if not blk^.blk_atts.use_db then
       cgerr_no_source(28, integer32(strtk('DB not valid', 12)));
     blk192 := blk^.xp[48];
     con := get_proc_addr_con(7, ads^.lab2, integer32(sect), blk192);
@@ -1017,7 +1017,7 @@ begin
                       while (a^.kind <> block_start_instyp) or
                             (il_$node_ptr_t(a^.pc)^.kind = inner_blk) do
                         a := a^.prev;
-                      if (ord(il_$node_ptr_t(a^.pc)^.xc[375]) & 8) = 0 then
+                      if not il_$node_ptr_t(a^.pc)^.blk_atts.use_db then
                         cgerr_no_source(28,
                             integer32(strtk('DB not valid', 12)));
                       t44 := dpc;

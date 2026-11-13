@@ -2930,6 +2930,21 @@ answered by this policy and needs no reply.
    function, by operator) as numbers.  (e) The condition codes and math
    functions are named only in list_tree; the code generator's uses
    (emit's x, reverse_cc, tree_fn_inst) are numbers.
+   **Done (translator RN5, 2026-11-12): (a), (b) and (c)**; (d) and
+   (e) are RN6's.  (c) opt_vector's ov_tree_t.phase is an
+   add_node_$phase_t (the call kept: phase_sd_eff).  (b) il.ins.pas's
+   il_$node_t has a tree's tr_rlen (+24) and tr_op (+36, il_$top_t), a
+   variable's vr_attr (+32) and a Fortran symbol's fs_attr (+24,
+   il_$var_attrs_t), the ISC's isc_node_t names (tr_rlen, tr_op); the
+   units compare them with il_$top_t's names, the rlen_ constants and
+   il_$var_attr_t's names (sets of them for the masks).  (a)
+   il_$blk_atts_t (blk_atts, +374), il_$label_class_t and
+   il_$label_atts_t (lab_atts, +72: def, fwrd, class) and
+   il_$stmt_flags_t (st_flags, +40) in il.ins.pas; g_opt.ins.pas's
+   statement header and opt_vector's take the dump's names for +41 and
+   +42; list_tree's views use the records; the ISC's block view
+   (isc_types' bk_atts) is an il_$blk_atts_t at +374 and the
+   generator's isc_<blk> template reads bat.  Questions 328..332.
 327. Translator RN4: **the assembly comparison** (every unit compiled as
    the gate compiles it, main 3679840 against the branch, dpc acea73f:
    274 of 277 objects identical).  opt_main's
@@ -2943,3 +2958,134 @@ answered by this policy and needs no reply.
    0x080572, 0x083F02): written as a transfer to a word (lt_word_t), as
    ord() gives ext.l (question 316: more evidence that Rev 8.89's ord()
    of an enumeration, if the original wrote one, zero-extends).
+328. Translator RN5 (2026-11-12), question 326 (a)-(c): **the records
+   and the names chosen.**  il.ins.pas: il_$blk_atts_t, the 6 bytes at
+   +374 of a block, bit 7 first (dpc's packing, checked with a test
+   unit): +374 assigned_goto, addr_fparam, resident_proc, no_fp,
+   visible, inline_block, inlined, expanded; +375 inlineable, noinline,
+   inline, a0_ptr_ret, use_db, d0_ptr_ret, noreturn, nosave_regs; +376
+   need_fp_fcw, nlgoto, abnorm, save_db, local_name_only, b376_2,
+   b376_1, then bat (il_$bat_t, +376 .0 and +377 .7); +377 call (.6..4,
+   call_unk .. call_ada; 6 has no name and stays a number), func_assign,
+   variable_arg_list, val_param_flag, fasn; +378 sb_display,
+   pass_display, save_static_link_in_frame, must_have_own_frame,
+   sb_12_in_use, b378_2, returns_dynamic_results, respect_storage_error;
+   +379 local_call_same_db, local_call_different_db,
+   calls_extern_non_lib_routine, never_entered_recursively, b379_3,
+   coded, visited_depth_first, visited_set_local_call_bits (the dump's
+   strings in lower case: 'D0_Ptr_Ret', 'NLGoTo', ...).  Of the bits the
+   dump does not print, the units use b378_2 (debug_sym_dmp) and b379_3
+   (reg_cost_68k, opt_inline).  il_$label_class_t, lbl_else ..
+   lbl_par_one_proc (print_top_node's 'ELSE' .. 'PAR_ONE_PROC' with lbl_
+   before them: the bare words are Pascal's, and c_stmt_sem has routines
+   for_start_lab and for_next_lab); 'ord(class)=' says the original's
+   field was class, an enumeration.  il_$label_atts_t at +72: def (.7),
+   fwrd (.6), class (.5..1).  il_$stmt_flags_t at +40: +41
+   inliner_generated_stmt .. stmt_eliminated, +42 constant_assign,
+   b42_6 (not printed; opt_inline sets it), contains_call_w_simple_p,
+   contains_user_call, ends_basic_block, ends_proc, begins_basic_block,
+   begins_proc.  il_$node_t's variants: tr_rlen (+24), tr_op (+36),
+   vr_attr (+32), fs_attr (+24), blk_atts (+374), lab_atts (+72),
+   st_flags (+40).  g_opt.ins.pas's statement header took the same
+   names (b7 inliner_generated_stmt, b6 pascal_for_loop, b5
+   compiler_generated_stmt, b4 contains_fp_expr, b3 loophascalls,
+   counted defsubtracted, no_prune contains_cse, deleted
+   stmt_eliminated, b42_7 constant_assign, kills
+   contains_call_w_simple_p, b42_4 contains_user_call, last
+   ends_basic_block, b42_2 ends_proc, first begins_basic_block, entry
+   begins_proc), its uses in 14 units with them; opt_vector's header is
+   an il_$stmt_flags_t.  The ISC's block view (isc_types'
+   bk_atts) is an il_$blk_atts_t at +374 (nlgoto for its b6), and the
+   generator's isc_<blk> template (tools/iscg_text.py) reads bat into a
+   local bat: il_$bat_t (iscg_gen.py --check passes; re-extraction into
+   a copy of the rules reproduces them).  Not known from the original:
+   the types' names, bat's and call's field names, the label class
+   prefix, the unprinted bits' names.  Better names, or Apollo's, if a
+   listing turns up?
+329. Translator RN5: **masks kept, and why** (question 326's rule: a
+   field access where it gives the image's code).  The longword at +374
+   tested for two bits at once: cg_top's `(rshft(xl2[93], 11) & 258)'
+   (use_db and save_db, question 87) and `& 640' (a0_ptr_ret and
+   d0_ptr_ret), reg_vars' `& 640', cg_call's get_atts and
+   cg_call_$att_in_any_entry (a bit by number), debug_sym_dmp's
+   `xl2[93] & 16#81000'; opt_inline's merge of a callee into its caller
+   (+374 longword, +376 word, +377 calling convention and +378 written
+   as masks in one go); celpkg's new label (`& 16#01 ! 28': def, fwrd
+   and class at once); prtobj's class letter (`(ord(xc[72]) div 2) mod
+   32'); opt_inline's 16-bit write of +41..+42 (`& 16#FF0000FF !
+   16#800000' of the longword at +40).  Three variable attribute tests
+   where the image loads the longword (`move.l (32,A4),D1; btst #6,D1',
+   opt_reachdef's init_block 0x0E4540; `btst #14' of the longwords at
+   +24 and +32, reachingdefinitions 0x0E501E, 0x0E5046; get_memory_loc's
+   bit 10, 0x0A8C92) and the set field's test a byte or word (dpc tests
+   an element below 16 of a longword set in memory in the byte or word
+   holding it): elsewhere Rev 8.89 tests the byte (is_device's `btst
+   #3,(35,A0)', cc.a88k 0x212DC6), so the original perhaps wrote these
+   differently (an integer mask?).  For the domain-pascal session if
+   dpc should load the longword for `in' on a longword set in some
+   form.
+330. Translator RN5: **list_tree's views were laid out 2 bytes off**
+   (found comparing print_routine_block with the image; fixed).  dpc
+   rounds a packed record to a word and gives a set of 0..7 a word, so
+   lt_node_t's flags (a packed record of 8 booleans) then b1 put kind at
+   +4 (the image: `move.w (2,A3),D0', print_routine_block 0x08258A), and
+   every variant 2 bytes late; lt_bb_t's flags (set of 0..7) then b1 put
+   depth at +4 (the image: +2, print_basic_block 0x08573C; the flags
+   `btst #2,(A2)'); xs (array of set of 0..7) had word elements, the
+   byte at +1 of each.  Now the flags' packed record holds b1, the
+   block's flags are a packed record of booleans (cleanup, preheader,
+   loop_head, abnormal: the dump's names) and xs a packed array (byte
+   elements).  Every list_tree routine's similarity rose (0.71 to 0.73
+   mean; print_top_node 0.74 to 0.80, sanity_check_walk 0.69 to 0.79).
+   Does Rev 8.89 lay these out as dpc does?  If it does, the original's
+   declarations were not these.  Other units' records with a set of 0..7
+   or a packed record of booleans followed by a byte field are worth the
+   same check (gen_unwind's and debug_sym_dmp's are inside packed
+   records).
+331. Translator RN5: **what question 326 leaves** (besides RN6's (d),
+   (e)).  A label's byte booleans at +74..+77 (abnormal,
+   'abnormal(well_behaved)' at +77, nlgoto, assigned_goto_target) are
+   read as bytes (`xc[74] <> chr(0)', `ord(xc[74]) >= 128') by cg_top,
+   cg_addr, celpkg, opt_main, reg_save; a variable's allocation (xw[36],
+   il_$vat_t) and a statement's assignment operator (xw[38],
+   commit_top_node's n^.xw[38] := 1 ...) are still numbers; the phase
+   (+4) is read by mask through xl[1] (il_utils, is_device): il.ins.pas
+   cannot name add_node_$phase_t (add_node.ins.pas comes after it in the
+   prelude); the generated ISC copies and indexes by the class through
+   xw[12] (isc_node_t's tr_rlen exists; the generator's iscg_pass1.py
+   writes xw[k]); c_stmt_sem's add_ldfn passes label classes as numbers;
+   list_tree's other views (print_tree_ref, print_variable's xc reads)
+   still read some fields by offset.  The front end's block view
+   (c_objtype.ins.pas c_blk_t's bits, +374..+378) and call_conv's
+   (unused_374) are records already but name the bits by position or
+   by use; by the dump, c_blk_t's b374_6 (set by unary_expr's `&') is
+   addr_fparam, main_int (+375 .6) noinline, db_adjusted (+376 .4)
+   save_db, x376_0 bat, conv call, made (+378 .7) sb_display, and
+   call_conv's b376_5 (asynchronous) abnorm, b378_6 (a static link)
+   pass_display: rename them to il_$blk_atts_t's (or make them one)?
+332. Translator RN5: **the assembly comparison** (every unit compiled as
+   the gate compiles it, main eec0632 against the branch, dpc b9d77de
+   stable: 207 of 277 objects identical, the other 70 all in units
+   touched).  Per routine (coff_compare against the image): 281
+   routines' similarity rose, 11 fell, 1 mixed.  The changes are the
+   field forms where the masks were: `btst #n,(d,An)' / `bset' /
+   `bclr' on the byte for a bit (print_routine_block 0x082834, the
+   image's own form), `and.b; lsr.w; cmpi.w' for the calling convention
+   (find_paths 0x0C6EB8, generate 0x107E66) where `ext.l; lsr.l;
+   cmpi.l' was, `and.w #384; lsr.w #7' for the allocation (make_main_pgm
+   0x059F5C, sym_map 0x0605AE, address 0x0F21BC, isc_entry_blk
+   0x0E4090), `btst #6,(72,A2)' for fwrd (merge_state 0x0F2BC4), `bset
+   #0,(32,A2)' and `(24,A2)' for var_$wasbound (forceobjcache
+   0x0EF0A2, 0x0EF0B4), `bset #2,(33,A2)', `bclr #5,(25,A1)' (reg_alloc
+   0x0C3FC6, 0x0C4752), `btst #3,(27,A0)' (is_device 0x212DB6), `pea
+   (36,A2)' for a write of the operator (il_node_to_string 0x218506).
+   The fallen routines: seven whose code is unchanged (their neighbours
+   moved: evaluate_subtree, estimate_register_consumption_of_all_
+   statements, coff_equiv_lines, compress_graph,
+   registers_consumed_by_tree_operator, check_static_initializations,
+   build_call_graph_walk_il); cg_addr's address (its two changes are the
+   image's, 0x0F21C4 and 0x0F2BC4); lir_main_$save_and_restore_code,
+   whose three bit tests are now the image's `btst #5,(378,A2)' and
+   `btst #3,(378,A2)' (cc.a88k 0x24B75C, 0x24B776, 0x24B88C) but whose
+   block pointer dpc now keeps in the frame rather than A2 (a register
+   choice of dpc's).  list_tree's 1422 lines are question 330.
