@@ -3113,6 +3113,15 @@ answered by this policy and needs no reply.
    differently (an integer mask?).  For the domain-pascal session if
    dpc should load the longword for `in' on a longword set in some
    form.
+   (Lead, from the domain-pascal session, codegen-patterns 5.1: `in'
+   always reads only the part of the set holding the bit; the kernel's
+   78 wider reads, 13 of them longword loads for a bit below 16, are
+   read as an integer one-bit test, `(integer32(x) & c) <> 0' or the
+   field an integer32 tested with `&', which dpc compiles to `move.l;
+   btst' (checked: `(integer32(rp^.s) & 16#4000) <> 0' gives `move.l
+   (0x20,A0),D0; btst #14,D0').  So the variable-attribute tests
+   (0x0E4540, 0x0E501E, 0x0E5046, 0x0A8C92) are probably written that
+   way; to do.)
 330. Translator RN5: **list_tree's views were laid out 2 bytes off**
    (found comparing print_routine_block with the image; fixed).  dpc
    rounds a packed record to a word and gives a set of 0..7 a word, so
@@ -3131,6 +3140,17 @@ answered by this policy and needs no reply.
    or a packed record of booleans followed by a byte field are worth the
    same check (gen_unwind's and debug_sym_dmp's are inside packed
    records).
+   (Lead, from the domain-pascal session: Rev 8.89 follows the
+   reference, a set of 0..7 a word (3.9.3) and a packed record at
+   least 16 bits (3.10.7); the image's one-byte forms come from the
+   `[byte]' size attribute (3.15.5), which the kernel uses on both
+   (ACL_'s and APP_'s `[byte] set of 0..7', the SAU9 driver's `[byte]'
+   packed record: codegen-patterns 5.1).  dpc measured: `p: [byte]
+   flags_t; b1: char; kind: integer' puts kind at +2, as does
+   `s: [byte] set of 0..7; b: char; depth: integer' (and a packed
+   outer record for the set).  Not a dpc layout difference: the
+   original likely had `[byte]' on the field; to do: restore the first
+   declarations with `[byte]'.)
 331. Translator RN5: **what question 326 leaves** (besides RN6's (d),
    (e)).  A label's byte booleans at +74..+77 (abnormal,
    'abnormal(well_behaved)' at +77, nlgoto, assigned_goto_target) are
