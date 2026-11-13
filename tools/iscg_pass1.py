@@ -1194,6 +1194,26 @@ def format_operator(d, lifted, positions, unions, ils, kinds, op_name):
     return '\n'.join(L)
 
 
+_KIND_REL = re.compile(r'(\.w2) (=|<>|<|>|<=|>=) (\d+)\b')
+
+
+def kind_names(text, value=False):
+    """A lifted node's kind (its word at +2, `.w2') by name (il.ins.pas's
+    il_$kind_t): in the relations of a condition's text, or the whole
+    text when value (a stored kind)."""
+    global _IL_KIND_NAMES
+    if _IL_KIND_NAMES is None:
+        import os
+        _IL_KIND_NAMES = il_kinds(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+    if value:
+        return _IL_KIND_NAMES[int(text)] if re.match(r'\d+$', text) else text
+    return _KIND_REL.sub(lambda m: '%s %s %s' % (m.group(1), m.group(2),
+                                                 _IL_KIND_NAMES[int(m.group(3))]), text)
+
+
+_IL_KIND_NAMES = None
+
+
 def format_body(L, body, ind, unions, kinds, op_name):
     for b in body:
         if b[0] == 'call':
@@ -1205,11 +1225,11 @@ def format_body(L, body, ind, unions, kinds, op_name):
         elif b[0] == 'made':
             L.append('%ssolutions_made;' % ind)
         elif b[0] == 'nstore':
-            L.append('%s%s <- %s;' % (ind, b[1], b[2]))
+            L.append('%s%s <- %s;' % (ind, b[1], kind_names(b[2], b[1].endswith('.w2'))))
         elif b[0] == 'solution':
             L.append('%schild %d %s solution %s;' % (ind, b[1], b[2], kinds[b[3]]))
         elif b[0] == 'if':
-            L.append('%sif %s;' % (ind, b[1]))
+            L.append('%sif %s;' % (ind, kind_names(b[1])))
             format_body(L, b[2], ind + '  ', unions, kinds, op_name)
             if b[3]:
                 L.append('%selse;' % ind)
@@ -1329,8 +1349,8 @@ def join_expr(toks):
 
 # --------------------------------------------------------------------------
 # the dispatch: the IL node kinds, tree operators and assignment operators
-# (the enumerations whose names isc_user_routines writes: an_kind_t,
-# ur_top_t, ur_aop_t), and the A5 offsets of isc_pass_1_main's tables
+# (the enumerations whose names isc_user_routines writes: the kinds,
+# il.ins.pas's il_$kind_t, and ur_top_t, ur_aop_t), and the A5 offsets of isc_pass_1_main's tables
 
 OPERATORS_COMMENT = [
     "{ The operators: isc_pass_1_main's routine for each IL node kind, tree,",
@@ -1365,14 +1385,25 @@ TABLES = [  # (prefix, enumeration, A5 offset, entries)
 TABLE_NAMES = {0: 'p1_tree_op', 360: 'p1_cmp_op', 720: 'p1_assign_op', 872: 'p1_kind'}
 
 
+def il_kinds(root):
+    """The IL node kinds: il.ins.pas's il_$kind_t, in ordinal order (the
+    names the generator writes for a kind)."""
+    import os
+    text = open(os.path.join(root, 'lang', 'lang', 'source', 'il.ins.pas'),
+                encoding='latin1').read()
+    m = re.search(r'\bil_\$kind_t = \((.*?)\);', text, re.S)
+    body = re.sub(r'\{[^}]*\}', '', m.group(1))
+    return [x.strip() for x in body.split(',')]
+
+
 def enumerations(root):
-    """{name: [identifiers]} of isc_user_routines.pas's an_kind_t, ur_top_t,
-    ur_aop_t."""
+    """{name: [identifiers]} of the IL node kinds (an_kind_t: il.ins.pas's
+    il_$kind_t) and isc_user_routines.pas's ur_top_t and ur_aop_t."""
     import os
     text = open(os.path.join(root, 'lang2', 'source', 'isc', 'isc_user_routines.pas'),
                 encoding='latin1').read()
-    out = {}
-    for n in ('an_kind_t', 'ur_top_t', 'ur_aop_t'):
+    out = {'an_kind_t': il_kinds(root)}
+    for n in ('ur_top_t', 'ur_aop_t'):
         m = re.search(r'\b%s = \((.*?)\);' % re.escape(n), text, re.S)
         out[n] = [x.strip() for x in m.group(1).split(',')]
     return out
@@ -1768,8 +1799,7 @@ def emit_unit(rules, unions_by_il, kinds, il_index, text):
     L.append(INCLUDES_P1.rstrip('\n'))
     L.append('')
     enum_lines = []
-    for pas, en in (('an_kind_t', 'an_kind_t'), ('p1_top_t', 'ur_top_t'),
-                    ('p1_aop_t', 'ur_aop_t')):
+    for pas, en in (('p1_top_t', 'ur_top_t'), ('p1_aop_t', 'ur_aop_t')):
         enum_lines.append('  %s = (' % pas)
         enum_lines.extend(wrap_list(e[en], '    ', end=');'))
     L.append(text.P1_TYPES.replace('@ENUMS@', '\n'.join(enum_lines)))

@@ -60,14 +60,14 @@ type
   - the locals' names. }
 
 function smcontk(
-    kind: integer;
+    kind: il_$kind_t;
     value: integer32): il_$node_ptr_t;
 var
   h: integer32;
   first: boolean;
   p, prev, t: il_$node_ptr_t;
 begin
-  if kind <> 81 then
+  if kind <> integer_ob then
     h := (value & 1023) + 1152
   else if value >= 0 then
     h := value & 1023
@@ -118,7 +118,7 @@ end;
 
 function floating_token(
     in value: univ token_bits_t;
-    kind: integer): il_$node_ptr_t; internal;
+    kind: il_$kind_t): il_$node_ptr_t; internal;
 var
   hi, lo: integer32;
   chains: token_chains_ptr_t;
@@ -134,7 +134,7 @@ begin
     hi := 0
   else
     hi := value[1];
-  if kind = 88 then
+  if kind = real_ob then
     chains := addr(token_real_chains)
   else
     chains := addr(token_dreal_chains);
@@ -220,7 +220,7 @@ begin
       end;
     end;
   end;
-  rlcontk := floating_token(r, 88);
+  rlcontk := floating_token(r, real_ob);
 end;
 
 { dpcontk - the node of a double-precision real (kind 89).
@@ -230,7 +230,7 @@ end;
 function dpcontk(
     in value: double): il_$node_ptr_t;
 begin
-  dpcontk := floating_token(value, 89);
+  dpcontk := floating_token(value, dpreal_ob);
 end;
 
 { get_reciprocal - the node of 1 / t's value, of t's kind.
@@ -305,7 +305,7 @@ begin
     token_pair_chain := t
   else
     prev^.pair_next := t;
-  t^.kind := 90;
+  t^.kind := complex_ob;
   t^.pair_a := a;
   t^.pair_b := b;
   t^.pair_unused_8 := 0;
@@ -377,7 +377,7 @@ begin
     token_pair_chain := t
   else
     prev^.pair_next := t;
-  t^.kind := 90;
+  t^.kind := complex_ob;
   t^.pair_a := ia;
   t^.pair_b := ib;
   t^.pair_unused_8 := 0;
@@ -432,7 +432,7 @@ begin
     token_dcomplex_chain := t
   else
     prev^.bits_next := t;
-  t^.kind := 198;
+  t^.kind := dpcomplex_ob;
   t^.bits[1] := pre^[1];
   t^.bits[2] := pre^[2];
   t^.bits[3] := pim^[1];
@@ -489,7 +489,7 @@ begin
     token_string_chain := t
   else
     prev^.str_next := t;
-  t^.kind := 92;
+  t^.kind := char_string_ob;
   t^.str_unused_8 := 0;
   t^.str_unused_12 := 0;
   strtk := t;
@@ -543,12 +543,12 @@ begin
   if n = 1 then begin
     v.hi := 0;
     v.lo := bits[w];
-    setcontk := smcontk(81, v.l);
+    setcontk := smcontk(integer_ob, v.l);
   end
   else if n = 2 then begin
     v.hi := bits[w];
     v.lo := bits[w + 1];
-    setcontk := smcontk(81, v.l);
+    setcontk := smcontk(integer_ob, v.l);
   end
   else begin
     h := n mod 65;
@@ -567,7 +567,7 @@ begin
       p := p^.set_next;
     end;
     t := gspace(len + 18);
-    t^.kind := 156;
+    t^.kind := set_con_ob;
     t^.set_next := token_set_chains[h];
     t^.set_unused_8 := 0;
     t^.set_len := len;
@@ -592,9 +592,9 @@ function set_is_nil(
 var
   i: integer;
 begin
-  if t^.kind in [77..87, 101, 200] then
+  if t^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     set_is_nil := t^.int_value = 0
-  else if t^.kind = 156 then begin
+  else if t^.kind = set_con_ob then begin
     for i := 1 to t^.set_len div 2 do
       if t^.set_words[i] <> 0 then begin
         set_is_nil := false;

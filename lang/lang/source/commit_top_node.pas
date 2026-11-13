@@ -74,51 +74,52 @@ var
   val: integer32;
   shift: integer32;
 begin
-  if (n = nil) or else (n^.kind <> 140) then
+  if (n = nil) or else (n^.kind <> assign_node) then
     bug_check('IL_UTILS_$\PACK_AOP_TO_MEM --- node^.kind is not an assign_node.%.');
   if n^.xw[38] <> 10 then
     bug_check('IL_UTILS_$\PACK_AOP_TO_MEM --- node^.assign_node.op <> pack_aop.%.');
   if (ord(n^.xc[58]) & 16#40) <> 0 then
     return;
   r := n^.xp[17];
-  if r^.kind = 190 then
+  if r^.kind = cse_parent_ob then
     return;
-  if r^.kind = 189 then
+  if r^.kind = cse_use_ob then
     r := r^.xp[5];
-  if (r^.kind = 137) and (r^.xw[18] = 18) then
+  if (r^.kind = tree_node) and (r^.xw[18] = 18) then
     r := r^.xp[10];
-  if r^.kind <> 137 then
+  if r^.kind <> tree_node then
     return;
   if not ((r^.xw[18] = 10) or (r^.xw[18] = 9) or (r^.xw[18] = 2) or
           (r^.xw[18] = 1)) then
     return;
   operand := r^.xp[11];
-  if not (operand^.kind in [77..87, 101, 200]) then
+  if not (operand^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
     return;
   inner := r^.xp[10];
-  if inner^.kind = 190 then
+  if inner^.kind = cse_parent_ob then
     inner := inner^.xp[1];
-  if inner^.kind = 189 then
+  if inner^.kind = cse_use_ob then
     inner := inner^.xp[5];
   lhs := n^.xp[16];
-  if lhs^.kind = 189 then
+  if lhs^.kind = cse_use_ob then
     lhs := lhs^.xp[5];
-  if lhs^.kind = 190 then
+  if lhs^.kind = cse_parent_ob then
     lhs := lhs^.xp[1];
-  if inner^.kind = 137 then begin
+  if inner^.kind = tree_node then begin
     operand := inner^.xp[10];
-    if operand^.kind = 189 then
+    if operand^.kind = cse_use_ob then
       operand := operand^.xp[5];
-    if operand^.kind = 190 then
+    if operand^.kind = cse_parent_ob then
       operand := operand^.xp[1];
   end;
-  if inner^.kind <> 137 then
+  if inner^.kind <> tree_node then
     return;
   if il_utils_$trees_equivalent(lhs, operand) > 1 then
     return;
   if inner^.xw[18] <> 14 then
     return;
-  if not (inner^.xp[11]^.kind in [77..87, 101, 200]) then
+  if not (inner^.xp[11]^.kind in [blogical_ob..char_ob, char16_ob,
+                                  binteger_ob]) then
     return;
   width := n^.xw[27];
   if inner^.xp[11]^.xl[2] <> width then
@@ -146,7 +147,7 @@ begin
       ;
   end;
   il_utils_$adjust_uc(r, -1);
-  n^.xp[17] := smcontk(81, val);
+  n^.xp[17] := smcontk(integer_ob, val);
 end;
 
 { aop_pattern_search - the operand of the tree in slot (and below it,
@@ -171,7 +172,7 @@ function aop_pattern_search(
 var
   r: il_$node_ptr_t;
 begin
-  if slot^.kind = 137 then
+  if slot^.kind = tree_node then
     if slot^.xw[18] = lhs^.xw[18] then begin
       if il_utils_$trees_equivalent(n^.xp[16], slot^.xp[10]) <= 1 then begin
         r := slot^.xp[10];
@@ -234,9 +235,9 @@ var
   r: il_$node_ptr_t;
   tmp: il_$node_ptr_t;
 begin
-  if (n = nil) or else (n^.kind <> 140) then
+  if (n = nil) or else (n^.kind <> assign_node) then
     bug_check('IL_UTILS_$\AOP_TO_MEM --- node^.kind is not an assign_node.%.');
-  if n^.xp[17]^.kind <> 137 then
+  if n^.xp[17]^.kind <> tree_node then
     return;
   if n^.xw[38] = 11 then begin
     if cargs_$options.cpu * [2, 4, 8, 9, 10] = [] then
@@ -246,7 +247,7 @@ begin
   end;
   e := n^.xp[17];
   slot := addr(n^.xp[17]);
-  while (e^.kind = 137) and (e^.xw[18] = 18) do begin
+  while (e^.kind = tree_node) and (e^.xw[18] = 18) do begin
     slot := addr(e^.xp[10]);
     e := e^.xp[10];
   end;
@@ -263,11 +264,11 @@ begin
     1: n^.xw[38] := 1;
     2: n^.xw[38] := 2;
     7: begin
-      x := smcontk(81, 0);
+      x := smcontk(integer_ob, 0);
       n^.xw[38] := 14;
     end;
     8: begin
-      x := smcontk(81, 0);
+      x := smcontk(integer_ob, 0);
       n^.xw[38] := 13;
     end;
     9: n^.xw[38] := 3;
@@ -334,20 +335,22 @@ var
   i: integer;
 begin
   r := false;
-  if a^.kind = 189 then
+  if a^.kind = cse_use_ob then
     a := a^.xp[5];
-  if a^.kind = 190 then
+  if a^.kind = cse_parent_ob then
     a := a^.xp[1];
-  if b^.kind = 189 then
+  if b^.kind = cse_use_ob then
     b := b^.xp[5];
-  if b^.kind = 190 then
+  if b^.kind = cse_parent_ob then
     b := b^.xp[1];
-  if (b^.kind in [109, 145, 146, 147, 205]) or
-     ((b^.kind = 110) and (rshft(ord(b^.xc[44]) & 16#F0, 4) = 3)) then begin
+  if (b^.kind in [var_name, dindex_node, ptr_node, disp_node, sym_disp_node])
+      or
+     ((b^.kind = fortran_symbol) and (rshft(ord(b^.xc[44]) & 16#F0,
+                                            4) = 3)) then begin
     if il_utils_$trees_equivalent(a, b) = 0 then
       r := true;
   end
-  else if b^.kind = 137 then begin
+  else if b^.kind = tree_node then begin
     if (b^.xw[18] = 16) or (b^.xw[18] = 15) then
       first := 2
     else
@@ -369,11 +372,11 @@ var
   l: il_$node_ptr_t;
   r: il_$node_ptr_t;
 begin
-  if (n = nil) or else (n^.kind <> 140) then
+  if (n = nil) or else (n^.kind <> assign_node) then
     bug_check('IL_UTILS_$\USER_ATOMICNESS --- node^.kind is not an assign_node.%.');
   l := n^.xp[16];
   r := n^.xp[17];
-  if (0 in getphase(l)) and (r^.kind = 137) then
+  if (0 in getphase(l)) and (r^.kind = tree_node) then
     user_atomicness := contains_same_lvalue(l, r)
   else
     user_atomicness := false;
@@ -389,7 +392,7 @@ function implicit_atomicness(
 var
   l: il_$node_ptr_t;
 begin
-  if (n = nil) or else (n^.kind <> 140) then
+  if (n = nil) or else (n^.kind <> assign_node) then
     bug_check('IL_UTILS_$\IMPLICIT_ATOMICNESS  --- node^.kind is not an assign_node.%.');
   l := n^.xp[16];
   if (0 in getphase(l)) and ((n^.xw[38] = 12) or (n^.xw[38] = 10)) then
@@ -419,7 +422,7 @@ var
   user: boolean;
   l: il_$node_ptr_t;
 begin
-  if (t = nil) or else (t^.kind <> 140) then
+  if (t = nil) or else (t^.kind <> assign_node) then
     bug_check('IL_UTILS_$CONVERT_AOPS_TO__AOP_TO_MEM --- node^.kind is not an assign_node.%.');
   if (ord(t^.xc[41]) & 1) <> 0 then
     return;
@@ -432,8 +435,8 @@ begin
         if (op = 10) or (op = 6) then begin
           l := t^.xp[17];
           case l^.kind of
-            109: l^.xc[33] := chr(ord(l^.xc[33]) ! 16#20);
-            110: l^.xc[25] := chr(ord(l^.xc[25]) ! 16#20);
+            var_name: l^.xc[33] := chr(ord(l^.xc[33]) ! 16#20);
+            fortran_symbol: l^.xc[25] := chr(ord(l^.xc[25]) ! 16#20);
             otherwise
               ;
           end;

@@ -44,7 +44,7 @@ var
   0x098BD4.  Kind 81 (the common one): value & 1023, or for a negative
   value 1024 + (value & 127); other kinds 1152 + (value & 1023). }
 function smcontk(
-    kind: integer;
+    kind: il_$kind_t;
     value: integer32): il_$node_ptr_t; options(val_param); extern;
 
 { RLCONTK - the node of a single-precision real (kind 88), the value

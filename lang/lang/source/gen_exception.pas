@@ -332,13 +332,13 @@ begin
             e := allocate(offset, 8);
             e^.tag := 9;
             e^.l2 := disp;
-            if v^.kind = 163 then begin
+            if v^.kind = addr_con then begin
               e^.l_w6 := v^.xw[9];
               e^.f7 := true;
               e^.f6 := false;
             end
             else begin
-              if v^.kind <> 109 then
+              if v^.kind <> var_name then
                 ass_$precondition_fail(
                     'GEN_EXCEPTION_$WRITE_FRAME_AND_HANDLER_RECORDS -- not a var_name%$');
               if not (v^.xw[36] in [1, 4, 7, 8]) then
@@ -357,13 +357,13 @@ begin
             e := allocate(offset, 6);
             e^.tag := 3;
             e^.w2 := disp;
-            if v^.kind = 163 then begin
+            if v^.kind = addr_con then begin
               e^.w4 := v^.xw[9];
               e^.f7 := true;
               e^.f6 := false;
             end
             else begin
-              if v^.kind <> 109 then
+              if v^.kind <> var_name then
                 ass_$precondition_fail(
                     'GEN_EXCEPTION_$WRITE_FRAME_AND_HANDLER_RECORDS -- not a var_name%$');
               if not (v^.xw[36] in [1, 4, 7, 8]) then

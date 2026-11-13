@@ -91,7 +91,7 @@ type
   ra_regs_ptr_t = ^ra_regs_t;
   ra_regs_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     ent: array [0..23] of ra_cache_t;   { +4 }
   end;
 
@@ -167,13 +167,13 @@ begin
       v := i;
       vfmt_$write('%3LD %8ZLH  %$', v, r^[i].node);
       t := r^[i].node;
-      if t^.kind = 109 then begin
+      if t^.kind = var_name then begin
         v := t^.xp[1]^.idnt_len;
         if v > 12 then
           v := 12;
         vfmt_$write('%13ZA%$', t^.xp[1]^.idnt_name, v);
       end
-      else if t^.kind = 110 then begin
+      else if t^.kind = fortran_symbol then begin
         v := t^.xw[35];
         if v > 12 then
           v := 12;
@@ -357,7 +357,7 @@ var
 begin
   for k := 1 to n do begin
     v := r^[k].node;
-    if (v^.kind = 109) and ((v^.xl[8] & 16#40000) = 0) then begin
+    if (v^.kind = var_name) and ((v^.xl[8] & 16#40000) = 0) then begin
       if (2 in r^[k].flags) or (r^[k].avail * [8..11] <> []) then
         short := false
       else if v^.xp[7] = runbackend_10 then
@@ -385,9 +385,10 @@ begin
     k := 1;
     repeat
       v := r^[k].node;
-      if (v^.kind = 109) and ((v^.xl[8] & 16#40000) = 0) and
+      if (v^.kind = var_name) and ((v^.xl[8] & 16#40000) = 0) and
          (v^.xw[36] <> 3) and (v^.xl[14] = 0) and (v^.xw[36] <> 10) and
-         not ((v^.xp[7]^.kind = 108) or (v^.xp[7]^.kind = 107)) then begin
+         not ((v^.xp[7]^.kind = function_blk)
+              or (v^.xp[7]^.kind = procedure_blk)) then begin
         v^.xw[36] := 2;
         type_exp(v, addr(d));
         if 2 in r^[k].flags then
@@ -480,7 +481,7 @@ begin
     a := lshft(1, shift);
     for k := 1 to n do begin
       v := r^[k].node;
-      if v^.kind = 110 then
+      if v^.kind = fortran_symbol then
         if il_utils_$is_strength_reduction_temp(v) then
           if r^[k].reg = 31 then
             if (r^[k].node^.xl[6] & 16#40000) = 0 then begin
@@ -736,7 +737,7 @@ var
     if (e^.flags & 16#400) <> 0 then
       return;
     t := e^.node;
-    if t^.kind = 109 then begin
+    if t^.kind = var_name then begin
       if (t^.xl[8] & 16#201101) <> 0 then
         return;
       if opt_var_types^[v].base = nil then
@@ -745,7 +746,7 @@ var
         defined_var := true;
         return;
       end;
-      if opt_var_types^[v].base^.kind = 123 then begin
+      if opt_var_types^[v].base^.kind = real_type then begin
         if cargs_$options.cpu * [2, 4, 8..10] = [] then
           return;
         if (ord(il_180^.xc[376]) & 16#80) = 0 then
@@ -754,16 +755,16 @@ var
       if (opt_4009c[opt_region]^.vars^[v]^.flags & 8) <> 0 then
         return;
       if not opt_var_types^[v].flags.ranged then
-        if (opt_var_types^[v].base^.kind <> 134) and
-           (opt_var_types^[v].base^.kind <> 123) and
-           (opt_var_types^[v].base^.kind <> 130) then
+        if (opt_var_types^[v].base^.kind <> set_type) and
+           (opt_var_types^[v].base^.kind <> real_type) and
+           (opt_var_types^[v].base^.kind <> ptr_type) then
           return;
-      if opt_var_types^[v].base^.kind = 134 then
+      if opt_var_types^[v].base^.kind = set_type then
         defined_var := opt_var_types^[v].size <= 4
       else
         defined_var := true;
     end
-    else if t^.kind = 110 then begin
+    else if t^.kind = fortran_symbol then begin
       if rshft(ord(t^.xc[44]) & 16#F0, 4) <> 3 then
         return;
       if (t^.xw[13] & 16#100) <> 0 then
@@ -786,7 +787,7 @@ var
           return;
       end;
       if cls = 7 then
-        if il_180^.kind <> 105 then
+        if il_180^.kind <> program_blk then
           return;
       if (opt_4009c[opt_region]^.vars^[v]^.flags & 8) <> 0 then
         return;
@@ -798,7 +799,7 @@ var
         defined_var := true;
         return;
       end;
-      if il_180^.kind = 108 then
+      if il_180^.kind = function_blk then
         if il_180^.xp[24] = t then begin
           defined_var := true;
           return;
@@ -810,8 +811,8 @@ var
           defined_var := true;
           return;
         end;
-        if (st^.kind = 188) or (st^.kind = 140) then begin
-          if st^.kind = 140 then
+        if (st^.kind = use_def_ob) or (st^.kind = assign_node) then begin
+          if st^.kind = assign_node then
             if st^.asg_rhs <> e^.node then
               if st^.hdr.b4 then begin
                 defined_var := true;
@@ -875,10 +876,12 @@ var
           next;
         if not test_stmt(rr, p) then
           next;
-        if rr^.node^.kind = 190 then
+        if rr^.node^.kind = cse_parent_ob then
           if g_opt_cse_ptr_t(rr^.node)^.p_stmt = b^.first_stmt then
             next;
-        if (rr^.node^.kind in [88..89, 137..138, 145..147, 163, 195]) and
+        if (rr^.node^.kind in [real_ob..dpreal_ob, tree_node..gen_tree_node,
+                               dindex_node..disp_node, addr_con,
+                               reloc_absolute_addr_con]) and
            b^.flags.latch then
           if not test_stmt(rr, p - 1) then
             next;
@@ -888,7 +891,7 @@ var
             next;
         if g_opt_bb_ptr_t(b)^.cache_in = nil then begin
           regs := gspace(196);
-          regs^.kind := 178;
+          regs^.kind := reg_assign_ob;
           for m := 0 to 23 do begin
             regs^.ent[m].obj := nil;
             regs^.ent[m].size := 0;
@@ -898,7 +901,7 @@ var
           g_opt_bb_ptr_t(b)^.cache_in := regs;
         end;
         regs := g_opt_bb_ptr_t(b)^.cache_in;
-        if rr^.node^.kind = 190 then
+        if rr^.node^.kind = cse_parent_ob then
           regs^.ent[rr^.reg].obj := g_opt_cse_ptr_t(rr^.node)^.p_tree
         else
           regs^.ent[rr^.reg].obj := rr^.node;
@@ -916,14 +919,16 @@ begin
   while s <> nil do begin
     if s^.hdr.vnum <> 0 then
       reg_nest := reg_nest + 1;
-    if (s^.kind = 140) and (s^.asg_op = 0) then
+    if (s^.kind = assign_node) and (s^.asg_op = 0) then
       if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
         reg_nest := reg_nest + 1;
     b := s^.block;
     if (b^.first_stmt = s) or (b^.num = opt_first_block) then
-      if b^.flags.latch and (s^.kind = 139) then
+      if b^.flags.latch and (s^.kind = eval_node) then
         for i := 1 to s^.eval_count do
-          if s^.eval_opnd[i]^.kind in [88..89, 145..147, 163, 195] then
+          if s^.eval_opnd[i]^.kind in [real_ob..dpreal_ob,
+                                       dindex_node..disp_node, addr_con,
+                                       reloc_absolute_addr_con] then
             reg_nest := reg_nest + 1;
     c := g_opt_cse_ptr_t(s^.cses);
     while c <> nil do begin
@@ -948,12 +953,14 @@ begin
       if cargs_$options.opt_on * [17, 18, 20] <> [] then begin
         b := s^.block;
         if (b^.first_stmt = s) or (b^.num = opt_first_block) then
-          if b^.flags.latch and (s^.kind = 139) then
+          if b^.flags.latch and (s^.kind = eval_node) then
             for i := 1 to s^.eval_count do
-              if s^.eval_opnd[i]^.kind in [88..89, 145..147, 163, 195] then
+              if s^.eval_opnd[i]^.kind in [real_ob..dpreal_ob,
+                                           dindex_node..disp_node, addr_con,
+                                           reloc_absolute_addr_con] then
                 add_con_range(s^.hdr.region, s^.eval_opnd[i]);
       end;
-      if (s^.kind = 140) and (s^.asg_op = 0) then
+      if (s^.kind = assign_node) and (s^.asg_op = 0) then
         if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
           add_con_range(s^.hdr.region, s^.asg_lhs);
       s := s^.next;
@@ -968,7 +975,7 @@ begin
         for i := 1 to reg_nranges do begin
           x := reg_ranges^[i].node;
           if x <> nil then
-            if x^.kind <> 190 then
+            if x^.kind <> cse_parent_ob then
               for j := 1 to reg_nranges do
                 if (reg_ranges^[j].node = x) and (i <> j) then
                   if ranges_intersect(addr(reg_ranges^[i]),
@@ -987,7 +994,7 @@ begin
         compute_costs(reg_ranges, reg_nranges);
         compress_graph(reg_ranges, reg_nranges);
         if reg_nranges <> 0 then begin
-          if il_180^.kind = 108 then
+          if il_180^.kind = function_blk then
             if il_180^.xp[24] <> nil then
               if il_180^.xp[24] <> reg_ranges^[1].node then
                 if reg_nranges > 1 then
@@ -1005,8 +1012,8 @@ begin
           for i := 1 to reg_nranges do begin
             x := reg_ranges^[i].node;
             if x <> nil then
-              if (x^.kind <> 145) and (x^.kind <> 146) and
-                 (x^.kind <> 190) and (x^.kind <> 147) then
+              if (x^.kind <> dindex_node) and (x^.kind <> ptr_node) and
+                 (x^.kind <> cse_parent_ob) and (x^.kind <> disp_node) then
                 for j := i + 1 to reg_nranges do
                   if reg_ranges^[j].node = reg_ranges^[i].node then
                     if reg_ranges^[i].reg = reg_ranges^[j].reg then

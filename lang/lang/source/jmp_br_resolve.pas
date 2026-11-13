@@ -450,7 +450,7 @@ var
     end;
     b := l;
     while (b^.kind <> block_start_instyp) or
-          (il_$node_ptr_t(b^.pc)^.kind = 172) do
+          (il_$node_ptr_t(b^.pc)^.kind = inner_blk) do
       b := b^.prev;
     blk := il_$node_ptr_t(b^.pc);
     if (ord(blk^.xc[375]) & 8) = 0 then
@@ -796,7 +796,7 @@ var
                   hole.cell^.next^.prev := n;
                   hole.cell^.next := n;
                   node := gspace(12);
-                  node^.kind := 184;
+                  node^.kind := inline_constant;
                   node^.xp[1] := il_$node_ptr_t(sect);
                   node^.xp[2] := il_$node_ptr_t(n);
                   update_refs_from_here_forward(c, k, node);
@@ -1015,7 +1015,7 @@ begin
                     else begin
                       a := cur;
                       while (a^.kind <> block_start_instyp) or
-                            (il_$node_ptr_t(a^.pc)^.kind = 172) do
+                            (il_$node_ptr_t(a^.pc)^.kind = inner_blk) do
                         a := a^.prev;
                       if (ord(il_$node_ptr_t(a^.pc)^.xc[375]) & 8) = 0 then
                         cgerr_no_source(28,

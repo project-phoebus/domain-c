@@ -65,15 +65,15 @@ module rewrite;
 %include 'lang/lang/source/list_tree.ins.pas';
 
 type
-  { The nodes as rewrite reads and builds them (kinds: add_node.pas's
-    an_kind_t ordinals). }
+  { The nodes as rewrite reads and builds them (kinds: il.ins.pas's
+    il_$kind_t). }
   rw_ptr_t = ^rw_node_t;
   rw_ptrs_t = array [0..7] of rw_ptr_t;
   rw_node_t = record
     rewritten: boolean;                 { +0: set in what rewrite makes
                                           (rw_rewritten) }
     b1: char;                           { +1 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { A tree node (137, 143 a comparison; 138 done). }
       1: (phase: add_node_$phase_t;     { +4 }
@@ -375,7 +375,7 @@ begin
       lir_main_c58 := h;
     lir_main_c60 := h^.vr_link;
   end;
-  if h^.kind = 109 then
+  if h^.kind = var_name then
     h^.vr_attr := h^.vr_attr ! 16#402000
   else
     h^.fs_attr := h^.fs_attr ! 16#402000;
@@ -386,7 +386,7 @@ begin
   off := 4;
 1:
   n := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 36);
-  n^.kind := 147;
+  n^.kind := disp_node;
   n^.rewritten := rw_rewritten;
   n^.rf_disp := off - rshft(bits + 7, 3);
   n^.rf_base := h;
@@ -484,8 +484,12 @@ var
   old: rw_ptr_t;
 begin
   rw_rewritten := true;
-  if node^.kind in [139..142, 144, 148..151, 188, 191, 214..215,
-                    223..225, 227..228, 231, 233] then begin
+  if node^.kind in [eval_node..cbranch_node, label_node,
+                    block_entry_node..return_node, use_def_ob, reg_list_ob,
+                    case_node_range_check..case_node_no_range_check,
+                    exception_handler_entry..release_dynamic_space,
+                        insert_bit_field..bit_field_assign, spine_mark,
+                        pa_mmu_bip] then begin
     top := node^.top;
     stmt := rshft(node^.l42 & 16#FFFF00, 8);
     line := node^.line;
@@ -501,19 +505,19 @@ begin
   end;
   c := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
   res := c;
-  c^.kind := 137;
+  c^.kind := tree_node;
   c^.rewritten := true;
   c^.count := 3;
   conv := nil;
-  if node^.kind = 137 then begin
+  if node^.kind = tree_node then begin
     c^.desc := node^.desc;
     rw_hdr_ptr_t(addr(c^.phase))^ := rw_hdr_ptr_t(addr(node^.phase))^;
     is_call := (node^.op = 15) or (node^.op = 16);
     if is_call then begin
       r := node^.opnd[1];
-      if r^.kind = 171 then
+      if r^.kind = cc_call then
         c^.opnd[1] := rw_ptr_t(r^.cs_x4[4])
-      else if (r^.kind = 110) and (r^.fs_p40 <> nil) then
+      else if (r^.kind = fortran_symbol) and (r^.fs_p40 <> nil) then
         c^.opnd[1] := r^.fs_p40
       else
         c^.opnd[1] := r;
@@ -561,17 +565,17 @@ begin
   end
   else begin
     is_call := false;
-    if node^.kind = 150 then
+    if node^.kind = nlbranch_node then
       c^.opnd[1] := rw_ptr_t(at_lib_dsc_ptr[51])
-    else if node^.kind = 224 then
+    else if node^.kind = raise_exception then
       c^.opnd[1] := rw_ptr_t(at_lib_dsc_ptr[55])
-    else if node^.kind = 225 then
+    else if node^.kind = release_dynamic_space then
       c^.opnd[1] := rw_ptr_t(at_lib_dsc_ptr[54])
-    else if (node^.kind = 140) and (node^.aop = 32) then
+    else if (node^.kind = assign_node) and (node^.aop = 32) then
       c^.opnd[1] := rw_ptr_t(at_lib_dsc_ptr[50])
-    else if node^.kind = 228 then
+    else if node^.kind = bit_field_assign then
       c^.opnd[1] := rw_ptr_t(at_lib_dsc_ptr[58])
-    else if node^.kind = 149 then
+    else if node^.kind = blk_end_node then
       c^.opnd[1] := rw_ptr_t(at_lib_dsc_ptr[59])
     else
       bug_check('REWRITE: unrecognized IL kind.op%.');
@@ -586,7 +590,7 @@ begin
   c^.f12.cleanup := conv^.cleanup;
   if conv^.args_size > 2048 then begin
     at_backend_506 := false;
-    cgerr(50, line, smcontk(81, conv^.args_size));
+    cgerr(50, line, smcontk(integer_ob, conv^.args_size));
   end
   else if rw_ptr_t(il_180)^.bk_args < conv^.args_size then
     rw_ptr_t(il_180)^.bk_args := conv^.args_size;
@@ -594,8 +598,10 @@ begin
     rw_ptr_t(il_180)^.bk_args := 24;
 
   { the kind of call }
-  if (node^.kind = 150) or (node^.kind = 140) or (node^.kind = 225)
-     or (node^.kind = 224) or (node^.kind = 228) or (node^.kind = 149)
+  if (node^.kind = nlbranch_node) or (node^.kind = assign_node)
+      or (node^.kind = release_dynamic_space)
+     or (node^.kind = raise_exception) or (node^.kind = bit_field_assign)
+         or (node^.kind = blk_end_node)
      or (node^.op = 15) then begin
     c^.op := 30;
     first := 1;
@@ -632,11 +638,11 @@ begin
   arg := nil;
   for j := first to conv^.nargs do begin
     home := nil;
-    if node^.kind = 137 then
+    if node^.kind = tree_node then
       arg := node^.opnd[conv^.args[j].num + ord(is_call)]
-    else if node^.kind = 150 then begin
+    else if node^.kind = nlbranch_node then begin
       if j = 1 then begin
-        if node^.st_p48^.kind <> 117 then
+        if node^.st_p48^.kind <> label_name then
           bug_check('REWRITE: unexpected NLBRANCH_NODE.DST%.');
         lvl := rw_ptr_t(il_180)^.bk_f294.slevel
                - node^.st_p48^.lb_block^.bk_f294.slevel;
@@ -646,7 +652,7 @@ begin
       end
       else begin
         l := node^.st_p48^.lb_node;
-        while l^.kind <> 148 do
+        while l^.kind <> block_entry_node do
           l := l^.prev;
         if l^.st_p48^.bk_l188 <> rw_ptr_t(il_180)^.bk_l188 then
           cgerr(25, node^.line, node^.st_p48);
@@ -656,7 +662,7 @@ begin
                    rw_ptr_t(il_180)^.bk_sect));
       end;
     end
-    else if node^.kind = 140 then begin
+    else if node^.kind = assign_node then begin
       case j of
         1: arg := node^.src;
         2: arg := node^.dst;
@@ -665,7 +671,7 @@ begin
           bug_check('REWRITE: Wrong number of assign_node arguments.');
       end;
     end
-    else if node^.kind = 228 then begin
+    else if node^.kind = bit_field_assign then begin
       case j of
         1: arg := node^.st_p56;
         2: arg := node^.st_p60;
@@ -676,16 +682,17 @@ begin
           bug_check('REWRITE: Wrong number of bit_field_assign arguments.');
       end;
     end
-    else if (node^.kind = 225) or (node^.kind = 224) then
+    else if (node^.kind = release_dynamic_space)
+        or (node^.kind = raise_exception) then
       arg := node^.st_p48
     else
       bug_check('REWRITE: unrecognized IL kind for the call.op%.');
 
     { a byte or halfword passed to op 86's routine: widened }
-    if (node^.kind = 137) and (j = 2) and (node^.op = 86)
+    if (node^.kind = tree_node) and (j = 2) and (node^.op = 86)
        and ((node^.desc.rlen = 2) or (node^.desc.rlen = 1)) then begin
       t := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 44);
-      t^.kind := 137;
+      t^.kind := tree_node;
       t^.rewritten := true;
       t^.op := 18;
       t^.count := 1;
@@ -694,18 +701,21 @@ begin
       t^.opnd[1] := arg;
       arg := t;
     end;
-    if arg^.kind = 164 then
+    if arg^.kind = cs_node then
       arg := arg^.cs_value;
-    if (arg^.kind = 110) and (arg^.fs_f44.cls = 6) then begin
+    if (arg^.kind = fortran_symbol) and (arg^.fs_f44.cls = 6) then begin
       d := arg^.fs_p48;
-      if d^.kind in [77..90, 92..93, 101, 156, 176, 198, 200] then
+      if d^.kind in [blogical_ob..complex_ob, char_string_ob..char32_string_ob,
+                     char16_ob, set_con_ob, rec_const_ob, dpcomplex_ob,
+                     binteger_ob] then
         arg := d;
     end;
-    if (arg^.kind = 163) and (arg^.ac_f20.b20 = 4)
-       and (arg^.ac_sym^.kind = 110) and (arg^.ac_sym^.fs_f44.cls = 1)
+    if (arg^.kind = addr_con) and (arg^.ac_f20.b20 = 4)
+       and (arg^.ac_sym^.kind = fortran_symbol)
+           and (arg^.ac_sym^.fs_f44.cls = 1)
        and (arg^.ac_sym^.fs_p40 <> nil) then
       arg^.ac_sym := arg^.ac_sym^.fs_p40
-    else if (arg^.kind = 110) and (arg^.fs_f44.cls = 1)
+    else if (arg^.kind = fortran_symbol) and (arg^.fs_f44.cls = 1)
             and (arg^.fs_p40 <> nil)
             and (arg^.fs_p40 <> rw_ptr_t(il_180))
             and (rshft(arg^.fs_p40^.bk_w376 & 16#180, 7) = 0) then
@@ -720,14 +730,14 @@ begin
         saved := nil;
       end;
 
-    if arg^.kind = 147 then
+    if arg^.kind = disp_node then
       cand := isc_$is_a_register_candidate(arg^.rf_base)
     else
       cand := isc_$is_a_register_candidate(arg);
     copy := not (20 in getphase(arg)) and not cand;
     if conv^.args[j].by_value then begin
       value := arg;
-      if (arg^.kind = 137) and (j < conv^.nargs)
+      if (arg^.kind = tree_node) and (j < conv^.nargs)
          and (conv^.args[j + 1].num = conv^.args[j].num)
          and (arg^.desc.rlen = 7) then begin
         home := make_expression_temporary(123, 64);
@@ -740,14 +750,14 @@ begin
         node^.opnd[x] := home;
       end;
     end
-    else if cand and (arg^.kind = 147) then begin
+    else if cand and (arg^.kind = disp_node) then begin
       get_rlen_and_size(il_$node_ptr_t(arg^.rf_base), rl, size);
       rlen := rl;
       bits := isc_$precision_from_rlen_and_size(rlen, size);
       size := bits div 8;
       home := get_home_or_temp(arg^.rf_base, rlen, bits);
       value := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 44);
-      value^.kind := 147;
+      value^.kind := disp_node;
       value^.rewritten := true;
       value^.rf_phase := arg^.rf_phase;
       value^.rf_x8 := arg^.rf_x8;
@@ -762,27 +772,33 @@ begin
       value^.rf_base := home;
       arg := arg^.rf_base;
     end
-    else if ((arg^.kind = 109) or (arg^.kind = 110)) and copy then begin
-      if arg^.kind = 109 then
+    else if ((arg^.kind = var_name) or (arg^.kind = fortran_symbol))
+        and copy then begin
+      if arg^.kind = var_name then
         arg^.vr_attr := arg^.vr_attr ! 16#402000
       else
         arg^.fs_attr := arg^.fs_attr ! 16#402000;
       value := arg;
     end
     else if copy
-            or (arg^.kind in [77..90, 92, 105..108, 144..147, 156, 163,
-                              167, 192, 195, 200, 205, 212]) then begin
+            or (arg^.kind in [blogical_ob..complex_ob, char_string_ob,
+                              program_blk..function_blk, label_node..disp_node,
+                              set_con_ob, addr_con,
+                              entry_blk, transfer_vector,
+                                  reloc_absolute_addr_con, binteger_ob,
+                                  sym_disp_node,
+                                  namelist_constant_ob]) then begin
       d := rw_ptr_t(alias_$ind_for_captured_lvalue(il_$node_ptr_t(arg)));
       if d <> nil then begin
-        if d^.kind = 109 then
+        if d^.kind = var_name then
           d^.vr_attr := d^.vr_attr ! 16#402000
-        else if d^.kind = 110 then
+        else if d^.kind = fortran_symbol then
           d^.fs_attr := d^.fs_attr ! 16#402000;
       end;
       value := arg;
     end
     else begin
-      if (arg^.kind = 109) and (arg^.vr_vat <> 5) then begin
+      if (arg^.kind = var_name) and (arg^.vr_vat <> 5) then begin
         get_rlen_and_size(il_$node_ptr_t(arg), rl, size);
         rlen := rl;
       end
@@ -799,7 +815,7 @@ begin
     { the copy into the home or temporary, and back }
     if home <> nil then begin
       a := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-      a^.kind := 140;
+      a^.kind := assign_node;
       a^.rewritten := true;
       a^.size := size;
       a^.rlen := rlen;
@@ -822,7 +838,7 @@ begin
       if not conv^.args[j].by_value
          and (conv^.args[j].f22.mode in [1, 3, 4]) and cand then begin
         b := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-        b^.kind := 140;
+        b^.kind := assign_node;
         b^.rewritten := true;
         b^.top := top;
         b^.l42 := (b^.l42 & 16#FF0000FF) ! lshft(stmt, 8);
@@ -845,7 +861,7 @@ begin
 
     { the argument }
     an := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-    an^.kind := 140;
+    an^.kind := assign_node;
     an^.rewritten := true;
     if not conv^.args[j].by_value then begin
       an^.size := 4;
@@ -871,12 +887,12 @@ begin
     l := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 8);
     an^.dst := l;
     if conv^.args[j].f18.loc = 4 then begin
-      l^.kind := 204;
+      l^.kind := argument_block_location_ob;
       l^.rewritten := true;
       l^.lo_offset := conv^.args[j].offset;
     end
     else begin
-      l^.kind := 203;
+      l^.kind := physical_register_ob;
       l^.rewritten := true;
       l^.lo_class := conv^.args[j].f18.loc;
       l^.lo_reg := conv^.args[j].f22.reg;
@@ -887,18 +903,18 @@ begin
       else begin
         d := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 40);
         an^.src := d;
-        d^.kind := 147;
+        d^.kind := disp_node;
         d^.rewritten := true;
         d^.rf_disp := conv^.args[j].w6;
         d^.rf_base := value;
       end;
     end
-    else if value^.kind = 146 then
+    else if value^.kind = ptr_node then
       an^.src := value^.rf_base
     else begin
       t := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 44);
       an^.src := t;
-      t^.kind := 137;
+      t^.kind := tree_node;
       t^.rewritten := true;
       t^.op := 64;
       t^.count := 1;
@@ -916,7 +932,7 @@ begin
     if conv^.args[j].by_value
        and (conv^.args[j].f22.mode in [3, 4]) then begin
       o := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-      o^.kind := 140;
+      o^.kind := assign_node;
       o^.rewritten := true;
       o^.prev := an^.prev;
       o^.next := an^.next;
@@ -944,7 +960,7 @@ begin
   { the static link }
   if conv^.link <> nil then begin
     an := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-    an^.kind := 140;
+    an^.kind := assign_node;
     an^.rewritten := true;
     an^.size := 4;
     an^.rlen := 5;
@@ -957,7 +973,7 @@ begin
     an^.src := conv^.link;
     l := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 8);
     an^.dst := l;
-    l^.kind := 203;
+    l^.kind := physical_register_ob;
     l^.rewritten := true;
     l^.lo_class := 0;
     l^.lo_reg := conv^.w12;
@@ -970,7 +986,7 @@ begin
     if not db^.f2.physical or (db^.f2.reg <> conv^.w16)
        or ((rconv^.w16 & 31) in bv_word_t(rconv^.ip76)) then begin
       an := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-      an^.kind := 140;
+      an^.kind := assign_node;
       an^.rewritten := true;
       an^.size := 4;
       an^.rlen := 5;
@@ -988,7 +1004,7 @@ begin
                        rw_ptr_t(il_180)^.bk_sect, false));
       l := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 8);
       an^.dst := l;
-      l^.kind := 203;
+      l^.kind := physical_register_ob;
       l^.rewritten := true;
       l^.lo_class := 0;
       l^.lo_reg := conv^.w16;
@@ -1009,10 +1025,10 @@ begin
   end;
 
   { FORTRAN I/O }
-  if (res^.kind = 137) and (res^.op = 30) then begin
+  if (res^.kind = tree_node) and (res^.op = 30) then begin
     res^.f12.fio := false;
     lib := res^.opnd[1];
-    if lib^.kind = 159 then begin
+    if lib^.kind = lib_dsc then begin
       if lib^.ld_len > 9 then
         if strl_$eq(lib^.ld_words[lib^.ld_skip], 10, 'fio_$xfer_', 10)
            or strl_$eq(lib^.ld_words[lib^.ld_skip], 9, 'fio_$inq_', 9) then
@@ -1022,15 +1038,15 @@ begin
           res^.f12.fio := true;
           old := res;
           res := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 52);
-          res^.kind := 137;
+          res^.kind := tree_node;
           res^.rewritten := true;
           res^.op := 67;
           res^.count := 1;
           res^.opnd[1] := old;
           for i := 2 to node^.count do begin
             d := node^.opnd[i];
-            if (d^.kind = 110) and (d^.fs_f44.cls = 6)
-               and (d^.fs_p48^.kind = 144) then begin
+            if (d^.kind = fortran_symbol) and (d^.fs_f44.cls = 6)
+               and (d^.fs_p48^.kind = label_node) then begin
               res^.count := res^.count + 1;
               res^.opnd[res^.count] := d;
             end;
@@ -1040,10 +1056,14 @@ begin
   end;
 
   { a statement: an EVAL_NODE }
-  if node^.kind in [139..142, 144, 148..151, 188, 191, 214..215,
-                    223..225, 227..228, 231, 233] then begin
+  if node^.kind in [eval_node..cbranch_node, label_node,
+                    block_entry_node..return_node, use_def_ob, reg_list_ob,
+                    case_node_range_check..case_node_no_range_check,
+                    exception_handler_entry..release_dynamic_space,
+                        insert_bit_field..bit_field_assign, spine_mark,
+                        pa_mmu_bip] then begin
     d := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 56);
-    d^.kind := 139;
+    d^.kind := eval_node;
     d^.rewritten := true;
     d^.ev_count := 1;
     d^.prev := node^.prev;
@@ -1078,16 +1098,16 @@ var
   k: integer32;
 begin
   case n^.kind of
-    143, 137:
+    cmp_tree_node, tree_node:
       ;
-    175: begin
+    pf_call: begin
       discard(correct_uc(rw_ptr_t(n^.cs_x4[4])));
       correct_uc := 0;
       return;
     end;
-    146, 147, 205:
+    ptr_node, disp_node, sym_disp_node:
       discard(correct_uc(n^.rf_base));
-    145: begin
+    dindex_node: begin
       discard(correct_uc(n^.rf_index));
       discard(correct_uc(n^.rf_base));
     end;
@@ -1098,7 +1118,7 @@ begin
   end;
   n^.uses := n^.uses + 1;
   k := n^.uses;
-  if (k > 1) and (n^.kind <> 189) then begin
+  if (k > 1) and (n^.kind <> cse_use_ob) then begin
     n^.phase := n^.phase + [22];
     rw_hdr_ptr_t(addr(n^.phase))^.l8 := 0;
   end;
@@ -1128,7 +1148,7 @@ var
   n: rw_ptr_t;
 begin
   n := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 48);
-  n^.kind := 137;
+  n^.kind := tree_node;
   n^.rewritten := rw_rewritten;
   n^.desc := rw_desc;
   rw_hdr_ptr_t(addr(n^.phase))^ := rw_hdr;
@@ -1185,7 +1205,7 @@ begin
       correct_opmod(sh^.desc.w6, a);
     end;
     discard(correct_uc(sh^.opnd[1]));
-    sh^.opnd[2] := rw_ptr_t(smcontk(81, rw_shift_tab[op]));
+    sh^.opnd[2] := rw_ptr_t(smcontk(integer_ob, rw_shift_tab[op]));
   end;
   n := ops[k];
   if op = 1 then
@@ -1195,7 +1215,7 @@ begin
     0, 1: begin
       n^.opnd[1] := ops[a];
       correct_opmod(n^.desc.w6, a);
-      n^.opnd[2] := rw_ptr_t(smcontk(81, b));
+      n^.opnd[2] := rw_ptr_t(smcontk(integer_ob, b));
     end;
     2, 6: begin
       n^.opnd[1] := ops[a];
@@ -1272,7 +1292,7 @@ begin
   res := node;
   node^.op := 33;
   cst := node^.opnd[2];
-  if cst^.kind in [77..87, 101, 200] then begin
+  if cst^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
     m := cst^.ic_value;
     rw_desc := node^.desc;
     rw_hdr := rw_hdr_ptr_t(addr(node^.phase))^;
@@ -1313,7 +1333,7 @@ begin
       rw_desc.w6 := rw_desc.rlen;
       rw_desc.w8 := rw_desc.rlen;
     end
-    else if ((x^.kind = 109) or (x^.kind = 110))
+    else if ((x^.kind = var_name) or (x^.kind = fortran_symbol))
             and isc_$is_a_register_candidate(x) then
       ops[0] := x
     else begin
@@ -1357,7 +1377,7 @@ begin
       t^.desc.w8 := rw_desc.rlen;
       t^.op := 27;
       t^.opnd[1] := r;
-      t^.opnd[2] := rw_ptr_t(smcontk(81, shift));
+      t^.opnd[2] := rw_ptr_t(smcontk(integer_ob, shift));
     end;
     if at_backend_switches.sw10 then begin
       vfmt_$write('REWRITE_$CONST_MUL -- rewritten tree:%.');
@@ -1384,7 +1404,8 @@ var
 begin
   rw_rewritten := true;
   node^.aop := 26;
-  if node^.src^.kind in [77..87, 101, 200] then begin
+  if node^.src^.kind in [blogical_ob..char_ob, char16_ob,
+                         binteger_ob] then begin
     rw_desc := rw_desc_ptr_t(addr(node^.size))^;
     rw_hdr.phase := [];
     rw_hdr.l8 := 0;
@@ -1416,7 +1437,7 @@ var
   d: rw_ptr_t;
 begin
   d := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 44);
-  d^.kind := 145;
+  d^.kind := dindex_node;
   rw_hdr_ptr_t(addr(d^.phase))^ := rw_hdr;
   d^.rf_phase := 256;
   d^.rf_uses := 1;
@@ -1435,9 +1456,9 @@ function common_piece_of_tree(
     n: rw_ptr_t): rw_ptr_t; options(val_param, internal);
 begin
   if n <> nil then
-    if n^.kind = 190 then
+    if n^.kind = cse_parent_ob then
       n := rw_ptr_t(isc_node_ptr_t(n)^.cp_tree)
-    else if n^.kind = 189 then
+    else if n^.kind = cse_use_ob then
       n := rw_ptr_t(isc_node_ptr_t(n)^.cu_tree);
   common_piece_of_tree := n;
 end;
@@ -1455,16 +1476,17 @@ label
 begin
 1:
   tree_is_a_constant := true;
-  if not (n^.kind in [77..87, 101, 200]) then begin
-    if n^.kind = 190 then begin
+  if not (n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then begin
+    if n^.kind = cse_parent_ob then begin
       n := rw_ptr_t(isc_node_ptr_t(n)^.cp_tree);
       goto 1;
     end
-    else if n^.kind = 189 then begin
+    else if n^.kind = cse_use_ob then begin
       n := rw_ptr_t(isc_node_ptr_t(n)^.cu_tree);
       goto 1;
     end
-    else if (n^.kind = 137) and (n^.op in [0, 7, 8, 17, 18, 63]) then begin
+    else if (n^.kind = tree_node) and (n^.op in [0, 7, 8, 17, 18,
+                                                 63]) then begin
       n := n^.opnd[1];
       goto 1;
     end;
@@ -1528,7 +1550,7 @@ begin
   cnt := t^.uses - 1;
   if cnt < 4 then
     goto 1;
-  if (t^.kind <> 137) and (t^.kind <> 138) then
+  if (t^.kind <> tree_node) and (t^.kind <> gen_tree_node) then
     goto 1;
   if t^.op <> 17 then
     goto 1;
@@ -1537,12 +1559,12 @@ begin
   br := stmt^.next;
   i := cnt;
   while i > 0 do begin
-    if br^.kind <> 142 then
+    if br^.kind <> cbranch_node then
       goto 1;
     if not br^.cb_f60.on_true then
       goto 1;
     cmp := br^.st_p56;
-    if cmp^.kind <> 143 then
+    if cmp^.kind <> cmp_tree_node then
       goto 1;
     if cmp^.desc.w8 <> 7 then
       goto 1;
@@ -1555,7 +1577,7 @@ begin
     end;
     value := cmp^.opnd[1];
     k := cmp^.opnd[2];
-    if not (k^.kind in [77..87, 101, 200]) then
+    if not (k^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
       goto 1;
     v := k^.ic_value;
     if v < lo then
@@ -1592,16 +1614,16 @@ begin
   end;
   low := lo;
   high := hi;
-  if br^.kind = 141 then begin
+  if br^.kind = branch_node then begin
     dflt := br^.st_p48;
     next := br^.next;
   end
   else begin
-    if br^.kind = 144 then
+    if br^.kind = label_node then
       lab := br
     else begin
       lab := gspace(84);
-      lab^.kind := 144;
+      lab^.kind := label_node;
       lab^.prev := br^.prev;
       br^.prev^.next := lab;
       lab^.next := br;
@@ -1664,13 +1686,13 @@ begin
     return;
   if stmt = nil then
     return;
-  if stmt^.kind <> 139 then
+  if stmt^.kind <> eval_node then
     return;
   if stmt^.ev_count = 0 then
     return;
   if stmt^.next = nil then
     return;
-  if stmt^.next^.kind <> 142 then
+  if stmt^.next^.kind <> cbranch_node then
     return;
   if tree_is_a_constant(stmt^.st_p52) then
     return;
@@ -1693,15 +1715,15 @@ begin
     t^.count := 2;
     t^.uses := 1;
     t^.opnd[1] := value;
-    t^.opnd[2] := rw_ptr_t(smcontk(81, low));
+    t^.opnd[2] := rw_ptr_t(smcontk(integer_ob, low));
     value := t;
   end;
   a := rw_ptr_t(get_proc_addr_con(6, il_$node_ptr_t(s),
            rw_ptr_t(il_180)^.bk_l188, rw_ptr_t(il_180)^.bk_sect));
   if not done then
-    s^.kind := 215
+    s^.kind := case_node_no_range_check
   else begin
-    s^.kind := 214;
+    s^.kind := case_node_range_check;
     t := make_tree_node;
     t^.uses := 2;
     t^.phase := [22];
@@ -1711,13 +1733,13 @@ begin
     a := t;
     s^.st_p56 := a;
     c := make_tree_node;
-    c^.kind := 143;
+    c^.kind := cmp_tree_node;
     c^.op := 12;
     c^.desc.w8 := 3;
     c^.count := 2;
     c^.opnd[1] := value;
     discard(correct_uc(value));
-    c^.opnd[2] := rw_ptr_t(smcontk(81, high));
+    c^.opnd[2] := rw_ptr_t(smcontk(integer_ob, high));
     s^.st_p60 := c;
     s^.st_p64 := dflt;
   end;
@@ -1743,13 +1765,13 @@ var
   n: rw_ptr_t;
 begin
   n := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 48);
-  n^.kind := 137;
+  n^.kind := tree_node;
   n^.op := 16;
   n^.desc.size := 4;
   n^.desc.rlen := 5;
   n^.count := 2;
-  n^.opnd[1] := rw_ptr_t(addr(at_lib_dsc[16#10EC]));
-  n^.opnd[2] := rw_ptr_t(smcontk(82, size));
+  n^.opnd[1] := rw_ptr_t(addr(at_lib_dsc_bytes[16#10EC]));
+  n^.opnd[2] := rw_ptr_t(smcontk(linteger_ob, size));
   make_call_to_rws_$alloc_temp := n;
 end;
 
@@ -1784,7 +1806,7 @@ begin
   rw_rewritten := false;
   stmt := node;
   b := stmt^.st_p48;
-  if b^.kind = 167 then
+  if b^.kind = entry_blk then
     b := b^.bk_routine;
   nxt := stmt^.next;
   x := b^.bk_xdynm;
@@ -1799,7 +1821,7 @@ begin
       x := b^.bk_xdynm;
     end;
     a := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-    a^.kind := 140;
+    a^.kind := assign_node;
     stmt^.next := a;
     a^.size := 4;
     a^.rlen := 5;
@@ -1810,7 +1832,7 @@ begin
     stmt := a;
     if cargs_$options.db >= 2 then begin
       a2 := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 80);
-      a2^.kind := 140;
+      a2^.kind := assign_node;
       a^.next := a2;
       a2^.size := 4;
       a2^.rlen := 5;
@@ -1827,7 +1849,7 @@ begin
   end;
   e := mrh_$alloc(rw_heap_ptr_t(addr(lir_3f60))^, 52);
   stmt^.next := e;
-  e^.kind := 148;
+  e^.kind := block_entry_node;
   e^.prev := stmt;
   e^.st_p48 := b;
   e^.next := nxt;
@@ -1879,11 +1901,11 @@ begin
   dst := node^.dst;
   src := node^.src;
   len := node^.size - w56;
-  if (dst^.kind = 110) or (dst^.kind = 109) then
+  if (dst^.kind = fortran_symbol) or (dst^.kind = var_name) then
     p := dst
   else begin
     t := mrh_$alloc(isc_preserve_heap, 44);
-    t^.kind := 137;
+    t^.kind := tree_node;
     t^.rewritten := true;
     rw_hdr_ptr_t(addr(t^.phase))^.l8 := integer32(node);
     t^.op := 0;
@@ -1891,33 +1913,33 @@ begin
     t^.desc.size := len;
     t^.opnd[1] := dst;
     p := mrh_$alloc(isc_preserve_heap, 28);
-    p^.kind := 190;
+    p^.kind := cse_parent_ob;
     p^.rewritten := true;
     isc_node_ptr_t(p)^.cp_tree := isc_node_ptr_t(t);
     u := mrh_$alloc(isc_preserve_heap, 36);
-    u^.kind := 189;
+    u^.kind := cse_use_ob;
     u^.rewritten := true;
     isc_node_ptr_t(u)^.cu_tree := isc_node_ptr_t(t);
     isc_node_ptr_t(u)^.cu_parent := isc_node_ptr_t(p);
     dst := u;
   end;
   d := mrh_$alloc(isc_preserve_heap, 36);
-  d^.kind := 147;
+  d^.kind := disp_node;
   d^.rewritten := true;
   d^.rf_f22.b23 := 0;
   d^.rf_disp := len;
   d^.rf_base := dst;
   d^.rf_l28 := 0;
   k32 := mrh_$alloc(isc_preserve_heap, 12);
-  k32^.kind := 81;
+  k32^.kind := integer_ob;
   k32^.rewritten := true;
   k32^.ic_value := 32;
   kw := mrh_$alloc(isc_preserve_heap, 12);
-  kw^.kind := 81;
+  kw^.kind := integer_ob;
   kw^.rewritten := true;
   kw^.ic_value := w56;
   a := mrh_$alloc(isc_preserve_heap, 80);
-  a^.kind := 140;
+  a^.kind := assign_node;
   a^.rewritten := true;
   a^.next := nxt;
   a^.top := top;
@@ -1929,7 +1951,7 @@ begin
   a^.aop := 34;
   a^.rlen := 1;
   b := mrh_$alloc(isc_preserve_heap, 80);
-  b^.kind := 140;
+  b^.kind := assign_node;
   b^.rewritten := true;
   b^.next := a;
   b^.top := top;

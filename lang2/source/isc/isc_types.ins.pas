@@ -32,15 +32,15 @@ type
       end;
   end;
 
-  { The IL nodes as the ISC reads them (kind at +2; the kinds are
-    add_node.pas's an_kind_t ordinals, written as numbers). }
+  { The IL nodes as the ISC reads them (kind at +2; the kind is
+    il.ins.pas's il_$kind_t). }
   isc_node_ptr_t = ^isc_node_t;
   isc_sr_info_ptr_t = ^isc_sr_info_t;  { below }
   isc_node_t = record
     rewritten: boolean;                 { +0: list_tree's flag (rewrite)
                                           sets it) }
     b1: char;                           { +1 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { A tree node (137 TREE_NODE, 138 GEN_TREE_NODE: the ISC sets a
         CSE's tree to 138 once it has its solution): top (+12) its

@@ -379,7 +379,7 @@ type
   ra_var_ptr_t = ^ra_var_t;
   ra_var_t = record
     space0: array [0..1] of char;
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     space4: array [4..31] of char;
     flags: set of 0..31;                { +32 }
     size: integer32;                    { +36 }
@@ -395,7 +395,7 @@ type
   ra_fsym_ptr_t = ^ra_fsym_t;
   ra_fsym_t = record
     space0: array [0..1] of char;
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     space4: array [4..10] of char;
     f11: packed record                  { +11 }
       class: 0..15;
@@ -1092,7 +1092,7 @@ begin
           if ra_final then begin
             v := ra_var_ptr_t(op^.link);
             case v^.kind of
-              109:
+              var_name:
                 if v^.flags * [8, 27] = [] then begin
                   v^.flags := v^.flags - [18] + [27];
                   if 17 in v^.flags then begin
@@ -1106,7 +1106,7 @@ begin
                   v^.next := ra_frame_objs;
                   ra_frame_objs := v;
                 end;
-              110: begin
+              fortran_symbol: begin
                 fs := ra_fsym_ptr_t(v);
                 if fs^.flags * [8, 27] = [] then begin
                   fs^.flags := fs^.flags - [18] + [27];
@@ -1165,7 +1165,7 @@ begin
     while obj <> nil do begin
       fs := ra_fsym_ptr_t(obj);
       case obj^.kind of
-        109: begin
+        var_name: begin
           next := obj^.next;
           if 18 in obj^.flags then
             goto 10;
@@ -1175,7 +1175,7 @@ begin
             size := rshft(obj^.size + 7, 3);
           align := obj^.align;
           end;
-        110: begin
+        fortran_symbol: begin
           next := fs^.next;
           if 18 in fs^.flags then
             goto 10;
@@ -1219,7 +1219,7 @@ begin
         if size <= half then
           goto 10;
       end;
-      if obj^.kind = 109 then begin
+      if obj^.kind = var_name then begin
         obj^.flags := obj^.flags + [18];
         obj^.offset := off;
       end
@@ -1389,11 +1389,11 @@ begin
     v := ra_frame_objs;
     while v <> nil do
       case v^.kind of
-        109: begin
+        var_name: begin
           v^.flags := v^.flags - [18, 27];
           v := v^.next;
           end;
-        110: begin
+        fortran_symbol: begin
           ra_fsym_ptr_t(v)^.flags := ra_fsym_ptr_t(v)^.flags - [18, 27];
           v := ra_fsym_ptr_t(v)^.next;
           end;
@@ -1404,11 +1404,11 @@ begin
     ra_frame_objs := v;
     while v <> nil do
       case v^.kind of
-        109: begin
+        var_name: begin
           v^.flags := v^.flags - [18] + [27];
           v := v^.next;
           end;
-        110: begin
+        fortran_symbol: begin
           ra_fsym_ptr_t(v)^.flags := ra_fsym_ptr_t(v)^.flags - [18] + [27];
           v := ra_fsym_ptr_t(v)^.next;
           end;
@@ -1497,12 +1497,12 @@ begin
     ra_check_db := false;
     if rtn^.f226.needs_frame then begin
       v := ra_var_ptr_t(rtn^.ap_lr^.node20);
-      if v^.kind = 109 then
+      if v^.kind = var_name then
         v^.flags := v^.flags + [18]
       else
         ra_fsym_ptr_t(v)^.flags := ra_fsym_ptr_t(v)^.flags + [18];
       v := ra_var_ptr_t(lr_ptr_t(rtn^.l112)^.node20);
-      if v^.kind = 109 then
+      if v^.kind = var_name then
         v^.flags := v^.flags + [18]
       else
         ra_fsym_ptr_t(v)^.flags := ra_fsym_ptr_t(v)^.flags + [18];
@@ -1617,7 +1617,7 @@ var
   k, n: integer32;
 begin
   if ra_simple_ids = 32767 then
-    cgerr_no_source(24, integer32(idntk(76, 'basic block too complex', 23)))
+    cgerr_no_source(24, integer32(idntk(id_ob, 'basic block too complex', 23)))
   else if ra_simple_ids >= ra_max_simple then
     bug_check('RA_$NEW_SIMPLE_ID -- no cornucopia found here%$');
   p := ra_cs.cursor;
@@ -4794,7 +4794,7 @@ begin
   off := lir_main_c6c;
   v := ra_frame_objs;
   while v <> nil do begin
-    if v^.kind = 109 then begin
+    if v^.kind = var_name then begin
       v^.offset := v^.offset + off;
       nxt := v^.next;
       v^.next := nil;
@@ -4808,12 +4808,12 @@ begin
   end;
   if rtn^.f226.needs_frame then begin
     v := ra_var_ptr_t(rtn^.ap_lr^.node20);
-    if v^.kind = 109 then
+    if v^.kind = var_name then
       v^.offset := 0
     else
       ra_fsym_ptr_t(v)^.offset := 0;
     v := ra_var_ptr_t(lr_ptr_t(rtn^.l112)^.node20);
-    if v^.kind = 109 then
+    if v^.kind = var_name then
       v^.offset := 8
     else
       ra_fsym_ptr_t(v)^.offset := 8;

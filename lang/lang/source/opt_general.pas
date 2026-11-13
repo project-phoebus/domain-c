@@ -69,7 +69,7 @@ begin
   if t = nil then
     assert_is_a_variable := false
   else
-    assert_is_a_variable := (t^.kind = 110) or (t^.kind = 109);
+    assert_is_a_variable := (t^.kind = fortran_symbol) or (t^.kind = var_name);
 end;
 
 { assert_is_scrutable_tree_not_used_elsewhere - t is a tree (143 or
@@ -83,7 +83,8 @@ function assert_is_scrutable_tree_not_used_elsewhere(
 begin
   if t = nil then
     assert_is_scrutable_tree_not_used_elsewhere := false
-  else if ((t^.kind = 143) or (t^.kind = 137)) and (t^.uses = 1) then
+  else if ((t^.kind = cmp_tree_node) or (t^.kind = tree_node))
+      and (t^.uses = 1) then
     assert_is_scrutable_tree_not_used_elsewhere := t^.flags * [3, 4, 12] = []
   else
     assert_is_scrutable_tree_not_used_elsewhere := false;
@@ -101,7 +102,8 @@ function assert_is_explicitly_useless_object(
 begin
   if t = nil then
     assert_is_explicitly_useless_object := false
-  else if t^.kind in [137, 138, 143, 145..147, 164, 205] then
+  else if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                      dindex_node..disp_node, cs_node, sym_disp_node] then
     assert_is_explicitly_useless_object := t^.uses = 0
   else
     assert_is_explicitly_useless_object := false;
@@ -129,7 +131,7 @@ end;
 procedure squash_this_eval_operand(
     var t: il_$node_ptr_t); internal;
 begin
-  t := smcontk(81, 0);
+  t := smcontk(integer_ob, 0);
 end;
 
 { opt_gen_$prune_eval_operands - fold each operand of evaluation
@@ -198,11 +200,11 @@ begin
   ok := false;
   if 4 in cargs_$options.cpu then
     if cargs_$options.cpu * [5, 9, 10] = [] then
-      if t^.kind = 137 then
+      if t^.kind = tree_node then
         if (t^.op = 37) or (t^.op = 36) then
           if (t^.rlen = 7) or (t^.rlen = 6) then begin
             c := t^.opnd[2];
-            if (c^.kind = 88) or (c^.kind = 89) then begin
+            if (c^.kind = real_ob) or (c^.kind = dpreal_ob) then begin
               x.d := c^.real_value;
               a := abs(x.d);
               if a >= 5.0e-307 then
@@ -282,39 +284,46 @@ begin
   for i := first^.first to last^.last do begin
     t := g_opt_nodes_ptr_t(il_120)^[i];
     if opt_track_lines then
-      if (t^.kind in [139..142, 144, 148..151, 188, 191, 214, 215,
-                      223..225, 227, 228, 231, 233]) and
+      if (t^.kind in [eval_node..cbranch_node, label_node,
+                      block_entry_node..return_node, use_def_ob, reg_list_ob,
+                      case_node_range_check, case_node_no_range_check,
+                      exception_handler_entry..release_dynamic_space,
+                          insert_bit_field, bit_field_assign, spine_mark,
+                          pa_mmu_bip]) and
          (g_opt_stmt_ptr_t(t)^.line <> spos_$null_position) then
         il_d0 := g_opt_stmt_ptr_t(t)^.line;
-    if (t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) and
+    if (t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                    dindex_node..disp_node, cs_node, cc_call, pf_call,
+                    cse_use_ob, sym_disp_node]) and
        (6 in g_opt_tree_ptr_t(t)^.flags) then
       while 6 in g_opt_tree_ptr_t(t)^.flags do begin
         t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
-        if t^.kind = 190 then
+        if t^.kind = cse_parent_ob then
           exit;
       end;
     case t^.kind of
-      143, 137: begin
+      cmp_tree_node, tree_node: begin
         tr := g_opt_tree_ptr_t(t);
         for j := 1 to tr^.count do
           kfold(t, tr^.opnd[j]);
       end;
-      145:
+      dindex_node:
         kfold(t, t^.xp[9]);
-      147:
+      disp_node:
         kfold(t, t^.xp[6]);
-      205:
+      sym_disp_node:
         kfold(t, t^.xp[6]);
-      146:
+      ptr_node:
         kfold(t, t^.xp[6]);
-      142: begin
+      cbranch_node: begin
         st := g_opt_stmt_ptr_t(t);
         kfold(t, st^.br_cond);
         if st^.br_cond <> nil then
-          if (st^.br_cond^.kind = 92) and (st^.br_cond^.str_len = 1) then
-            st^.br_cond := smcontk(81, ord(st^.br_cond^.str_chars[1]));
+          if (st^.br_cond^.kind = char_string_ob)
+              and (st^.br_cond^.str_len = 1) then
+            st^.br_cond := smcontk(integer_ob, ord(st^.br_cond^.str_chars[1]));
       end;
-      140: begin
+      assign_node: begin
         st := g_opt_stmt_ptr_t(t);
         kfold(t, st^.asg_rhs);
         kfold(t, st^.asg_lhs);
@@ -322,37 +331,39 @@ begin
           kfold(t, st^.asg_x);
         commit_top_$convert_aops_to__aop_to_mem(t);
         if (st^.asg_op in [1..5, 15, 16]) and
-           (st^.asg_rhs^.kind in [77..87, 101, 200]) then begin
+           (st^.asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
+                                  binteger_ob]) then begin
           if st^.asg_rhs^.int_value < 0 then
             case st^.asg_op of
               1: begin
                 st^.asg_op := 2;
-                st^.asg_rhs := smcontk(81, -st^.asg_rhs^.int_value);
+                st^.asg_rhs := smcontk(integer_ob, -st^.asg_rhs^.int_value);
               end;
               2: begin
                 st^.asg_op := 1;
-                st^.asg_rhs := smcontk(81, -st^.asg_rhs^.int_value);
+                st^.asg_rhs := smcontk(integer_ob, -st^.asg_rhs^.int_value);
               end;
               otherwise ;
             end;
           p := st^.prev;
-          if p^.kind = 140 then
+          if p^.kind = assign_node then
             if (getphase(p^.asg_lhs) + getphase(p^.asg_rhs)) * [1, 2] = [] then
               if (find_var(st^.asg_lhs) = 0) and
                  (find_var(p^.asg_lhs) = 0) then begin
                 a := st^.asg_lhs;
-                if a^.kind = 190 then
+                if a^.kind = cse_parent_ob then
                   a := a^.xp[1]
-                else if a^.kind = 189 then
+                else if a^.kind = cse_use_ob then
                   a := a^.xp[5];
                 b := p^.asg_lhs;
-                if b^.kind = 190 then
+                if b^.kind = cse_parent_ob then
                   b := b^.xp[1]
-                else if b^.kind = 189 then
+                else if b^.kind = cse_use_ob then
                   b := b^.xp[5];
                 if (a = b) and (p^.asg_op = st^.asg_op) then begin
                   c := p^.asg_rhs;
-                  if c^.kind in [77..87, 101, 200] then begin
+                  if c^.kind in [blogical_ob..char_ob, char16_ob,
+                                 binteger_ob] then begin
                     diff := p^.asg_rlen - st^.asg_rlen;
                     if (diff = 0) or
                        not (st^.asg_op in [1, 2, 15, 16]) then begin
@@ -393,7 +404,7 @@ begin
                             v := (v & ~w) ! (~v & w);
                         otherwise ;
                       end;
-                      p^.asg_rhs := smcontk(81, v);
+                      p^.asg_rhs := smcontk(integer_ob, v);
                       adjust_uc(p^.asg_lhs, -1);
                       st^.hdr.deleted := true;
                       p^.next := st^.next;
@@ -404,7 +415,7 @@ begin
               end;
         end;
       end;
-      139:
+      eval_node:
         opt_gen_$prune_eval_operands(g_opt_stmt_ptr_t(t));
       otherwise ;
     end;
@@ -429,8 +440,8 @@ begin
   find_var := 0;
   if v <> nil then begin
     case v^.kind of
-      109: n := v^.xw[37];
-      110: n := v^.xw[8];
+      var_name: n := v^.xw[37];
+      fortran_symbol: n := v^.xw[8];
       otherwise
         return;
     end;

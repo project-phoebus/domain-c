@@ -301,6 +301,7 @@ def read_headings_of(path):
 # the abstract syntax
 #
 # expressions: ('num', v) ('nil',) ('bool', b) ('str', s) ('opc', name)
+# ('ilk', name)
 #   ('path', base, [sel...])  base a parameter, '$K' or a name; sel an
 #   attribute name, '$K', cNNN ...
 #   ('call', name, [args]) ('addr', path) ('bin', op, a, b) ('un', op, a)
@@ -328,7 +329,7 @@ def fmt_expr(e, prec=0):
         return "'" + e[1].replace("'", "''") + "'"
     if k == 'real':
         return repr(float(e[1]))
-    if k == 'opc':
+    if k in ('opc', 'ilk'):
         return e[1]
     if k == 'path':
         base, sels = e[1], e[2]
@@ -578,6 +579,8 @@ class Parser:
             return ('bool', t == 'true')
         if t.lower().startswith('opc$'):
             return ('opc', t.lower())
+        if t.lower() in il_kind_names():
+            return ('ilk', t.lower())
         if t == 'addr':
             self.expect('(')
             p = self.primary()
@@ -614,6 +617,24 @@ def parse_body(text):
     if p.peek() is not None:
         raise LangError('text after the body: %r' % p.peek())
     return out
+
+
+# --------------------------------------------------------------------------
+# the IL node kinds (il.ins.pas's il_$kind_t): a rule names a kind by its
+# name ('ilk', name), written as the name
+
+_IL_KINDS = None
+
+
+def il_kind_names():
+    global _IL_KINDS
+    if _IL_KINDS is None:
+        import os
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+                         'lang', 'lang', 'source', 'il.ins.pas')
+        m = re.search(r'\bil_\$kind_t = \((.*?)\);', open(p, encoding='latin1').read(), re.S)
+        _IL_KINDS = frozenset(x.strip() for x in re.sub(r'\{[^}]*\}', '', m.group(1)).split(','))
+    return _IL_KINDS
 
 
 # --------------------------------------------------------------------------
@@ -772,6 +793,8 @@ class Emitter:
             return repr(float(e[1])), 'real'
         if k == 'opc':
             return 'ord(%s)' % e[1], 'num'
+        if k == 'ilk':
+            return e[1], 'ilk'
         if k == 'path':
             t, c = self.path(e)
             return t, c

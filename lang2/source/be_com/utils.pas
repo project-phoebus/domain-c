@@ -149,7 +149,7 @@ type
   ut_sym_ptr_t = ^ut_sym_t;
   ut_sym_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [4..23] of char;    { +4 }
     flags24: integer32;                 { +24 }
     unused_28: integer32;               { +28 }
@@ -585,9 +585,9 @@ begin
        and (op^.h.kind in [operand$ip_reg..operand$well_behaved_memory]) then begin
       sym := op^.lts^.lr^.node20;
       if sym <> nil then begin
-        if sym^.kind = 109 then
+        if sym^.kind = var_name then
           flags := sym^.flags32
-        else if sym^.kind = 110 then
+        else if sym^.kind = fortran_symbol then
           flags := sym^.flags24
         else
           next;

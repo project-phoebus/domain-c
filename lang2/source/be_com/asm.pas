@@ -143,7 +143,7 @@ type
   asm_sym_ptr_t = ^asm_sym_t;
   asm_sym_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: integer32;                { +4 }
     l8: univ_ptr;                       { +8 }
     unused_12: array [12..19] of char;  { +12 }
@@ -175,7 +175,7 @@ type
   asm_node_ptr_t = ^asm_node_t;
   asm_node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [4..99] of char;    { +4 }
     code: asm_sym_ptr_t;                { +100 }
     unused_104: array [104..127] of char;    { +104 }
@@ -1069,7 +1069,7 @@ begin
   node := univ_ptr(i^.opnds[1].link);
   info := node^.info;
   n := node;
-  if n^.kind = 167 then
+  if n^.kind = entry_blk then
     n := n^.parent;
   if (r^.frame_size <> 0)
      and (n^.f378.b379_6 or (not r^.f226.b1) or info^.f26.b7 or n^.f378.b379_7) then begin
@@ -1509,7 +1509,7 @@ begin
   else if (i^.opc = ord(opc$loadl)) and (i^.opnds[1].h.kind = operand$immediate)
           and (i^.opnds[1].link <> nil) then begin
     sym := univ_ptr(i^.opnds[1].link);
-    if (sym^.kind = 163) and (ord(sym^.b20) = 12) then begin
+    if (sym^.kind = addr_con) and (ord(sym^.b20) = 12) then begin
       lit := sym_$reformat_literal(sym^.l8);
       size := asm_$size_of_indirect_literal(lit);
       discard(add_literal_to_literal_pool(lit, size, addr(pool2), unique));
@@ -1778,10 +1778,10 @@ begin
       else if opc = ord(opc$label) then begin
         sym := univ_ptr(i^.opnds[1].link);
         if sym <> nil then begin
-          if sym^.kind = 117 then
+          if sym^.kind = label_name then
             sym := sym^.p28;
           if sym <> nil then
-            if sym^.kind = 144 then
+            if sym^.kind = label_node then
               sym^.base := i^.l28;
         end;
       end;

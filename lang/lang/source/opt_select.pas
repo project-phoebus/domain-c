@@ -232,13 +232,13 @@ function new_block(
     t: g_opt_stmt_ptr_t): boolean;
 begin
   new_block := false;
-  if t^.kind = 144 then
+  if t^.kind = label_node then
     new_block := true
-  else if (t^.kind = 139) and (t^.eval_count = 0) then
+  else if (t^.kind = eval_node) and (t^.eval_count = 0) then
     new_block := true
   else if t^.prev <> nil then
-    if (t^.prev^.kind = 142) or (t^.prev^.kind = 141) or
-       (t^.prev^.kind = 150) then
+    if (t^.prev^.kind = cbranch_node) or (t^.prev^.kind = branch_node) or
+       (t^.prev^.kind = nlbranch_node) then
       new_block := true;
 end;
 

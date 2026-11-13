@@ -92,9 +92,10 @@ begin
   assert_fortran_lvalue_not_in_areg := false;
   if r^.node <> nil then begin
     t := r^.node;
-    if (t^.kind = 147) or (t^.kind = 146) then
+    if (t^.kind = disp_node) or (t^.kind = ptr_node) then
       if t^.xp[7] <> nil then
-        if (t^.xp[7]^.kind = 111) or (t^.xp[7]^.kind = 110) then
+        if (t^.xp[7]^.kind = common_block_name)
+            or (t^.xp[7]^.kind = fortran_symbol) then
           assert_fortran_lvalue_not_in_areg := not (2 in r^.flags);
   end;
 end;
@@ -112,8 +113,8 @@ procedure replace_parent_with_use(
 var
   u: g_opt_cse_ptr_t;
 begin
-  if p^.kind = 190 then
-    if opt_4009c[s]^.kind = 139 then
+  if p^.kind = cse_parent_ob then
+    if opt_4009c[s]^.kind = eval_node then
       if p^.p_stmt^.hdr.region = s then
         opt_4009c[s]^.eval_opnd[k] := il_$node_ptr_t(p)
       else begin
@@ -140,7 +141,7 @@ var
 begin
   nextrealstmt := runbackend_16;
   for k := s to runbackend_16 do
-    if opt_4009c[k]^.kind <> 188 then begin
+    if opt_4009c[k]^.kind <> use_def_ob then begin
       nextrealstmt := k;
       exit;
     end;
@@ -187,7 +188,7 @@ begin
   n^.hdr.b42_2 := false;
   n^.hdr.entry := false;
   n^.line := spos_$null_position;
-  if (s^.kind = 144) and s^.hdr.first then begin
+  if (s^.kind = label_node) and s^.hdr.first then begin
     n^.prev^.hdr.last := false;
     n^.hdr.first := false;
     n^.hdr.last := true;
@@ -214,7 +215,7 @@ begin
   s := gspace(n * 336 + 50);
   if s = nil then
     cgerr_no_source(9, 0);
-  s^.kind := 191;
+  s^.kind := reg_list_ob;
   s^.act_count := 0;
   s^.acts[1].node := nil;
   s^.acts[1].reg := 31;
@@ -299,7 +300,7 @@ procedure act(
 var
   k: reg_num_t;
 begin
-  if s^.kind <> 191 then begin
+  if s^.kind <> reg_list_ob then begin
     alloc_stmt(8, s);
     k := t^.hdr.region;
     if k <> 0 then
@@ -337,21 +338,22 @@ var
 begin
   m := 7;
   repeat
-    if (t^.kind = 147) or (t^.kind = 146) then begin
+    if (t^.kind = disp_node) or (t^.kind = ptr_node) then begin
       if (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 3) and
-         (t^.xp[7]^.kind = 122) then begin
+         (t^.xp[7]^.kind = integer_type) then begin
         m := 2;
         exit;
       end;
       t := t^.xp[7];
     end
-    else if t^.kind = 159 then begin
+    else if t^.kind = lib_dsc then begin
       m := ord(t^.xc[9 + 2 * k]) & 15;
       exit;
     end
-    else if t^.kind = 110 then
+    else if t^.kind = fortran_symbol then
       exit
-    else if (t^.kind = 108) or (t^.kind = 107) or (t^.kind = 167) then begin
+    else if (t^.kind = function_blk) or (t^.kind = procedure_blk)
+        or (t^.kind = entry_blk) then begin
       lang := rshft(ord(t^.xc[377]) & 16#70, 4);
       if lang = 2 then
         m := 7
@@ -363,13 +365,13 @@ begin
         m := ra_rtn_ptr_t(t)^.classes[k];
       exit;
     end
-    else if t^.kind = 175 then
+    else if t^.kind = pf_call then
       t := t^.xp[5]
-    else if t^.kind = 171 then begin
+    else if t^.kind = cc_call then begin
       m := 2;
       exit;
     end
-    else if (t^.kind = 174) or (t^.kind = 173) then begin
+    else if (t^.kind = func__type) or (t^.kind = proc__type) then begin
       m := t^.xw[38 + k];
       exit;
     end
@@ -380,8 +382,8 @@ begin
   until false;
   if m = 11 then
     m := 3;
-  if t^.kind = 171 then
-    if c^.xp[12]^.kind = 109 then
+  if t^.kind = cc_call then
+    if c^.xp[12]^.kind = var_name then
       if (c^.xp[12]^.xw[36] = 1) or (paramclass(c^.xp[14], abs(k) - 1) = 4) then
         m := 7;
   mechanism := m;
@@ -470,11 +472,11 @@ var
       if test_stmt(r, 2 * k) then
         return;
       if (how & 8) <> 0 then begin
-        if (s^.kind = 144) and
+        if (s^.kind = label_node) and
            (rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2) and
            (rshft(ord(il_$node_ptr_t(s)^.xc[72]) & 16#3E, 1) = 4) then begin
           x := s^.next;
-          if x^.kind <> 191 then begin
+          if x^.kind <> reg_list_ob then begin
             alloc_stmt(8, n);
             x := n;
             insert_stmt(s^.next, n);
@@ -487,7 +489,7 @@ var
         end
         else begin
           x := s^.prev;
-          if x^.kind <> 191 then begin
+          if x^.kind <> reg_list_ob then begin
             alloc_stmt(8, n);
             x := n;
             insert_stmt(s, n);
@@ -497,11 +499,11 @@ var
         how := how & ~8;
       end;
       x := b^.first_stmt;
-      while x^.kind = 144 do
+      while x^.kind = label_node do
         x := x^.next;
-      if x^.kind = 191 then
+      if x^.kind = reg_list_ob then
         n := x
-      else if x^.prev^.kind = 191 then
+      else if x^.prev^.kind = reg_list_ob then
         n := x^.prev
       else begin
         alloc_stmt(8, n);
@@ -522,27 +524,27 @@ var
       until b = nil;
 
     { Whether the value must be stored back. }
-    if r^.node^.kind = 109 then begin
+    if r^.node^.kind = var_name then begin
       if (r^.node^.xw[36] = 2) or
-         ((r^.node^.xw[36] = 1) and (il_180^.kind = 105)) or
+         ((r^.node^.xw[36] = 1) and (il_180^.kind = program_blk)) or
          (r^.node^.xw[36] = 5) then
         store := false
       else
         store := 8 in r^.flags;
       if r^.node^.xw[36] = 1 then
-        if il_180^.kind <> 105 then
+        if il_180^.kind <> program_blk then
           store := true;
     end
-    else if r^.node^.kind = 110 then begin
+    else if r^.node^.kind = fortran_symbol then begin
       cls := rshft(ord(r^.node^.xc[11]) & 16#F0, 4);
       if (cls in [0, 2]) or
          ((rshft(ord(r^.node^.xc[11]) & 16#F0, 4) = 1) and
-          (il_180^.kind = 105)) then
+          (il_180^.kind = program_blk)) then
         store := false
       else
         store := 8 in r^.flags;
       if rshft(ord(r^.node^.xc[11]) & 16#F0, 4) = 1 then
-        if il_180^.kind <> 105 then
+        if il_180^.kind <> program_blk then
           store := true;
     end
     else
@@ -588,16 +590,20 @@ var
           st := opt_4009c[s];
 
           { A constant's load at the loop's entry. }
-          if r^.node^.kind in [88..89, 137..138, 145..147, 163, 195] then
+          if r^.node^.kind in [real_ob..dpreal_ob, tree_node..gen_tree_node,
+                               dindex_node..disp_node, addr_con,
+                               reloc_absolute_addr_con] then
             if not test_stmt(r, 2 * (s - 1) + 1) then
               if st^.block^.flags.latch then begin
-                if r^.node^.kind in [137..138, 145..147] then
+                if r^.node^.kind in [tree_node..gen_tree_node,
+                                     dindex_node..disp_node] then
                   how := 1
                 else
                   how := 3;
                 if assert_fortran_lvalue_not_in_areg(r) then
                   how := how ! 2;
-                if (st^.block^.first_stmt = st) and (st^.kind = 144) then
+                if (st^.block^.first_stmt = st)
+                    and (st^.kind = label_node) then
                   act(r, how, st^.next, st^.next)
                 else
                   act(r, how, st^.prev, st);
@@ -609,7 +615,8 @@ var
               if not test_stmt(r, 2 * (s - 1) + 1) then
                 if st^.block^.flags.latch then begin
                   how := 1;
-                  if (st^.block^.first_stmt = st) and (st^.kind = 144) then
+                  if (st^.block^.first_stmt = st)
+                      and (st^.kind = label_node) then
                     act(r, how, st^.next, st^.next)
                   else
                     act(r, how, st^.prev, st);
@@ -621,13 +628,14 @@ var
               if not test_stmt(r, 2 * s) then begin
                 if (v <> 0) and (st^.vars^[v]^.du <> nil) and
                    (((st^.vset <> nil) and (v in st^.vset^)) or
-                    (st^.kind = 188)) then
+                    (st^.kind = use_def_ob)) then
                   how := 3
                 else
                   how := 1;
                 act(r, how, st^.prev, st);
               end;
-          if (r^.node^.kind = 110) or (r^.node^.kind = 109) then
+          if (r^.node^.kind = fortran_symbol)
+              or (r^.node^.kind = var_name) then
             if (st^.hdr.vnum = v) and (v > 0) then
               if test_stmt(r, 2 * s + 1) then
                 if test_stmt(r, 2 * s) then
@@ -641,7 +649,7 @@ var
                           end;
 
           { A cse parent's load at its assignment. }
-          if r^.node^.kind = 190 then
+          if r^.node^.kind = cse_parent_ob then
             if g_opt_cse_ptr_t(r^.node)^.p_stmt^.hdr.region = s then
               act(r, 1, st^.prev, st);
 
@@ -654,7 +662,7 @@ var
           if test_stmt(r, 2 * s) then begin
             if v <> 0 then
               if st^.hdr.vnum = v then
-                if st^.kind = 188 then
+                if st^.kind = use_def_ob then
                   if test_stmt(r, 2 * s + 1) then
                     if test_stmt(r, 2 * s) then
                       if st^.vars^[v]^.du <> nil then
@@ -666,13 +674,13 @@ var
             if st^.vset <> nil then
               if v in st^.vset^ then begin
                 { A call's argument passed by reference. }
-                if st^.kind = 188 then begin
+                if st^.kind = use_def_ob then begin
                   if il_$node_ptr_t(st)^.xw[30] > 0 then
                     if mechanism(il_$node_ptr_t(st)^.xp[14]^.xp[10],
                                  il_$node_ptr_t(st)^.xw[30],
                                  il_$node_ptr_t(st)) >= 6 then
                       if (8 in r^.flags) or
-                         (il_$node_ptr_t(st)^.xp[14]^.xp[10]^.kind = 159) then
+                         (il_$node_ptr_t(st)^.xp[14]^.xp[10]^.kind = lib_dsc) then
                         act(r, 8, st^.prev, st);
                   q := nextrealstmt(s);
                   if test_stmt(r, 2 * s + 1) then
@@ -687,13 +695,13 @@ var
 
                 { A variable the routine's callers may read. }
                 cls := rshft(ord(r^.node^.xc[11]) & 16#F0, 4);
-                if (((r^.node^.kind = 109) and
+                if (((r^.node^.kind = var_name) and
                      (r^.node^.xw[36] in [1, 3, 4, 7, 8, 10, 11])) or
-                    ((r^.node^.kind = 110) and
+                    ((r^.node^.kind = fortran_symbol) and
                      (cls in [1, 3, 4, 7, 8, 10, 11]))) and
-                   (il_180^.kind <> 105) then
+                   (il_180^.kind <> program_blk) then
                   if not test_stmt(r, 2 * s + 1) then begin
-                    if st^.prev^.kind = 191 then
+                    if st^.prev^.kind = reg_list_ob then
                       act(r, 8, st^.prev, st^.prev)
                     else
                       act(r, 8, st, st);
@@ -707,7 +715,9 @@ var
               end;
 
             { A constant's store where the range ends. }
-            if r^.node^.kind in [88..89, 137..138, 145..147, 163, 190, 195] then
+            if r^.node^.kind in [real_ob..dpreal_ob, tree_node..gen_tree_node,
+                                 dindex_node..disp_node, addr_con,
+                                 cse_parent_ob, reloc_absolute_addr_con] then
               if not test_stmt(r, 2 * (s + 1)) then
                 if not st^.hdr.last then begin
                   if assert_fortran_lvalue_not_in_areg(r) then
@@ -734,54 +744,59 @@ begin
   for k := 1 to n do begin
     rr := addr(r^[k]);
     if rr^.reg = 31 then begin
-      if (rr^.node^.kind = 145) or (rr^.node^.kind = 147) or
-         (rr^.node^.kind = 146) then
-        if opt_4009c[rr^.first]^.kind = 139 then
+      if (rr^.node^.kind = dindex_node) or (rr^.node^.kind = disp_node) or
+         (rr^.node^.kind = ptr_node) then
+        if opt_4009c[rr^.first]^.kind = eval_node then
           if opt_4009c[rr^.first]^.block^.flags.latch then begin
             g_opt_tree_ptr_t(rr^.node)^.uses := g_opt_tree_ptr_t(rr^.node)^.uses - 1;
             st := opt_4009c[rr^.first];
             for j := 1 to st^.eval_count do
               if st^.eval_opnd[j] = rr^.node then begin
                 t := rr^.node^.xp[6];
-                if t^.kind = 190 then begin
+                if t^.kind = cse_parent_ob then begin
                   if g_opt_cse_ptr_t(t)^.p_stmt^.hdr.region = rr^.first then
                     st^.eval_opnd[j] := t
                   else
                     replace_parent_with_use(rr^.first, j, g_opt_cse_ptr_t(t));
                 end
-                else if (t^.kind in [137..138, 143, 145..147, 164, 171, 175, 189,
-                                     205]) and (t^.kind <> 189) then begin
+                else if (t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                                     dindex_node..disp_node, cs_node, cc_call,
+                                     pf_call, cse_use_ob,
+                                     sym_disp_node])
+                                         and (t^.kind <> cse_use_ob) then begin
                   x := t;
-                  while (x^.kind = 147) or (x^.kind = 146) do begin
+                  while (x^.kind = disp_node) or (x^.kind = ptr_node) do begin
                     g_opt_tree_ptr_t(x)^.uses := g_opt_tree_ptr_t(x)^.uses - 1;
                     x := x^.xp[6];
                   end;
-                  if x^.kind in [137..138, 143, 145..147, 164, 171, 175,
-                                 189..190, 205] then
+                  if x^.kind in [tree_node..gen_tree_node, cmp_tree_node,
+                                 dindex_node..disp_node, cs_node, cc_call,
+                                 pf_call,
+                                 cse_use_ob..cse_parent_ob, sym_disp_node] then
                     st^.eval_opnd[j] := x
                   else
-                    st^.eval_opnd[j] := smcontk(81, 0);
+                    st^.eval_opnd[j] := smcontk(integer_ob, 0);
                 end
                 else
-                  st^.eval_opnd[j] := smcontk(81, 0);
+                  st^.eval_opnd[j] := smcontk(integer_ob, 0);
                 exit;
               end;
           end;
     end
-    else if rr^.node^.kind = 109 then begin
+    else if rr^.node^.kind = var_name then begin
       do_register_actions(rr, rr^.node^.xw[37]);
       rr^.node^.xc[33] := chr(ord(rr^.node^.xc[33]) ! 4);
     end
-    else if rr^.node^.kind = 110 then begin
+    else if rr^.node^.kind = fortran_symbol then begin
       do_register_actions(rr, rr^.node^.xw[8]);
       rr^.node^.xc[25] := chr(ord(rr^.node^.xc[25]) ! 4);
     end
-    else if (rr^.node^.kind = 145) or (rr^.node^.kind = 146) or
-            (rr^.node^.kind = 147) then begin
-      if opt_4009c[rr^.first]^.kind = 139 then
+    else if (rr^.node^.kind = dindex_node) or (rr^.node^.kind = ptr_node) or
+            (rr^.node^.kind = disp_node) then begin
+      if opt_4009c[rr^.first]^.kind = eval_node then
         if opt_4009c[rr^.first]^.block^.flags.latch then begin
           st := opt_4009c[rr^.first];
-          if (rr^.node^.kind = 145) or
+          if (rr^.node^.kind = dindex_node) or
              (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2) or
              (2 in rr^.flags) then begin
             desc.rlen := rr^.rlen;

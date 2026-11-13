@@ -467,7 +467,7 @@ type
   ru_node_ptr_t = ^ru_node_t;
   ru_node_t = record
     space0: array [0..1] of char;
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     space4: array [4..25] of char;
     b26: char;                          { +26 (FORTRAN symbol) }
     b27: char;
@@ -498,9 +498,9 @@ begin
     end
     else begin
       h := lr^.memory_home;
-      if h^.kind = 109 then
+      if h^.kind = var_name then
         h^.b34 := chr(ord(h^.b34) ! 8)
-      else if h^.kind = 110 then
+      else if h^.kind = fortran_symbol then
         h^.b26 := chr(ord(h^.b26) ! 8);
     end;
   end;
@@ -1712,7 +1712,7 @@ type
   ru_var_ptr_t = ^ru_var_t;
   ru_var_t = record
     space0: array [0..1] of char;
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     space4: array [4..9] of char;
     b10: char;                          { +10 }
     b11: char;
@@ -1735,7 +1735,7 @@ begin
     if lts^.rrp * [rrp$fp_reg_even_only, rrp$fp_reg_odd_only] <> [] then
       if (kind = operand$fp_reg_pair) or lts^.lr^.f2.physical then begin
         v := node;
-        if v^.kind = 109 then
+        if v^.kind = var_name then
           b := v^.l36 = 64
         else
           b := (ord(v^.b10) & 15) in [5, 6, 13];

@@ -131,7 +131,7 @@ type
     bit size and an attribute longword). }
   c_type_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       { Integral (122) and floating (123) types. }
       1: (len: integer;                 { +4: integral: 1, 2 or 4
@@ -239,7 +239,7 @@ type
     signedness, the attributes and the type. }
   c_field_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     next: c_field_ptr_t;                { +4 }
     name: il_$node_ptr_t;               { +8: the identifier }
     line: integer;                      { +12: where it was declared
@@ -266,7 +266,7 @@ type
     labels (117) and typedefs (118), and the other kinds with prtobj. }
   c_sym_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     name: il_$node_ptr_t;               { +4: the identifier }
     line: integer;                      { +8: where it was declared
                                           (spos's encoding) }
@@ -551,14 +551,14 @@ type
   c_reglist_t = record                  { a block's register variables;
                                           a tag's incomplete users }
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     rvar: il_$node_ptr_t;               { +4: the variable (109) }
     next: c_reglist_ptr_t;              { +8 }
   end;
   c_blk_ptr_t = ^c_blk_t;
   c_blk_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     next_blk: c_blk_ptr_t;              { +4: the next block made (from
                                           il_17c, def_blk_skeleton) }
     outer: c_blk_ptr_t;                 { +8: the enclosing block
@@ -743,7 +743,7 @@ type
   c_tree_ptr_t = ^c_tree_t;
   c_tree_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: integer;                  { +4 }
     bits: packed record                 { +6 }
       b15, b14, b13, b12: boolean;
@@ -778,7 +778,7 @@ type
   c_top_ptr_t = ^c_top_t;
   c_top_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     prev: il_$node_ptr_t;               { +4 }
     next: il_$node_ptr_t;               { +8 }
     unused_12: integer32;               { +12 }
@@ -895,7 +895,7 @@ type
     parser's: c_syntax's declaration and function_prototype). }
   c_parm_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     next: c_parm_ptr_t;                 { +4 }
     pname: c_name_t;                    { +8 }
     ptype: c_type_ptr_t;                { +16: il_178 until declared

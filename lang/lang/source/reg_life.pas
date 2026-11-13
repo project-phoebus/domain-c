@@ -98,7 +98,7 @@ function assert_is_use_def_at_call_site(
     s: g_opt_stmt_ptr_t): boolean; options(val_param); internal;
 begin
   if s <> nil then
-    if s^.kind = 188 then begin
+    if s^.kind = use_def_ob then begin
       assert_is_use_def_at_call_site := s^.br_cond <> nil;
       return;
     end;
@@ -185,7 +185,7 @@ begin
   if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
     if blk^.nsucc = 0 then
       if blk^.last_stmt <> nil then
-        if blk^.last_stmt^.kind = 150 then
+        if blk^.last_stmt^.kind = nlbranch_node then
           for k := opt_first_block to opt_last_block do
             if g_opt_blocks_ptr_t(il_11c)^[k]^.flags.skip then
               find_paths(r, v, k, s);
@@ -234,8 +234,8 @@ begin
     if odd(k) then begin
       st := opt_4009c[s];
       if st^.hdr.last then begin
-        if st^.kind = 149 then
-          if st^.x48^.kind <> 172 then
+        if st^.kind = blk_end_node then
+          if st^.x48^.kind <> inner_blk then
             exit;
         if st^.next^.hdr.region <> 0 then
           exit;
@@ -576,9 +576,9 @@ begin
     t := g_opt_tree_ptr_t(p^.p_tree);
     skip := t^.flags * [1..4] <> [];
     if not skip then
-      skip := t^.kind = 143;
+      skip := t^.kind = cmp_tree_node;
     if not skip then
-      if t^.kind = 137 then
+      if t^.kind = tree_node then
         if (t^.rlen = 6) or (t^.rlen = 7) or (t^.rlen = 12) or (t^.rlen = 8) then
           skip := cargs_$options.cpu * [2, 4, 8..10] = [];
     if not skip then
@@ -589,7 +589,7 @@ begin
           skip := true
         else if (t^.op = 63) or (t^.op = 17) or (t^.op = 0) then
           for i := 1 to t^.count do
-            if g_opt_tree_ptr_t(t^.opnd[i])^.kind = 137 then
+            if g_opt_tree_ptr_t(t^.opnd[i])^.kind = tree_node then
               if g_opt_tree_ptr_t(t^.opnd[i])^.op = 16 then begin
                 skip := true;
                 exit;
@@ -822,7 +822,7 @@ begin
   rr^.node := e^.node;
   rr^.first := s;
   t := rr^.node;
-  if t^.kind = 109 then begin
+  if t^.kind = var_name then begin
     vn := t^.xw[37];
     if t^.xw[36] = 5 then
       rr^.rlen := 5
@@ -985,7 +985,7 @@ var
 begin
   blk := g_opt_blocks_ptr_t(il_11c)^[b];
   if il_utils_$is_strength_reduction_temp(t) then begin
-    if t^.kind = 109 then
+    if t^.kind = var_name then
       x := t^.xp[13]
     else
       x := t^.xp2[11];
@@ -1048,8 +1048,8 @@ var
   ls: g_opt_stmt_ptr_t;
   nb: g_opt_block_ptr_t;
 begin
-  if t^.kind = 147 then
-    if t^.xp[6]^.kind = 109 then
+  if t^.kind = disp_node then
+    if t^.xp[6]^.kind = var_name then
       return;
   st := opt_4009c[s];
   if not st^.block^.flags.latch then
@@ -1062,33 +1062,34 @@ begin
   rr := addr(reg_ranges^[reg_nranges]);
   init_graph(rr);
   rr^.node := t;
-  if rr^.node^.kind = 88 then
+  if rr^.node^.kind = real_ob then
     rr^.rlen := 6
-  else if rr^.node^.kind = 89 then
+  else if rr^.node^.kind = dpreal_ob then
     rr^.rlen := 7
-  else if (rr^.node^.kind = 195) or (rr^.node^.kind = 163) then
+  else if (rr^.node^.kind = reloc_absolute_addr_con)
+      or (rr^.node^.kind = addr_con) then
     rr^.rlen := 5
-  else if rr^.node^.kind = 147 then begin
+  else if rr^.node^.kind = disp_node then begin
     x := rr^.node^.xp[7];
-    if x^.kind = 110 then
+    if x^.kind = fortran_symbol then
       rr^.rlen := runbackend_18[ord(x^.xc[10]) & 15]
     else
       rr^.rlen := 5;
   end
-  else if rr^.node^.kind = 146 then begin
+  else if rr^.node^.kind = ptr_node then begin
     x := rr^.node^.xp[7];
-    if x^.kind = 110 then
+    if x^.kind = fortran_symbol then
       rr^.rlen := runbackend_18[ord(x^.xc[10]) & 15]
-    else if x^.kind = 111 then
+    else if x^.kind = common_block_name then
       rr^.rlen := runbackend_18[ord(x^.xp[3]^.xc[10]) & 15]
     else
       rr^.rlen := 5;
   end
-  else if rr^.node^.kind = 109 then begin
+  else if rr^.node^.kind = var_name then begin
     type_exp(rr^.node^.xp[7], addr(te));
     rr^.rlen := get_rlen(te);
   end
-  else if rr^.node^.kind = 110 then
+  else if rr^.node^.kind = fortran_symbol then
     rr^.rlen := runbackend_18[ord(rr^.node^.xc[10]) & 15]
   else
     rr^.rlen := 5;
@@ -1112,11 +1113,11 @@ begin
       upto := 2 * find_next_numbered_stmt(l^.last_stmt);
     mark_stmts(from, upto, rr);
     ls := l^.last_stmt;
-    if ls^.kind = 142 then
-      if ls^.br_target^.kind = 144 then
+    if ls^.kind = cbranch_node then
+      if ls^.br_target^.kind = label_node then
         if rshft(ord(ls^.br_target^.xc[72]) & 16#3E, 1) = 8 then
           if ls^.next <> nil then
-            if ls^.next^.kind = 139 then
+            if ls^.next^.kind = eval_node then
               if ls^.next^.eval_count = 0 then
                 if ls^.next = g_opt_blocks_ptr_t(il_11c)^[l^.num + 1]^.first_stmt then
                   if not assert_block_on_list(rr, l^.num + 1) then begin
@@ -1132,10 +1133,10 @@ begin
                     mark_stmts(k * 2, k2 * 2 + 1, rr);
                   end;
     ls := l^.last_stmt;
-    if ls^.kind = 142 then
-      if ls^.br_target^.kind = 144 then
+    if ls^.kind = cbranch_node then
+      if ls^.br_target^.kind = label_node then
         if rshft(ord(ls^.br_target^.xc[72]) & 16#3E, 1) = 2 then
-          if ls^.next^.kind = 144 then
+          if ls^.next^.kind = label_node then
             if rshft(ord(il_$node_ptr_t(ls^.next)^.xc[72]) & 16#3E, 1) = 4 then
               if ls^.next = g_opt_blocks_ptr_t(il_11c)^[l^.num + 1]^.first_stmt then
                 if not assert_block_on_list(rr, l^.num + 1) then begin

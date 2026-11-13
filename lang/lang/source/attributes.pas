@@ -77,7 +77,7 @@ type
   attr_node_ptr_t = ^attr_node_t;
   attr_node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     case integer of
       1: (pad_12t: array [1..2] of integer32;
           tattr_12: attr_tattr_t);      { +12 }
@@ -140,8 +140,8 @@ begin
       0: find_conflict := id_volatile;
       1: find_conflict := id_physical;
       2: find_conflict := id_atomic;
-      3: find_conflict := idntk(ctk_identifier, 'DEVICE(READ)', 12);
-      4: find_conflict := idntk(ctk_identifier, 'DEVICE(WRITE)', 13);
+      3: find_conflict := idntk(id_ob, 'DEVICE(READ)', 12);
+      4: find_conflict := idntk(id_ob, 'DEVICE(WRITE)', 13);
       5: find_conflict := id_address;
       6: find_conflict := id_immediate;
       7: find_conflict := id_reference;
@@ -244,25 +244,27 @@ var
   texp: type_exp_t;
 begin
   case node^.kind of
-    118:
+    type_name:
       if (11 in a.bits) and (a.size > node^.xl[11]) then begin
         type_exp(node^.xp[7], addr(texp));
-        if texp.base^.kind in [127, 131, 132, 196, 197, 218] then
+        if texp.base^.kind in [char_array_type, array_type, record_type,
+                               varying_type, parray_type,
+                               char16_array_type] then
           attr_calc_align := node^.xw[24]
         else
           attr_calc_align := attr_natural_align_from_bytes(bytes);
       end
       else
         attr_calc_align := node^.xw[24];
-    218, 127, 131:
+    char16_array_type, char_array_type, array_type:
       attr_calc_align := node^.xw[13];
-    196:
+    varying_type:
       attr_calc_align := 2;
-    197:
+    parray_type:
       attr_calc_align := 0;
-    132:
+    record_type:
       attr_calc_align := node^.xw[11];
-    107, 108:
+    procedure_blk, function_blk:
       attr_calc_align := 2;
     otherwise
       attr_calc_align := attr_natural_align_from_bytes(bytes);
@@ -310,76 +312,78 @@ begin
   an := attr_node_ptr_t(node);
   in_type := false;
   case node^.kind of
-    109: begin
+    var_name: begin
       te^.flags.b24_0 := false;
       align := an^.vattr_36.align;
       natural := an^.vattr_36.natural;
       bits := an^.vattr_36.bits;
       typ := node^.xp[7];
     end;
-    131, 218, 127: begin
+    array_type, char16_array_type, char_array_type: begin
       align := an^.vattr_16.align;
       natural := an^.vattr_16.natural;
       bits := an^.vattr_16.bits;
       typ := node^.xp[1];
       in_type := true;
     end;
-    197: begin
+    parray_type: begin
       align := an^.vattr_16.align;
       natural := an^.vattr_16.natural;
       bits := an^.vattr_16.bits;
       typ := nil;
       in_type := true;
     end;
-    132: begin
+    record_type: begin
       align := an^.vattr_12.align;
       natural := an^.vattr_12.natural;
       bits := an^.vattr_12.bits;
       typ := node;
     end;
-    119: begin
+    field_name: begin
       align := an^.vattr_24.align;
       natural := an^.vattr_24.natural;
       bits := an^.vattr_24.bits;
       typ := node^.xp[4];
       in_type := true;
     end;
-    120: begin
+    pfield_name: begin
       align := an^.vattr_24.align;
       natural := an^.vattr_24.natural;
       bits := an^.vattr_24.bits;
       typ := nil;
       in_type := true;
     end;
-    121: begin
+    param_name: begin
       te^.flags.b24_0 := false;
       align := an^.tattr_24.align;
       natural := an^.tattr_24.natural;
       bits := an^.tattr_24.bits;
       typ := node^.xp[4];
     end;
-    108: begin
+    function_blk: begin
       te^.flags.b24_0 := false;
       align := an^.tattr_312.align;
       natural := an^.tattr_312.natural;
       bits := an^.tattr_312.bits;
       typ := node^.xp[7];
     end;
-    174: begin
+    func__type: begin
       te^.flags.b24_0 := false;
       align := an^.tattr_12.align;
       natural := an^.tattr_12.natural;
       bits := an^.tattr_12.bits;
       typ := node^.xp[2];
     end;
-    130, 177, 133: begin
+    ptr_type, offset_type, file_type: begin
       align := an^.vattr_12.align;
       natural := an^.vattr_12.natural;
       bits := an^.vattr_12.bits;
       typ := node^.xp[1];
     end;
     otherwise
-      if node^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then begin
+      if node^.kind in [blogical_ob..complex_ob, char_string_ob,
+                        char32_string_ob, char16_ob, set_con_ob, rec_const_ob,
+                        dpcomplex_ob, binteger_ob] then begin
         natural := attr_calc_align(node, te^.size, a);
         align := natural;
         bits := [];
@@ -403,16 +407,16 @@ begin
     te^.flags.align_attr := false;
   te^.flags.align := align;
   te^.flags.align_attr := (12 in bits) or te^.flags.align_attr;
-  te^.flags.align_ok := (align >= natural) or (node^.kind = 197) or
-      (node^.kind = 120);
+  te^.flags.align_ok := (align >= natural) or (node^.kind = parray_type) or
+      (node^.kind = pfield_name);
   if not te^.flags.align_ok then
     if te^.size > 4 then
       if typ = nil then
         te^.flags.align_ok := true
       else begin
         type_exp(typ, addr(t));
-        if (t.base^.kind = 131) or (t.base^.kind = 197) or
-            (t.base^.kind = 132) then
+        if (t.base^.kind = array_type) or (t.base^.kind = parray_type) or
+            (t.base^.kind = record_type) then
           te^.flags.align_ok := true;
       end;
 end;
@@ -470,16 +474,16 @@ begin
   end
   else begin
     b := il_$node_ptr_t(texp.base);
-    if (b^.kind = 134) and (b^.xw[6] <= 32) then
+    if (b^.kind = set_type) and (b^.xw[6] <= 32) then
       bits := b^.xw[6]
     else if scalar then
       bits := texp.size * 8
     else begin
-      if b^.kind = 132 then
+      if b^.kind = record_type then
         bits := b^.xl[3]
-      else if b^.kind = 197 then
+      else if b^.kind = parray_type then
         bits := b^.xl[4]
-      else if b^.kind = 131 then begin
+      else if b^.kind = array_type then begin
         type_exp(b^.xp[2], addr(r));
         bits := (r.high - r.low + 1) * b^.xl[3] * 8;
       end
@@ -579,7 +583,7 @@ begin
       attr.size := value;
     12:
       if value > 10 then begin
-        error1(cerr_code_map[67], lex_line, smcontk(81, 10));
+        error1(cerr_code_map[67], lex_line, smcontk(integer_ob, 10));
         attr.align := 10;
       end
       else
@@ -587,7 +591,7 @@ begin
     13:
       if 12 in attr.bits then
         error1(cerr_code_map[66], lex_line,
-            idntk(ctk_identifier, 'Alignment', 9))
+            idntk(id_ob, 'Alignment', 9))
       else
         attr.bits := attr.bits + [12];
     otherwise
@@ -636,33 +640,33 @@ begin
     mask := [0..13]
   else
     case node^.kind of
-      109:
-        if node^.xp[7]^.kind = 121 then
+      var_name:
+        if node^.xp[7]^.kind = param_name then
           mask := []
         else begin
           if (1 in attr.bits) and not (5 in attr.bits) then
             error0(cerr_code_map[73], lex_line);
           mask := [6, 7, 14, 15, 17];
         end;
-      118:
+      type_name:
         mask := [];
-      174:
+      func__type:
         mask := [0..8, 14..17];
-      121:
+      param_name:
         case node^.xw[22] of
           0, 2: mask := [1, 3..5, 8..10, 14..17];
           1: mask := [1, 5, 6, 8..10, 14..17];
           3, 4: mask := [1, 5, 8..10, 14..17];
         end;
-      130, 177:
+      ptr_type, offset_type:
         mask := [5..10, 14..17];
-      119, 120:
+      field_name, pfield_name:
         mask := [1, 5..10, 14..17];
-      131, 218, 127, 197:
+      array_type, char16_array_type, char_array_type, parray_type:
         mask := [1, 5..10, 14..17];
-      133:
+      file_type:
         mask := [0..10, 12, 14..17];
-      108, 107: begin
+      function_blk, procedure_blk: begin
         p := node^.xp[3];
         while p <> nil do begin
           bad := attr_bits_t(p^.xl[6]) * [6, 7];
@@ -671,21 +675,21 @@ begin
               0:
                 if (p^.xw[21] < 4) or (p^.xw[21] > 29) then
                   error3(cerr_code_map[76], lex_line, find_conflict(bad),
-                      smcontk(81, p^.xw[21]), p^.xp[2]);
+                      smcontk(integer_ob, p^.xw[21]), p^.xp[2]);
               1:
                 if (p^.xw[21] < 0) or (p^.xw[21] > 63) then
                   error3(cerr_code_map[76], lex_line, find_conflict(bad),
-                      smcontk(81, p^.xw[21]), p^.xp[2]);
+                      smcontk(integer_ob, p^.xw[21]), p^.xp[2]);
               2:
                 if (p^.xw[21] > 63) or odd(p^.xw[21]) or (p^.xw[21] < 0) then
                   error3(cerr_code_map[76], lex_line, find_conflict(bad),
-                      smcontk(81, p^.xw[21]), p^.xp[2]);
+                      smcontk(integer_ob, p^.xw[21]), p^.xp[2]);
               3:
                 error1(cerr_code_map[74], lex_line,
-                    idntk(ctk_identifier, 'CONTROL', 7));
+                    idntk(id_ob, 'CONTROL', 7));
               4:
                 error1(cerr_code_map[74], lex_line,
-                    idntk(ctk_identifier, 'SPACE', 5));
+                    idntk(id_ob, 'SPACE', 5));
             end;
           if 6 in attr_bits_t(p^.xl[6]) then begin
             case p^.xw[20] of
@@ -698,7 +702,7 @@ begin
           end;
           p := p^.xp[1];
         end;
-        if node^.kind = 107 then
+        if node^.kind = procedure_blk then
           return;
         if rshft(node^.xw[188] & 16#180, 7) = 2 then
           mask := [0..9]
@@ -818,11 +822,11 @@ begin
   end
   else begin
     an := attr_node_ptr_t(typ);
-    if typ^.kind = 118 then begin
+    if typ^.kind = type_name then begin
       t := an^.tattr_40;
       have := true;
     end
-    else if typ^.kind = 121 then begin
+    else if typ^.kind = param_name then begin
       t.bits := an^.tattr_24.bits;
       t.size := an^.tattr_24.size;
       t.natural := an^.tattr_24.natural;
@@ -830,8 +834,9 @@ begin
       t.min_align := an^.tattr_24.min_align;
       have := true;
     end
-    else if (typ^.kind = 127) or (typ^.kind = 131) or (typ^.kind = 218) or
-        (typ^.kind = 197) then begin
+    else if (typ^.kind = char_array_type) or (typ^.kind = array_type)
+        or (typ^.kind = char16_array_type) or
+        (typ^.kind = parray_type) then begin
       t.bits := an^.vattr_16.bits - [11, 12, 19];
       t.size := an^.vattr_16.size;
       t.align := an^.vattr_16.align;
@@ -839,7 +844,7 @@ begin
       t.min_align := an^.vattr_16.min_align;
       have := true;
     end
-    else if typ^.kind = 132 then begin
+    else if typ^.kind = record_type then begin
       t.bits := an^.vattr_12.bits;
       t.size := an^.vattr_12.size;
       t.align := an^.vattr_12.align;
@@ -847,7 +852,7 @@ begin
       t.min_align := an^.vattr_12.min_align;
       have := true;
     end
-    else if typ^.kind = 202 then begin
+    else if typ^.kind = attribute_name then begin
       t := an^.tattr_28;
       have := true;
     end;
@@ -909,40 +914,41 @@ begin
     if texp.flags.ranged then begin
       bits := attr_packed_size(texp, true, negative);
       if (attr.size > 32) or (attr.size < bits) or
-          ((texp.base^.kind = 125) and (attr.size <> 8)) then begin
-        error1(cerr_code_map[68], lex_line, smcontk(81, attr.size));
+          ((texp.base^.kind = char_type) and (attr.size <> 8)) then begin
+        error1(cerr_code_map[68], lex_line, smcontk(integer_ob, attr.size));
         attr.size := bits;
       end;
     end
-    else if texp.base^.kind = 134 then begin
+    else if texp.base^.kind = set_type then begin
       if (attr.size > 256) or
           (il_$node_ptr_t(texp.base)^.xw[6] > attr.size) then begin
-        error1(cerr_code_map[68], lex_line, smcontk(81, attr.size));
+        error1(cerr_code_map[68], lex_line, smcontk(integer_ob, attr.size));
         attr.size := il_$node_ptr_t(texp.base)^.xw[6];
       end;
     end
-    else if texp.base^.kind = 123 then begin
+    else if texp.base^.kind = real_type then begin
       if ((texp.base^.len = 6) and (attr.size <> 32)) or
           ((texp.base^.len = 7) and (attr.size <> 64)) then begin
-        error1(cerr_code_map[68], lex_line, smcontk(81, attr.size));
+        error1(cerr_code_map[68], lex_line, smcontk(integer_ob, attr.size));
         if texp.base^.len = 6 then
           attr.size := 32
         else
           attr.size := 64;
       end;
     end
-    else if (texp.base^.kind = 131) or (texp.base^.kind = 197) or
-        (texp.base^.kind = 132) then begin
+    else if (texp.base^.kind = array_type) or (texp.base^.kind = parray_type)
+        or
+        (texp.base^.kind = record_type) then begin
       bits := attr_packed_size(texp, false, negative);
       if bits > attr.size then begin
-        error1(cerr_code_map[68], lex_line, smcontk(81, attr.size));
+        error1(cerr_code_map[68], lex_line, smcontk(integer_ob, attr.size));
         attr.size := bits;
       end;
     end
     else begin
       bits := texp.bytes * 8;
       if bits > attr.size then begin
-        error1(cerr_code_map[68], lex_line, smcontk(81, attr.size));
+        error1(cerr_code_map[68], lex_line, smcontk(integer_ob, attr.size));
         attr.size := bits;
       end;
     end;
@@ -981,11 +987,13 @@ begin
       attr.min_align := attr.align;
     end;
     if (attr.align = -1) and
-        (texp.base^.kind in [127, 131, 132, 196, 197, 218]) then begin
+        (texp.base^.kind in [char_array_type, array_type, record_type,
+                             varying_type, parray_type,
+                             char16_array_type]) then begin
       error0(cerr_code_map[69], lex_line);
       attr.align := 0;
     end
-    else if texp.base^.kind = 132 then begin
+    else if texp.base^.kind = record_type then begin
       f := texp.base^.su_fields;
       while f <> nil do begin
         if (12 in f^.attr.bits) and (attr.align < f^.attr.align) then begin
@@ -995,9 +1003,10 @@ begin
         f := f^.next;
       end;
     end
-    else if (texp.base^.kind = 123) or (texp.base^.kind = 122) then begin
+    else if (texp.base^.kind = real_type)
+        or (texp.base^.kind = integer_type) then begin
       if attr.align > attr.natural then begin
-        error1(cerr_code_map[67], lex_line, smcontk(81, attr.natural));
+        error1(cerr_code_map[67], lex_line, smcontk(integer_ob, attr.natural));
         attr.align := attr.natural;
       end;
     end;
@@ -1034,9 +1043,9 @@ begin
     else
       attr.size := pad_align;
     if (typ <> nil) and (pad_align <> pad_natural) and
-        not (12 in attr.bits) and then (typ^.kind = 132) then
-      error2(cerr_code_map[81], lex_line, smcontk(81, pad_align div 8),
-          smcontk(81, pad_natural div 8));
+        not (12 in attr.bits) and then (typ^.kind = record_type) then
+      error2(cerr_code_map[81], lex_line, smcontk(integer_ob, pad_align div 8),
+          smcontk(integer_ob, pad_natural div 8));
   end;
 
   flags := [];

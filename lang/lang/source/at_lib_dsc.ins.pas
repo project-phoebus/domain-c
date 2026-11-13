@@ -13,9 +13,15 @@
   target_properties$begin_compilation takes the address of +0x1284
   (0x35470C). }
 
-var
-  at_lib_dsc: extern array [0..16#159B] of char;
+var (at_lib_dsc)
+  { The section at_lib_dsc, shared by the units that declare it (as
+    std_lib and mem_$data$ are).  The section's variables are taken as
+    one array; at_lib_dsc itself is a node kind's name (208,
+    il.ins.pas's il_$kind_t), so the array cannot be named after the
+    section. }
+  at_lib_dsc_bytes: array [0..16#159B] of char;
 
+var
   { The section at_lib_dsc_ptr (cc.a88k 0x513D40, 240 bytes, initialized
     by the loader): 60 pointers to library descriptors (cc.a88k's
     rewrite_$routine_call takes the run-time routine of an operator from

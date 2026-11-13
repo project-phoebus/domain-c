@@ -82,7 +82,7 @@ type
   ov_stmt_ptr_t = ^ov_stmt_t;
   ov_stmt_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     prev: ov_stmt_ptr_t;                { +4 }
     next: ov_stmt_ptr_t;                { +8 }
     unused_12: array [3..4] of integer32;  { +12 }
@@ -117,7 +117,7 @@ type
   ov_tree_ptr_t = ^ov_tree_t;
   ov_tree_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     flags: set of 0..31;                { +4 }
     unused_8: integer32;                { +8 }
     unused_12: integer32;               { +12 }
@@ -171,10 +171,11 @@ define
 function opt_vec_$obj_is_float_const(
     t: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  if (t^.kind = 88) or (t^.kind = 110) or (t^.kind = 89) then
+  if (t^.kind = real_ob) or (t^.kind = fortran_symbol)
+      or (t^.kind = dpreal_ob) then
     opt_vec_$obj_is_float_const := true
-  else if t^.kind = 146 then
-    opt_vec_$obj_is_float_const := t^.xp[6]^.kind = 110
+  else if t^.kind = ptr_node then
+    opt_vec_$obj_is_float_const := t^.xp[6]^.kind = fortran_symbol
   else
     opt_vec_$obj_is_float_const := false;
 end;
@@ -195,15 +196,15 @@ var
 begin
   r := nil;
   if t <> nil then
-    if t^.kind = 145 then
+    if t^.kind = dindex_node then
       if t^.xp[7] <> nil then
-        if t^.xp[7]^.kind = 110 then begin
+        if t^.xp[7]^.kind = fortran_symbol then begin
           d := t^.xp[7]^.xp[8];
           if d^.xw[3] = 1 then
-            r := smcontk(82, 1)
+            r := smcontk(linteger_ob, 1)
           else if (d^.xw[3] & 16#FFFF) > 1 then
             if (ord(d^.xc[32]) & 16#80) <> 0 then
-              r := smcontk(82, d^.xl[6] - d^.xl[3] + 1)
+              r := smcontk(linteger_ob, d^.xl[6] - d^.xl[3] + 1)
             else
               r := d^.xp[9];
         end;
@@ -269,7 +270,7 @@ var
   d: add_node_$desc_t;
   p: ov_stmt_ptr_t;
 begin
-  if m^.kind = 139 then begin
+  if m^.kind = eval_node then begin
     ov_tree_ptr_t(m^.eval_opnd[1])^.desc.rlen := 0;
     ov_tree_ptr_t(m^.eval_opnd[1])^.flags :=
       ov_tree_ptr_t(m^.eval_opnd[1])^.flags + [12];
@@ -281,12 +282,15 @@ begin
   x^.next^.next^.prev := n^.next;
   n := n^.next;
   n^.asg_op := 0;
-  if start^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then
-    c := smcontk(81, start^.int_value + 1)
-  else if start^.kind in [110, 137, 146, 147, 205] then begin
+  if start^.kind in [blogical_ob..complex_ob, char_string_ob, char32_string_ob,
+                     char16_ob, set_con_ob, rec_const_ob, dpcomplex_ob,
+                     binteger_ob] then
+    c := smcontk(integer_ob, start^.int_value + 1)
+  else if start^.kind in [fortran_symbol, tree_node, ptr_node, disp_node,
+                          sym_disp_node] then begin
     ops[1] := delay_$splice(copy_tree(start), 4, true,
                             s^.prev^.prev^.asg_desc.rlen, false);
-    ops[2] := smcontk(81, 1);
+    ops[2] := smcontk(integer_ob, 1);
     d := s^.prev^.prev^.asg_desc;
     c := buildtreenode(1, d, ops, 2);
     ov_tree_ptr_t(c)^.uses := 0;
@@ -456,7 +460,7 @@ var
 begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   g := gspace(80);
-  g^.kind := 140;
+  g^.kind := assign_node;
   g^.asg_op := 11;
   head_ptr_t(addr(g^.prev))^ := head_ptr_t(addr(s^.next^.next^.prev))^;
   s^.next^.next := g;
@@ -469,21 +473,21 @@ begin
     ops[1] := std_lib_rtns[43];
   acc := body^.asg_rhs;
   o2 := ov_tree_ptr_t(acc)^.opnd[2];
-  if o2^.kind = 145 then
+  if o2^.kind = dindex_node then
     ops[2] := o2
-  else if (o2^.kind = 147) and (o2^.xp[6]^.kind = 145) then
+  else if (o2^.kind = disp_node) and (o2^.xp[6]^.kind = dindex_node) then
     ops[2] := o2
   else
     ops[2] := ov_tree_ptr_t(acc)^.opnd[1];
-  if o2^.kind = 146 then
-    if o2^.xp[6]^.kind = 110 then
+  if o2^.kind = ptr_node then
+    if o2^.xp[6]^.kind = fortran_symbol then
       acc := o2;
-  if ov_tree_ptr_t(body^.asg_rhs)^.opnd[1]^.kind = 146 then
-    if ov_tree_ptr_t(body^.asg_rhs)^.opnd[1]^.xp[6]^.kind = 110 then
+  if ov_tree_ptr_t(body^.asg_rhs)^.opnd[1]^.kind = ptr_node then
+    if ov_tree_ptr_t(body^.asg_rhs)^.opnd[1]^.xp[6]^.kind = fortran_symbol then
       acc := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
-  if o2^.kind = 110 then
+  if o2^.kind = fortran_symbol then
     acc := o2;
-  if ov_tree_ptr_t(body^.asg_rhs)^.opnd[1]^.kind = 110 then
+  if ov_tree_ptr_t(body^.asg_rhs)^.opnd[1]^.kind = fortran_symbol then
     acc := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[3] := delay_$splice(copy_tree(start), 4, true,
                           s^.prev^.prev^.asg_desc.rlen, false);
@@ -528,7 +532,7 @@ var
 begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   g := gspace(80);
-  g^.kind := 140;
+  g^.kind := assign_node;
   g^.asg_op := 11;
   head_ptr_t(addr(g^.prev))^ := head_ptr_t(addr(s^.next^.next^.prev))^;
   s^.next^.next := g;
@@ -658,13 +662,13 @@ begin
     ops[1] := std_lib_rtns[27];
   r := body^.asg_rhs;
   o1 := ov_tree_ptr_t(r)^.opnd[1];
-  if (o1^.kind = 147) and (o1^.xp[6]^.kind = 145) then begin
+  if (o1^.kind = disp_node) and (o1^.xp[6]^.kind = dindex_node) then begin
     ops[2] := o1;
     ops[4] := ov_tree_ptr_t(r)^.opnd[2];
   end
   else begin
     o2 := ov_tree_ptr_t(r)^.opnd[2];
-    if (o2^.kind = 147) and (o2^.xp[6]^.kind = 145) then begin
+    if (o2^.kind = disp_node) and (o2^.xp[6]^.kind = dindex_node) then begin
       ops[2] := o2;
       ops[4] := o1;
     end;
@@ -712,13 +716,13 @@ begin
     ops[1] := std_lib_rtns[39];
   r := body^.asg_rhs;
   o1 := ov_tree_ptr_t(r)^.opnd[1];
-  if (o1^.kind = 147) and (o1^.xp[6]^.kind = 145) then begin
+  if (o1^.kind = disp_node) and (o1^.xp[6]^.kind = dindex_node) then begin
     ops[2] := o1;
     ops[4] := ov_tree_ptr_t(r)^.opnd[2];
   end
   else begin
     o2 := ov_tree_ptr_t(r)^.opnd[2];
-    if (o2^.kind = 147) and (o2^.xp[6]^.kind = 145) then begin
+    if (o2^.kind = disp_node) and (o2^.xp[6]^.kind = dindex_node) then begin
       ops[2] := o2;
       ops[4] := o1;
     end;
@@ -835,22 +839,22 @@ var
   r: boolean;
   i: il_$node_ptr_t;
   a: il_$node_ptr_t;
-  k: integer;
+  k: il_$kind_t;
   b: il_$node_ptr_t;
   c: il_$node_ptr_t;
 begin
   r := true;
   if t <> nil then
-    if t^.kind = 145 then
+    if t^.kind = dindex_node then
       if t^.xp[9] = v then
         r := false
       else begin
         i := t^.xp[9];
-        if i^.kind = 147 then begin
+        if i^.kind = disp_node then begin
           if i^.xp[6] = v then
             r := false;
         end
-        else if i^.kind = 137 then
+        else if i^.kind = tree_node then
           if (ov_tree_ptr_t(i)^.op = 27) or (ov_tree_ptr_t(i)^.op = 18) or
              (ov_tree_ptr_t(i)^.op = 3) then
             if ov_tree_ptr_t(i)^.opnd[1] = v then
@@ -858,21 +862,21 @@ begin
             else begin
               a := ov_tree_ptr_t(i)^.opnd[1];
               k := a^.kind;
-              if (k = 147) or (k = 146) then begin
+              if (k = disp_node) or (k = ptr_node) then begin
                 if a^.xp[6] = v then
                   r := false;
               end
               else begin
                 if ov_tree_ptr_t(i)^.op = 27 then
-                  if k = 137 then
+                  if k = tree_node then
                     if ov_tree_ptr_t(a)^.op = 1 then
-                      if ov_tree_ptr_t(a)^.opnd[2]^.kind in [77..87, 101, 200] then begin
+                      if ov_tree_ptr_t(a)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
                         b := ov_tree_ptr_t(a)^.opnd[1];
-                        if b^.kind = 137 then
+                        if b^.kind = tree_node then
                           if ov_tree_ptr_t(b)^.op = 3 then
                             if ov_tree_ptr_t(b)^.opnd[1] = v then
-                              if ov_tree_ptr_t(b)^.opnd[2]^.kind in [77..87, 101, 200] then
-                                if t^.xp[7]^.kind = 110 then begin
+                              if ov_tree_ptr_t(b)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
+                                if t^.xp[7]^.kind = fortran_symbol then begin
                                   strided := true;
                                   r := false;
                                 end;
@@ -880,21 +884,21 @@ begin
                 if r then begin
                   i := t^.xp[9];
                   if ov_tree_ptr_t(i)^.op = 27 then
-                    if k = 137 then begin
+                    if k = tree_node then begin
                       a := ov_tree_ptr_t(i)^.opnd[1];
                       if ov_tree_ptr_t(a)^.op = 1 then
-                        if ov_tree_ptr_t(a)^.opnd[2]^.kind in [77..87, 101, 200] then begin
+                        if ov_tree_ptr_t(a)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
                           b := ov_tree_ptr_t(a)^.opnd[1];
-                          if b^.kind = 137 then
+                          if b^.kind = tree_node then
                             if ov_tree_ptr_t(b)^.op = 3 then begin
                               c := ov_tree_ptr_t(b)^.opnd[1];
-                              if c^.kind = 137 then begin
+                              if c^.kind = tree_node then begin
                                 b := ov_tree_ptr_t(b)^.opnd[2];
-                                if b^.kind = 110 then
+                                if b^.kind = fortran_symbol then
                                   if (b^.xw[13] & 16#4000) <> 0 then
                                     if ov_tree_ptr_t(c)^.op = 1 then
                                       if ov_tree_ptr_t(c)^.opnd[1] = v then
-                                        if ov_tree_ptr_t(c)^.opnd[2]^.kind in [77..87, 101, 200] then begin
+                                        if ov_tree_ptr_t(c)^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
                                           strided := true;
                                           r := false;
                                         end;
@@ -923,7 +927,7 @@ begin
   compare_disp := false;
   if a <> nil then
     if b <> nil then
-      if (a^.kind = 147) and (b^.kind = 147) then
+      if (a^.kind = disp_node) and (b^.kind = disp_node) then
         if a = b then
           compare_disp := true
         else if ov_head_ptr_t(addr(a^.xl[1]))^ = ov_head_ptr_t(addr(b^.xl[1]))^ then
@@ -950,7 +954,7 @@ begin
   compare_dindex := false;
   if a <> nil then
     if b <> nil then
-      if (a^.kind = 145) and (b^.kind = 145) then
+      if (a^.kind = dindex_node) and (b^.kind = dindex_node) then
         if a = b then
           compare_dindex := true
         else if ov_head_ptr_t(addr(a^.xl[1]))^ = ov_head_ptr_t(addr(b^.xl[1]))^ then
@@ -1018,11 +1022,11 @@ begin
   x := s;
   repeat
     x := x^.next;
-  until (x^.kind = 142) and (x^.br_target = s^.next^.next^.next);
+  until (x^.kind = cbranch_node) and (x^.br_target = s^.next^.next^.next);
   if not s^.prev^.hdr.b5 then
     return;
   p := x^.prev^.prev;
-  if p^.kind <> 140 then
+  if p^.kind <> assign_node then
     return;
   if not p^.hdr.b5 then
     if p^.asg_lhs = s^.prev^.asg_lhs then
@@ -1032,32 +1036,32 @@ begin
   width := s^.prev^.asg_desc.rlen;
   if (width & 16#FFFF) > 4 then
     return;
-  if not (a^.kind in [77..87, 101, 200]) then
+  if not (a^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
     return;
   if a^.int_value <> 1 then
     return;
-  if lhs^.kind <> 110 then
+  if lhs^.kind <> fortran_symbol then
     return;
   k := ord(lhs^.xc[10]) & 15;
   if not (k in [1..3]) then
     return;
   st := s^.next;
-  if st^.kind <> 140 then
+  if st^.kind <> assign_node then
     return;
-  if st^.asg_lhs^.kind <> 110 then
+  if st^.asg_lhs^.kind <> fortran_symbol then
     return;
   if (st^.asg_lhs^.xw[13] & 16#200) = 0 then
     return;
   st := st^.next;
-  if st^.kind <> 139 then
+  if st^.kind <> eval_node then
     return;
   if st^.eval_count <> 0 then
     return;
   st := st^.next;
-  if st^.kind <> 144 then
+  if st^.kind <> label_node then
     return;
   st := st^.next;
-  if st^.kind <> 140 then
+  if st^.kind <> assign_node then
     return;
   if st^.asg_op <> 11 then
     return;
@@ -1067,9 +1071,9 @@ begin
 
   { The store to an element. }
   a := st^.asg_lhs;
-  if a^.kind = 145 then
+  if a^.kind = dindex_node then
     ref := a
-  else if (a^.kind = 147) and (a^.xp[6]^.kind = 145) then
+  else if (a^.kind = disp_node) and (a^.xp[6]^.kind = dindex_node) then
     ref := a^.xp[6]
   else
     goto 99;
@@ -1088,14 +1092,14 @@ begin
     end;
     r := st^.asg_rhs;
     kind := 8;
-    if (r^.kind = 89) or (r^.kind = 88) then
+    if (r^.kind = dpreal_ob) or (r^.kind = real_ob) then
       if r^.real_value = 0.0 then
         kind := 10;
     goto 9;
   end;
   r := st^.asg_rhs;
-  if r^.kind = 147 then
-    if r^.xp[6]^.kind = 145 then
+  if r^.kind = disp_node then
+    if r^.xp[6]^.kind = dindex_node then
       if not bad_dindex(lhs, r^.xp[6]) then begin
         if st^.asg_lhs <> st^.asg_rhs then
           if il_utils_$trees_equivalent(st^.asg_lhs, st^.asg_rhs) > 1 then begin
@@ -1107,15 +1111,15 @@ begin
         kind := 7;
         goto 9;
       end;
-  if r^.kind <> 137 then
+  if r^.kind <> tree_node then
     return;
 
   { mult_constant: a[i] := b[i] * c or c * b[i]. }
   if ov_tree_ptr_t(r)^.op = 36 then
-    if ov_tree_ptr_t(r)^.opnd[1]^.kind = 147 then
+    if ov_tree_ptr_t(r)^.opnd[1]^.kind = disp_node then
       if opt_vec_$obj_is_float_const(ov_tree_ptr_t(r)^.opnd[2]) then
         if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[1]^.xp[6]) then
-          if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = 145 then begin
+          if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = dindex_node then begin
             o := ov_tree_ptr_t(r)^.opnd[1];
             if o <> st^.asg_lhs then
               if il_utils_$trees_equivalent(st^.asg_lhs, o) > 1 then begin
@@ -1129,8 +1133,8 @@ begin
           end;
   r := st^.asg_rhs;
   if ov_tree_ptr_t(r)^.op = 36 then
-    if ov_tree_ptr_t(r)^.opnd[2]^.kind = 147 then
-      if ov_tree_ptr_t(r)^.opnd[2]^.xp[6]^.kind = 145 then
+    if ov_tree_ptr_t(r)^.opnd[2]^.kind = disp_node then
+      if ov_tree_ptr_t(r)^.opnd[2]^.xp[6]^.kind = dindex_node then
         if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[2]^.xp[6]) then
           if opt_vec_$obj_is_float_const(ov_tree_ptr_t(r)^.opnd[1]) then begin
             o := ov_tree_ptr_t(r)^.opnd[2];
@@ -1148,10 +1152,10 @@ begin
   { subvector: a[i] := b[i] - c[i]. }
   r := st^.asg_rhs;
   if ov_tree_ptr_t(r)^.op = 35 then
-    if ov_tree_ptr_t(r)^.opnd[1]^.kind = 147 then
-      if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = 145 then
-        if ov_tree_ptr_t(r)^.opnd[2]^.kind = 147 then
-          if ov_tree_ptr_t(r)^.opnd[2]^.xp[6]^.kind = 145 then
+    if ov_tree_ptr_t(r)^.opnd[1]^.kind = disp_node then
+      if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = dindex_node then
+        if ov_tree_ptr_t(r)^.opnd[2]^.kind = disp_node then
+          if ov_tree_ptr_t(r)^.opnd[2]^.xp[6]^.kind = dindex_node then
             if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[2]^.xp[6]) then
               if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[1]^.xp[6]) then begin
                 t1 := st^.asg_lhs;
@@ -1161,14 +1165,16 @@ begin
                 alias_$basic_alias_desc(t2, db.d);
                 alias_$basic_alias_desc(t3, dc.d);
                 b1 := true;
-                if (t1^.kind = 147) and (t1^.xp[6]^.kind = 145) then
+                if (t1^.kind = disp_node)
+                    and (t1^.xp[6]^.kind = dindex_node) then
                   if il_utils_$trees_equivalent(t1, t2) <= 1 then
                     b1 := false;
                 if b1 then
                   if alias_$related(da.d, db.d) then
                     return;
                 b1 := true;
-                if (t1^.kind = 147) and (t1^.xp[6]^.kind = 145) then
+                if (t1^.kind = disp_node)
+                    and (t1^.xp[6]^.kind = dindex_node) then
                   if il_utils_$trees_equivalent(t1, t3) <= 1 then
                     b1 := false;
                 if b1 then
@@ -1176,7 +1182,8 @@ begin
                     return;
                 if (t1 = t2) or (t1 = t3) then begin
                   b1 := true;
-                  if (t2^.kind = 147) and (t2^.xp[6]^.kind = 145) then
+                  if (t2^.kind = disp_node)
+                      and (t2^.xp[6]^.kind = dindex_node) then
                     if il_utils_$trees_equivalent(t2, t3) <= 1 then
                       b1 := false;
                   if b1 then
@@ -1192,10 +1199,10 @@ begin
   if ov_tree_ptr_t(r)^.op <> 34 then
     return;
   { addvector: a[i] := b[i] + c[i]. }
-  if ov_tree_ptr_t(r)^.opnd[1]^.kind = 147 then
-    if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = 145 then
-      if ov_tree_ptr_t(r)^.opnd[2]^.kind = 147 then
-        if ov_tree_ptr_t(r)^.opnd[2]^.xp[6]^.kind = 145 then
+  if ov_tree_ptr_t(r)^.opnd[1]^.kind = disp_node then
+    if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = dindex_node then
+      if ov_tree_ptr_t(r)^.opnd[2]^.kind = disp_node then
+        if ov_tree_ptr_t(r)^.opnd[2]^.xp[6]^.kind = dindex_node then
           if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[1]^.xp[6]) then
             if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[2]^.xp[6]) then begin
               t1 := st^.asg_lhs;
@@ -1205,14 +1212,16 @@ begin
               alias_$basic_alias_desc(t2, db.d);
               alias_$basic_alias_desc(t3, dc.d);
               b1 := true;
-              if (t1^.kind = 147) and (t1^.xp[6]^.kind = 145) then
+              if (t1^.kind = disp_node)
+                  and (t1^.xp[6]^.kind = dindex_node) then
                 if il_utils_$trees_equivalent(t1, t2) <= 1 then
                   b1 := false;
               if b1 then
                 if alias_$related(da.d, db.d) then
                   return;
               b1 := true;
-              if (t1^.kind = 147) and (t1^.xp[6]^.kind = 145) then
+              if (t1^.kind = disp_node)
+                  and (t1^.xp[6]^.kind = dindex_node) then
                 if il_utils_$trees_equivalent(t1, t3) <= 1 then
                   b1 := false;
               if b1 then
@@ -1220,7 +1229,8 @@ begin
                   return;
               if (t1 = t2) or (t1 = t3) then begin
                 b1 := true;
-                if (t2^.kind = 147) and (t2^.xp[6]^.kind = 145) then
+                if (t2^.kind = disp_node)
+                    and (t2^.xp[6]^.kind = dindex_node) then
                   if il_utils_$trees_equivalent(t2, t3) <= 1 then
                     b1 := false;
                 if b1 then
@@ -1232,13 +1242,13 @@ begin
             end;
   { addconst: a[i] := b[i] + c. }
   r := st^.asg_rhs;
-  if ov_tree_ptr_t(r)^.opnd[1]^.kind = 147 then
-    if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = 145 then
+  if ov_tree_ptr_t(r)^.opnd[1]^.kind = disp_node then
+    if ov_tree_ptr_t(r)^.opnd[1]^.xp[6]^.kind = dindex_node then
       if opt_vec_$obj_is_float_const(ov_tree_ptr_t(r)^.opnd[2]) then
         if not bad_dindex(lhs, ov_tree_ptr_t(r)^.opnd[1]^.xp[6]) then begin
           t1 := st^.asg_lhs;
           b1 := true;
-          if (t1^.kind = 147) and (t1^.xp[6]^.kind = 145) then
+          if (t1^.kind = disp_node) and (t1^.xp[6]^.kind = dindex_node) then
             if il_utils_$trees_equivalent(t1, ov_tree_ptr_t(r)^.opnd[1]) <= 1 then
               b1 := false;
           if b1 then begin
@@ -1253,9 +1263,9 @@ begin
 
   { mult_add: a[i] := b[i] + c * d[i] (the product turned first). }
   r := st^.asg_rhs;
-  if r^.kind = 137 then
+  if r^.kind = tree_node then
     if ov_tree_ptr_t(r)^.op = 34 then
-      if ov_tree_ptr_t(r)^.opnd[2]^.kind = 137 then
+      if ov_tree_ptr_t(r)^.opnd[2]^.kind = tree_node then
         if ov_tree_ptr_t(ov_tree_ptr_t(r)^.opnd[2])^.op = 36 then begin
           o := ov_tree_ptr_t(r)^.opnd[2];
           ov_tree_ptr_t(r)^.opnd[2] := ov_tree_ptr_t(r)^.opnd[1];
@@ -1263,27 +1273,27 @@ begin
         end;
   r := st^.asg_rhs;
   a := ov_tree_ptr_t(r)^.opnd[1];
-  if a^.kind <> 137 then
+  if a^.kind <> tree_node then
     return;
   if ov_tree_ptr_t(a)^.op <> 36 then
     return;
   o := ov_tree_ptr_t(r)^.opnd[2];
-  k := o^.kind;
+  k := ord(o^.kind);
   if not ((k = 147) or (k = 145)) then
     return;
   if k = 147 then begin
-    if o^.xp[6]^.kind <> 145 then
+    if o^.xp[6]^.kind <> dindex_node then
       return;
     if bad_dindex(lhs, o^.xp[6]) then
       return;
   end;
   o := ov_tree_ptr_t(st^.asg_rhs)^.opnd[2];
-  if o^.kind = 145 then
+  if o^.kind = dindex_node then
     if bad_dindex(lhs, o) then
       return;
   a := ov_tree_ptr_t(st^.asg_rhs)^.opnd[1];
   o := ov_tree_ptr_t(a)^.opnd[1];
-  if (o^.kind = 147) and (o^.xp[6]^.kind = 145) then begin
+  if (o^.kind = disp_node) and (o^.xp[6]^.kind = dindex_node) then begin
     if bad_dindex(lhs, o^.xp[6]) then
       return;
     if not opt_vec_$obj_is_float_const(ov_tree_ptr_t(a)^.opnd[2]) then
@@ -1291,9 +1301,9 @@ begin
   end
   else begin
     o := ov_tree_ptr_t(a)^.opnd[2];
-    if o^.kind <> 147 then
+    if o^.kind <> disp_node then
       return;
-    if o^.xp[6]^.kind <> 145 then
+    if o^.xp[6]^.kind <> dindex_node then
       return;
     if bad_dindex(lhs, o^.xp[6]) then
       return;
@@ -1310,18 +1320,19 @@ begin
   alias_$basic_alias_desc(t2, db.d);
   alias_$basic_alias_desc(t3, dc.d);
   if t1 <> nil then
-    if (t1^.kind = 145) or (t1^.kind = 146) or (t1^.kind = 205) or
-       (t1^.kind = 147) then
+    if (t1^.kind = dindex_node) or (t1^.kind = ptr_node)
+        or (t1^.kind = sym_disp_node) or
+       (t1^.kind = disp_node) then
       if t1^.xp[6] <> nil then
-        if t1^.xp[6]^.kind <> 145 then
+        if t1^.xp[6]^.kind <> dindex_node then
           return;
-  if (t2^.kind = 147) and (t2 <> t1) then
+  if (t2^.kind = disp_node) and (t2 <> t1) then
     if not compare_disp(t1, t2, false) then
       if not compare_dindex(t1^.xp[6], t2^.xp[6]) then
         if il_utils_$trees_equivalent(t1^.xp[6]^.xp[9], t2^.xp[6]^.xp[9]) > 1 then
           if alias_$related(da.d, db.d) then
             return;
-  if (t2^.kind = 145) and (t2 <> t1) then
+  if (t2^.kind = dindex_node) and (t2 <> t1) then
     if not compare_disp(t1, t2, false) then
       if not compare_dindex(t1^.xp[6], t2^.xp[6]) then
         if il_utils_$trees_equivalent(t1^.xp[6]^.xp[9], t2^.xp[9]) > 1 then
@@ -1335,13 +1346,13 @@ begin
             return;
   if (il_utils_$trees_equivalent(t1, t2) <= 1) or
      (il_utils_$trees_equivalent(t1, t3) <= 1) then begin
-    if t2^.kind = 147 then
+    if t2^.kind = disp_node then
       if not (compare_disp(t2, t3, false) or
               compare_dindex(t2^.xp[6], t3^.xp[6])) then
         if il_utils_$trees_equivalent(t2, t3) > 1 then
           if alias_$related(db.d, dc.d) then
             return;
-    if t2^.kind = 145 then
+    if t2^.kind = dindex_node then
       if not compare_disp(t2, t3, false) then
         if not compare_dindex(t2^.xp[6], t3^.xp[6]) then
           if il_utils_$trees_equivalent(t2^.xp[9], t3^.xp[6]^.xp[9]) > 1 then
@@ -1357,30 +1368,30 @@ begin
   if st^.asg_op <> 11 then
     return;
   a := st^.asg_lhs;
-  k := a^.kind;
+  k := ord(a^.kind);
   if not ((k = 146) or (k = 110)) then
     return;
   if k = 146 then
-    if a^.xp[6]^.kind <> 110 then
+    if a^.xp[6]^.kind <> fortran_symbol then
       return;
   r := st^.asg_rhs;
-  if r^.kind <> 137 then
+  if r^.kind <> tree_node then
     return;
   if ov_tree_ptr_t(r)^.op <> 34 then
     return;
   o := ov_tree_ptr_t(r)^.opnd[1];
-  k := o^.kind;
+  k := ord(o^.kind);
   if (k = 146) or (k = 110) then begin
     { sum: acc + b[i]. }
     if o <> a then
       return;
     if k = 146 then
-      if o^.xp[6]^.kind <> 110 then
+      if o^.xp[6]^.kind <> fortran_symbol then
         return;
     o := ov_tree_ptr_t(r)^.opnd[2];
-    if o^.kind <> 147 then
+    if o^.kind <> disp_node then
       return;
-    if o^.xp[6]^.kind <> 145 then
+    if o^.xp[6]^.kind <> dindex_node then
       return;
     if bad_dindex(lhs, o^.xp[6]) then
       return;
@@ -1391,23 +1402,23 @@ begin
     kind := 5;
     goto 9;
   end;
-  if (k = 147) and (o^.xp[6]^.kind = 145) then begin
+  if (k = 147) and (o^.xp[6]^.kind = dindex_node) then begin
     { sum: b[i] + acc. }
     if bad_dindex(lhs, o^.xp[6]) then
       return;
     o := ov_tree_ptr_t(st^.asg_rhs)^.opnd[2];
-    k := o^.kind;
+    k := ord(o^.kind);
     if not ((k = 146) or (k = 110)) then begin
       kind := 0;
       goto 9;
     end;
     if k = 146 then
-      if o^.xp[6]^.kind <> 110 then
+      if o^.xp[6]^.kind <> fortran_symbol then
         return;
     if o <> st^.asg_lhs then begin
       if k <> 146 then
         return;
-      if st^.asg_lhs^.kind <> 146 then
+      if st^.asg_lhs^.kind <> ptr_node then
         return;
       if o^.xp[6] <> st^.asg_lhs^.xp[6] then
         return;
@@ -1425,30 +1436,30 @@ begin
   if ov_tree_ptr_t(o)^.op <> 36 then
     return;
   t2 := ov_tree_ptr_t(o)^.opnd[1];
-  if t2^.kind <> 147 then
+  if t2^.kind <> disp_node then
     return;
-  if t2^.xp[6]^.kind <> 145 then
+  if t2^.xp[6]^.kind <> dindex_node then
     return;
   t3 := ov_tree_ptr_t(o)^.opnd[2];
-  if t3^.kind <> 147 then
+  if t3^.kind <> disp_node then
     return;
-  if t3^.xp[6]^.kind <> 145 then
+  if t3^.xp[6]^.kind <> dindex_node then
     return;
   if bad_dindex(lhs, t2^.xp[6]) then
     return;
   if bad_dindex(lhs, ov_tree_ptr_t(ov_tree_ptr_t(st^.asg_rhs)^.opnd[1])^.opnd[2]^.xp[6]) then
     return;
   o := ov_tree_ptr_t(st^.asg_rhs)^.opnd[2];
-  k := o^.kind;
+  k := ord(o^.kind);
   if not ((k = 146) or (k = 110)) then
     return;
   if k = 146 then
-    if o^.xp[6]^.kind <> 110 then
+    if o^.xp[6]^.kind <> fortran_symbol then
       return;
   if o <> st^.asg_lhs then begin
     if k <> 146 then
       return;
-    if st^.asg_lhs^.kind <> 146 then
+    if st^.asg_lhs^.kind <> ptr_node then
       return;
     if o^.xp[6] <> st^.asg_lhs^.xp[6] then
       return;
@@ -1472,19 +1483,19 @@ begin
   if strided and (kind <> 3) then
     return;
   st := st^.next;
-  if st^.kind = 144 then
+  if st^.kind = label_node then
     if rshft(ord(il_$node_ptr_t(st)^.xc[72]) & 16#3E, 1) = 11 then
       st := st^.next;
-  if st^.kind <> 140 then
+  if st^.kind <> assign_node then
     return;
   if not st^.hdr.b5 then
     return;
   if st^.asg_lhs <> lhs then
     return;
   st := st^.next;
-  if st^.kind <> 140 then
+  if st^.kind <> assign_node then
     return;
-  if st^.asg_lhs^.kind <> 110 then
+  if st^.asg_lhs^.kind <> fortran_symbol then
     return;
   if (st^.asg_lhs^.xw[13] & 16#200) = 0 then
     return;
@@ -1521,15 +1532,15 @@ var
 begin
   if 19 in cargs_$options.opt_on then
     if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
-      if s^.kind = 142 then begin
+      if s^.kind = cbranch_node then begin
         c := ov_stmt_ptr_t(s)^.br_cond;
-        if c^.kind = 143 then
+        if c^.kind = cmp_tree_node then
           if ov_tree_ptr_t(c)^.op = 12 then begin
             l := il_$node_ptr_t(ov_stmt_ptr_t(s)^.br_target);
-            if l^.kind = 144 then
+            if l^.kind = label_node then
               if rshft(ord(l^.xc[72]) & 16#3E, 1) = 10 then begin
                 c := ov_tree_ptr_t(c)^.opnd[1];
-                if c^.kind = 110 then
+                if c^.kind = fortran_symbol then
                   if (c^.xw[13] & 16#4000) <> 0 then
                     if (c^.xw[13] & 16#200) <> 0 then
                       process_candidate(ov_stmt_ptr_t(s));
@@ -1553,15 +1564,15 @@ begin
   if 19 in cargs_$options.opt_on then begin
     s := il_d4;
     while s <> nil do begin
-      if s^.kind = 148 then begin
+      if s^.kind = block_entry_node then begin
         r := ov_stmt_ptr_t(s)^.x48;
-        if not ((r^.kind = 172) or (r^.kind = 167)) then begin
+        if not ((r^.kind = inner_blk) or (r^.kind = entry_blk)) then begin
           il_180 := r;
           if rshft(ord(r^.xc[377]) & 16#70, 4) <> 2 then
             return;
         end;
       end;
-      if s^.kind = 142 then
+      if s^.kind = cbranch_node then
         opt_vec_$process_loop(s, true);
       s := il_$node_ptr_t(ov_stmt_ptr_t(s)^.next);
     end;

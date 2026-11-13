@@ -576,6 +576,11 @@ answered by this policy and needs no reply.
    time would print differs).  Renaming the two cells (char_ptype,
    void_ptype, or by the front end's names when found) would let the
    table be declared as the image has it.
+   **Owner (2026-11-12):** yes.  **Done (translator RN1):** il.ins.pas
+   declares il_$kind_t, the 237 names in order; the nodes' kind fields
+   (il_$node_t and the units' views at +2) are of the type and the units
+   compare names; the cells are char_ptype and void_ptype.  Where a kind
+   stays an integer, and il$t: questions 314..318.
 79. Translator S: add_tn takes its descriptor as `var d: univ
    add_node_$desc_t' (distribute writes it) and buildtreenode `in d:
    univ add_node_$desc_t; in ops: univ add_node_$opnds_t' (add_node.ins.pas
@@ -1548,6 +1553,7 @@ answered by this policy and needs no reply.
    both units declare it locally (dmp.pas copies add_node.pas's
    declaration).  Should it move to il.ins.pas (or an insert of its
    own)?
+   **Done (translator RN1):** il.ins.pas's il_$kind_t (question 78).
 185. Translator PA3, call_conv: pfm_cleanup_check answers true for a name
    that is not 'PFM_$CLEANUP' when cargs flags_286's element 0 is set
    (`st D0' before the flag's test, 0x0B42F2); the lower-case name is
@@ -2686,3 +2692,70 @@ answered by this policy and needs no reply.
    space136), ds_solution_t names them.  Declare them in the insert
    (case_value's type, isc_case_index_array_t, is in
    isc_routine_externs.ins.pas, which is opened after it)?
+314. Translator RN1 (2026-11-12), the IL node kinds (question 78):
+   **il.ins.pas's il_$kind_t and the ISC's il$t.**  il_$kind_t is the
+   237-name table after add_node_$dispose_top_level, in order (0 end_ob
+   .. 104 signed_cob the tokens, 105 program_blk .. 236 union_ob).  il$t
+   (isc_enumeration.ins.pas, 178 names) is not a subset numbering: it is
+   the ISC generator's own classification, il_none, then 64 of the kinds
+   (with il_ before the name) and il_isc_fio_init (no kind of that name),
+   each assignment and tree node kind followed by its operators (111
+   _aop and _top names), il$k_max last; alphabetical but for the
+   signed/unsigned pairs (il_binteger_ob before il_ubinteger_ob,
+   il_integer_ob before il_uinteger_ob, ...).  Its kinds: 15 tokens
+   (the constants' kinds, 77 blogical_ob .. 200 binteger_ob) and nodes
+   from 105 to 229.  isc_user_routines' il_kind_function maps a node to
+   its il$t.  Not known from the original: il_$kind_t's name (the run
+   time's table has only the elements).
+315. Translator RN1: **an ordering compare of kinds is unsigned in the
+   image.**  dpc compares an enumeration unsigned (scs, shi, bls) and an
+   integer signed (slt, sgt, ble); the code is otherwise the same for
+   `=', `<>', `in', `case' and assignment.  prtobj_$prtobj_full's
+   `kind <= 76' is `cmpi.w #76,D2; bls' in the image (cc.m68k 0x0AF5C6),
+   so its kind local is now an il_$kind_t (`kind <= id_ob', dpc's sls
+   where it had sle): evidence that the original's kinds were the
+   enumeration.  No other ordering compare of a kind was found
+   (cg_addr's `kind > 0' tests are of other records).
+316. Translator RN1: **ord() of a kind into a longword.**  dpc extends
+   ord(e) of an il_$kind_t with ext.l; lang/common/source/token.pas
+   token_$identifier passes the kind on as a longword after `clr.l'
+   (token.low.pas's kind is 0..65535 for that reason).  So token.low.pas
+   keeps the 0..65535 field and token.pas compares its kinds as numbers;
+   it has a copy of il_$kind_t (the unit does not open il.ins.pas) for
+   the kinds it passes to smcontk and idntk.  Elsewhere a kind stored
+   into an integer is written ord(...) where the code is the same
+   (exs, list_tree's print_integer, isc_user_routines'
+   get_uparrow_dot_kind and il_kind_function, prtobj's w).  Kinds left
+   integers: opt_vector's k (one local is also a byte field's value),
+   c_main rword_init's loop over the classes (it indexes lex_tokens;
+   idntk(il_$kind_t(k), ...)), the ISC's possibly_make_expression_
+   temporary skind and tkind (122..124, as isc_lir's heading has them),
+   the generated p1_kind table's indices, and oli's mval kinds (1..3,
+   not IL kinds; oli_mval_t's kind is an integer again).  Is Rev 8.89's
+   ord() of an enumeration zero-extended (a dpc difference to log as a
+   gap), or did token.pas read the kind some other way?
+317. Translator RN1: **the C front end's token classes are kinds.**
+   c_globals' ctk_* (0 `}' .. 75, 76 identifier, 81/82/85 constants,
+   92/93 strings) are the Pascal front end's token kinds reused: 0
+   end_ob for the closing brace, 50 bus_ob and 60 sub_ob for the
+   brackets, 49 up_to_ob for `..', the keyword slots for C's keywords (6
+   with_ob is `enum', 16 array_ob `union', 17 record_ob `struct', 31
+   label_ob the `...' of a prototype's parameter list).  The parser keeps
+   a class in integers (token_kind, lex_tokens[...], its follow sets),
+   so ctk_* stay integer constants, and c_objtype's c_tag_t and
+   c_kw_node_t keep an integer kind; where a token node's kind meets a
+   ctk_ constant the front end writes the kind's name
+   (char_string_ob, char32_string_ob) or ord(...).  debug_sym_dmp's
+   `with_ob, array_ob, record_ob' arm is a C tag's kind (enum, union,
+   struct).  Would the original have declared the C classes as the
+   enumeration's constants (ctk_enum = with_ob), with the follow sets as
+   sets of the enumeration?  The sets would be 30 bytes instead of the
+   image's sizes, so not without evidence.
+318. Translator RN1: **names taken for the enumeration.**  c_globals'
+   cells char_type and void_type are char_ptype and void_ptype (kinds
+   125 CHAR_TYPE and 210 VOID_TYPE; question 78's proposal); unix_objmod's
+   data_section cell is data_section_node; the section at_lib_dsc is
+   declared `var (at_lib_dsc) at_lib_dsc_bytes' as std_lib and
+   mem_$data$ are (AT_LIB_DSC is kind 208): every unit that opens
+   at_lib_dsc.ins.pas now has the section as a .comm, as the other
+   shared sections do.  Better names when the front end's are found?

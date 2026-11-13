@@ -107,15 +107,15 @@ function token_$discrete_scalar(
     kind: integer;
     value: integer32): token_$t;
 var
-  node_kind: integer;                   { (-2,A6) }
+  node_kind: il_$kind_t;                { (-2,A6) }
 begin
   case kind of
-    1: node_kind := 87;
-    2: node_kind := 77;
-    3: node_kind := 80;
-    4: node_kind := 78;
-    5: node_kind := 82;
-    6: node_kind := 79;
+    1: node_kind := char_ob;
+    2: node_kind := blogical_ob;
+    3: node_kind := sinteger_ob;
+    4: node_kind := slogical_ob;
+    5: node_kind := linteger_ob;
+    6: node_kind := llogical_ob;
   end;
   token_$discrete_scalar := smcontk(node_kind, value);
 end;
@@ -196,7 +196,7 @@ begin
   if len > token_$max_text_length then
     ass_$precondition_fail(
       'TOKEN_$IDENTIFIER -- string text too long ("%a")%$', s, len);
-  node := idntk(76, s, len);
+  node := idntk(id_ob, s, len);
   if node^.kind <> 76 then begin
     node_kind := node^.kind;
     ass_$precondition_fail(

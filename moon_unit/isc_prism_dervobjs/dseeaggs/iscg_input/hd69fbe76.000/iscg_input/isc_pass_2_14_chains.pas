@@ -3871,7 +3871,7 @@ begin
         0, t1, isc_solution_ptr_t(t1^.base_register), solution, t1^.il, 0,
         t1^.bits_known, t1^.bits_trusted);
   end;
-  result.object_with_name := smcontk(81, integer32(result.fields[0]));
+  result.object_with_name := smcontk(integer_ob, integer32(result.fields[0]));
 end;
 
 { transform_399_pass_2 - rule 399: fp_reg <- literal_32_bits.

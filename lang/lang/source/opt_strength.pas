@@ -164,7 +164,7 @@ type
   sr_tree_view_ptr_t = ^sr_tree_view_t;
   sr_tree_view_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     hdr: array [1..3] of integer32;     { +4 }
     uses: integer;                      { +16 }
     unused_18: integer;                 { +18 }
@@ -255,15 +255,15 @@ function opt_str_$is_loop_constant_integer(
 var
   k: integer32;
 begin
-  if t^.kind in [77..87, 101, 200] then
+  if t^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     opt_str_$is_loop_constant_integer := true
   else
     case t^.kind of
-      109:
+      var_name:
         opt_str_$is_loop_constant_integer := (t^.xw[17] & 16#800) <> 0;
-      110:
+      fortran_symbol:
         opt_str_$is_loop_constant_integer := (t^.xw[13] & 16#800) <> 0;
-      137:
+      tree_node:
         if g_opt_tree_ptr_t(t)^.op in [0..10, 13, 14, 17, 18, 27..29, 33,
                                        43..46, 49..53, 57, 59..62, 74..77,
                                        86] then begin
@@ -298,16 +298,16 @@ function opt_str_$product_of_consts(
 begin
   opt_str_$product_of_consts := nil;
   if op = 3 then begin
-    if a^.kind in [77..87, 101, 200] then
-      if b^.kind in [77..87, 101, 200] then
+    if a^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
+      if b^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
         opt_str_$product_of_consts :=
-          smcontk(81, a^.int_value * b^.int_value);
+          smcontk(integer_ob, a^.int_value * b^.int_value);
   end
   else if op = 27 then
-    if a^.kind in [77..87, 101, 200] then
-      if b^.kind in [77..87, 101, 200] then
+    if a^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
+      if b^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
         opt_str_$product_of_consts :=
-          smcontk(81, lshft(a^.int_value, b^.int_value));
+          smcontk(integer_ob, lshft(a^.int_value, b^.int_value));
 end;
 
 { opt_str_$opmod_of_operand - see g_opt.ins.pas: an integer constant 2
@@ -347,7 +347,7 @@ var
   end;
 
 begin
-  if t^.kind in [77..87, 101, 200] then begin
+  if t^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
     if sgn then begin
       if (t^.int_value >= -32768) and (t^.int_value <= 32767) then
         opt_str_$opmod_of_operand := 2
@@ -361,10 +361,10 @@ begin
   end
   else
     case t^.kind of
-      110:
+      fortran_symbol:
         opt_str_$opmod_of_operand :=
           sizeof_dataclass(ord(t^.xc[10]) & 15, size);
-      109:
+      var_name:
         if (t^.xw[37] > 0) and (opt_var_types <> nil) then begin
           if opt_var_types^[t^.xw[37]].size > 2 then
             opt_str_$opmod_of_operand := 4
@@ -378,10 +378,10 @@ begin
           else
             opt_str_$opmod_of_operand := 4;
         end;
-      137:
+      tree_node:
         opt_str_$opmod_of_operand :=
           class_size[g_opt_tree_ptr_t(t)^.rlen];
-      145, 146, 147, 205:
+      dindex_node, ptr_node, disp_node, sym_disp_node:
         opt_str_$opmod_of_operand := size;
       otherwise
         bug_check('opt_str_$opmod_of_operand -- unexpected object kind %d%.',
@@ -487,22 +487,26 @@ var
   begin
     res := nil;
     t := g_opt_tree_ptr_t(a);
-    if a^.kind = 137 then
+    if a^.kind = tree_node then
       if t^.uses = 1 then
-        if b^.kind in [77..87, 101, 200] then
-          if (t^.op = 3) and (t^.opnd[2]^.kind in [77..87, 101, 200]) then begin
+        if b^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
+          if (t^.op = 3) and (t^.opnd[2]^.kind in [blogical_ob..char_ob,
+              char16_ob, binteger_ob]) then begin
             t^.opnd[2] := opt_str_$product_of_consts(op, t^.opnd[2], b);
             t^.w28 := opt_str_$opmod_of_operand(t^.opnd[2], d.w8, d.flags.signed);
             res := a;
           end
-          else if (t^.op = 3) and (t^.opnd[1]^.kind in [77..87, 101, 200]) then begin
+          else if (t^.op = 3) and (t^.opnd[1]^.kind in [blogical_ob..char_ob,
+              char16_ob, binteger_ob]) then begin
             t^.opnd[1] := opt_str_$product_of_consts(op, t^.opnd[1], b);
             t^.w26 := opt_str_$opmod_of_operand(t^.opnd[1], d.w6, t^.dflags.signed);
             res := a;
           end
           else if (t^.op = 27) and (op = 27) and
-                  (t^.opnd[2]^.kind in [77..87, 101, 200]) then begin
-            t^.opnd[2] := smcontk(81, t^.opnd[2]^.int_value + b^.int_value);
+                  (t^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                        binteger_ob]) then begin
+            t^.opnd[2] := smcontk(integer_ob,
+                                  t^.opnd[2]^.int_value + b^.int_value);
             res := a;
           end;
     smuggle_constants := res;
@@ -514,12 +518,15 @@ begin
     opt_str_$product_of := r;
     return;
   end;
-  if (op = 3) and (a^.kind in [77..87, 101, 200]) and (a^.int_value = 1) then begin
+  if (op = 3) and (a^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+      and (a^.int_value = 1) then begin
     opt_str_$product_of := identity_mul(b, rlen, rlen_b, sgn);
     return;
   end;
-  if ((op = 3) and (b^.kind in [77..87, 101, 200]) and (b^.int_value = 1)) or
-     ((op = 27) and (b^.kind in [77..87, 101, 200]) and (b^.int_value = 0)) then begin
+  if ((op = 3) and (b^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+      and (b^.int_value = 1)) or
+     ((op = 27) and (b^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+      and (b^.int_value = 0)) then begin
     opt_str_$product_of := identity_mul(a, rlen, rlen_a, sgn);
     return;
   end;
@@ -542,8 +549,9 @@ begin
     d.size := class_size[rlen];
     d.flags.signed := sgn;
     if rlen = 4 then
-      if not ((b^.kind = 80) or (b^.kind = 200) or (b^.kind = 81)) or
-         (a^.kind <> 109) or (a^.xw[37] <> 0) or (d.w6 <> 2) or
+      if not ((b^.kind = sinteger_ob) or (b^.kind = binteger_ob)
+              or (b^.kind = integer_ob)) or
+         (a^.kind <> var_name) or (a^.xw[37] <> 0) or (d.w6 <> 2) or
          (d.w8 <> 2) or (d.rlen <> 4) then begin
         d.w6 := 4;
         d.w8 := 4;
@@ -593,12 +601,12 @@ procedure opt_str_$set_substitution_point(
 var
   t: sr_temp_ptr_t;
 begin
-  if new^.kind = 110 then begin
+  if new^.kind = fortran_symbol then begin
     if (new^.xl[6] & 16#20000) = 0 then
       return;
     t := sr_temp_ptr_t(new^.xp2[11]);
   end
-  else if new^.kind = 109 then begin
+  else if new^.kind = var_name then begin
     if (new^.xl[8] & 16#20000) = 0 then
       return;
     t := sr_temp_ptr_t(new^.xp[13]);
@@ -628,18 +636,18 @@ begin
   n := new;
   if (n = nil) or (o = nil) then
     return;
-  if n^.kind = 110 then begin
+  if n^.kind = fortran_symbol then begin
     if (n^.xl[6] & 16#20000) = 0 then
       return;
     t := sr_temp_ptr_t(n^.xp2[11]);
   end
-  else if n^.kind = 109 then begin
+  else if n^.kind = var_name then begin
     if (n^.xl[8] & 16#20000) = 0 then
       return;
     t := sr_temp_ptr_t(n^.xp[13]);
   end
   else begin
-    if n^.kind = 137 then
+    if n^.kind = tree_node then
       if g_opt_tree_ptr_t(n)^.op = 18 then begin
         x := o;
         opt_str_$add_substitution_point(g_opt_tree_ptr_t(n)^.opnd[1], x);
@@ -676,12 +684,12 @@ begin
   if temp = nil then
     return;
   case temp^.kind of
-    109: begin
+    var_name: begin
       if (temp^.xl[8] & 16#20000) = 0 then
         return;
       s := sr_temp_ptr_t(temp^.xp[13])^.asg;
     end;
-    110: begin
+    fortran_symbol: begin
       if (temp^.xl[6] & 16#20000) = 0 then
         return;
       s := sr_temp_ptr_t(temp^.xp2[11])^.asg;
@@ -694,9 +702,9 @@ begin
   s^.asg_rhs := buildtreenode(1, s^.asg_desc, ops, 2);
   opt_str_$add_substitution_point(ops[1], s^.asg_rhs);
   opt_str_$add_substitution_point(ops[2], s^.asg_rhs);
-  if t^.kind = 137 then
+  if t^.kind = tree_node then
     g_opt_tree_ptr_t(t)^.opnd[2] := temp
-  else if t^.kind = 145 then
+  else if t^.kind = dindex_node then
     t^.xp[9] := temp
   else
     return;
@@ -717,7 +725,7 @@ var
   b: g_opt_block_ptr_t;
   r: boolean;
 begin
-  if t^.kind = 110 then
+  if t^.kind = fortran_symbol then
     hn := sr_temp_ptr_t(t^.xp2[11])^.header
   else
     hn := sr_temp_ptr_t(t^.xp[13])^.header;
@@ -749,16 +757,16 @@ var
 begin
   if t = nil then
     return;
-  if not ((t^.kind = 145) or (t^.kind = 137)) then
+  if not ((t^.kind = dindex_node) or (t^.kind = tree_node)) then
     return;
-  if t^.kind = 137 then
+  if t^.kind = tree_node then
     if g_opt_tree_ptr_t(t)^.op <> 13 then
       return;
-  if t^.kind = 137 then
+  if t^.kind = tree_node then
     x := g_opt_tree_ptr_t(g_opt_tree_ptr_t(t)^.opnd[2])
   else
     x := g_opt_tree_ptr_t(t^.xp[9]);
-  if x^.kind <> 137 then
+  if x^.kind <> tree_node then
     return;
   if x^.uses > 1 then
     return;
@@ -791,9 +799,9 @@ var
   b: g_opt_block_ptr_t;
   s, n: g_opt_stmt_ptr_t;
 begin
-  if t^.kind = 110 then
+  if t^.kind = fortran_symbol then
     p := sr_temp_ptr_t(t^.xp2[11])^.incs
-  else if t^.kind = 109 then
+  else if t^.kind = var_name then
     p := sr_temp_ptr_t(t^.xp[13])^.incs
   else
     return;
@@ -801,7 +809,7 @@ begin
   s := b^.first_stmt;
   while s <> g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt do begin
     n := s^.next;
-    if n^.kind = 140 then
+    if n^.kind = assign_node then
       if n^.asg_lhs = t then begin
         il_utils_$adjust_uc(il_$node_ptr_t(n), -1);
         s^.next := n^.next;
@@ -838,7 +846,7 @@ var
   n: il_$node_ptr_t;
   k: integer;
 begin
-  if old^.kind = 110 then
+  if old^.kind = fortran_symbol then
     p := sr_temp_ptr_t(old^.xp2[11])^.points
   else
     p := sr_temp_ptr_t(old^.xp[13])^.points;
@@ -848,43 +856,43 @@ begin
     n := q^.point;
     if n <> nil then
       case n^.kind of
-        143, 137:
+        cmp_tree_node, tree_node:
           for k := 1 to g_opt_tree_ptr_t(n)^.count do
             if g_opt_tree_ptr_t(n)^.opnd[k] = old then
               g_opt_tree_ptr_t(n)^.opnd[k] := new;
-        205, 147, 146:
+        sym_disp_node, disp_node, ptr_node:
           if n^.xp[6] = old then
             n^.xp[6] := new;
-        145: begin
+        dindex_node: begin
           if n^.xp[6] = old then
             n^.xp[6] := new;
           if n^.xp[9] = old then
             n^.xp[9] := new;
         end;
-        164: begin
+        cs_node: begin
           if n^.xp[5] = old then
             n^.xp[5] := new;
           if n^.xp[6] = old then
             n^.xp[6] := new;
         end;
-        175, 171:
+        pf_call, cc_call:
           if n^.xp[4] = old then
             n^.xp[4] := new;
-        140: begin
+        assign_node: begin
           if g_opt_stmt_ptr_t(n)^.asg_rhs = old then
             g_opt_stmt_ptr_t(n)^.asg_rhs := new;
           if g_opt_stmt_ptr_t(n)^.asg_x <> nil then
             if g_opt_stmt_ptr_t(n)^.asg_x = old then
               g_opt_stmt_ptr_t(n)^.asg_x := new;
         end;
-        139:
+        eval_node:
           for k := 1 to g_opt_stmt_ptr_t(n)^.eval_count do
             if g_opt_stmt_ptr_t(n)^.eval_opnd[k] = old then
               g_opt_stmt_ptr_t(n)^.eval_opnd[k] := new;
-        142:
+        cbranch_node:
           if g_opt_stmt_ptr_t(n)^.br_cond = old then
             g_opt_stmt_ptr_t(n)^.br_cond := new;
-        151:
+        return_node:
           if g_opt_stmt_ptr_t(n)^.x48 <> nil then
             if g_opt_stmt_ptr_t(n)^.x48 = old then
               g_opt_stmt_ptr_t(n)^.x48 := new;
@@ -893,7 +901,7 @@ begin
       end;
     q := q^.next;
   end;
-  if new^.kind = 110 then begin
+  if new^.kind = fortran_symbol then begin
     last^.next := sr_temp_ptr_t(new^.xp2[11])^.points;
     sr_temp_ptr_t(new^.xp2[11])^.points := p;
   end
@@ -921,12 +929,13 @@ var
 begin
   stmtfound := false;
   s := a;
-  while s^.kind = 140 do begin
+  while s^.kind = assign_node do begin
     if s = b then begin
       if (s^.asg_op = a^.asg_op) and (s^.asg_rlen = a^.asg_rlen) then
         if s^.asg_rhs = a^.asg_rhs then
           stmtfound := true
-        else if (s^.asg_rhs^.kind = 137) and (a^.asg_rhs^.kind = 137) then begin
+        else if (s^.asg_rhs^.kind = tree_node)
+            and (a^.asg_rhs^.kind = tree_node) then begin
           x := g_opt_tree_ptr_t(a^.asg_rhs);
           y := g_opt_tree_ptr_t(s^.asg_rhs);
           if (sr_tree_view_ptr_t(x)^.hdr = sr_tree_view_ptr_t(y)^.hdr) and
@@ -941,7 +950,7 @@ begin
     s := s^.prev;
   end;
   s := a;
-  while s^.kind = 140 do begin
+  while s^.kind = assign_node do begin
     if s = b then begin
       if (s^.asg_rhs = a^.asg_rhs) and (s^.asg_op = a^.asg_op) and
          (s^.asg_rlen = a^.asg_rlen) then
@@ -969,7 +978,7 @@ var
   ok, found: boolean;
 begin
   ok := true;
-  if a^.kind = 110 then begin
+  if a^.kind = fortran_symbol then begin
     p := sr_temp_ptr_t(a^.xp2[11])^.incs;
     q := sr_temp_ptr_t(b^.xp2[11])^.incs;
   end
@@ -991,8 +1000,8 @@ begin
         verify_increments := false;
         return;
       end;
-      if (p^.stmt^.asg_rhs^.kind <> 137) or
-         (q^.stmt^.asg_rhs^.kind <> 137) then begin
+      if (p^.stmt^.asg_rhs^.kind <> tree_node) or
+         (q^.stmt^.asg_rhs^.kind <> tree_node) then begin
         verify_increments := false;
         return;
       end;
@@ -1061,7 +1070,7 @@ begin
   x := g_opt_tree_ptr_t(a);
   y := g_opt_tree_ptr_t(b);
   case a^.kind of
-    137: begin
+    tree_node: begin
       if (x^.op <> y^.op) or
          (sr_tree_view_ptr_t(x)^.desc <> sr_tree_view_ptr_t(y)^.desc) or
          (x^.flags <> y^.flags) or (x^.uses <> y^.uses) or
@@ -1086,14 +1095,15 @@ begin
         end;
       opt_str_$trees_equivalent := true;
     end;
-    145:
+    dindex_node:
       opt_str_$trees_equivalent :=
         opt_str_$trees_equivalent(a^.xp[9], b^.xp[9], false) and
         (a^.xp[6] = b^.xp[6]) and in_index and (a^.xl[8] = b^.xl[8]) and
         (a^.xl[1] = b^.xl[1]) and (a^.xw[21] = b^.xw[21]) and
         (a^.xw[20] = b^.xw[20]) and
-        ((a^.xp[6]^.kind = 195) or (a^.xp[6]^.kind = 163) or
-         (a^.xp[6]^.kind = 154) or (a^.xp[6]^.kind = 153) or
+        ((a^.xp[6]^.kind = reloc_absolute_addr_con)
+         or (a^.xp[6]^.kind = addr_con) or
+         (a^.xp[6]^.kind = db_register) or (a^.xp[6]^.kind = sb_register) or
          (a^.xp[7] = b^.xp[7]));
     otherwise
       opt_str_$trees_equivalent := false;
@@ -1129,19 +1139,19 @@ begin
       preheader_num := b^.preheader^.num;
       s := b^.preheader^.first_stmt;
       while s <> g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt do begin
-        if s^.kind = 140 then
+        if s^.kind = assign_node then
           if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
             if s^.asg_op = 0 then begin
               s2 := s^.next;
               while s2 <> g_opt_blocks_ptr_t(il_11c)^[preheader_num + 1]^.first_stmt do begin
-                if s2^.kind = 140 then begin
+                if s2^.kind = assign_node then begin
                   n := s2^.asg_lhs;
                   t := nil;
-                  if n^.kind = 109 then begin
+                  if n^.kind = var_name then begin
                     if (n^.xl[8] & 16#20000) <> 0 then
                       t := sr_temp_ptr_t(n^.xp[13]);
                   end
-                  else if n^.kind = 110 then
+                  else if n^.kind = fortran_symbol then
                     if (n^.xl[6] & 16#20000) <> 0 then
                       t := sr_temp_ptr_t(n^.xp2[11]);
                   if t <> nil then
@@ -1202,7 +1212,7 @@ var
     k: integer;
   begin
     case n^.kind of
-      137, 143:
+      tree_node, cmp_tree_node:
         for k := 1 to g_opt_tree_ptr_t(n)^.count do
           if g_opt_tree_ptr_t(n)^.opnd[k] = t then begin
             found := true;
@@ -1210,12 +1220,12 @@ var
           end
           else
             usewalk(g_opt_tree_ptr_t(n)^.opnd[k], t);
-      147, 205, 146:
+      disp_node, sym_disp_node, ptr_node:
         if n^.xp[6] = t then
           found := true
         else
           usewalk(n^.xp[6], t);
-      145:
+      dindex_node:
         if n^.xp[6] = t then
           found := true
         else begin
@@ -1225,17 +1235,17 @@ var
           else
             usewalk(n^.xp[9], t);
         end;
-      175:
+      pf_call:
         if n^.xp[4] = t then
           found := true
         else
           usewalk(n^.xp[4], t);
-      171:
+      cc_call:
         if n^.xp[4] = t then
           found := true
         else
           usewalk(n^.xp[4], t);
-      164:
+      cs_node:
         if n^.xp[5] = t then
           found := true
         else begin
@@ -1252,7 +1262,7 @@ var
 begin
   used_outside_loop := false;
   found := false;
-  if not ((t^.kind = 143) or (t^.kind = 137)) then
+  if not ((t^.kind = cmp_tree_node) or (t^.kind = tree_node)) then
     return;
   for i := opt_first_block to opt_last_block do begin
     b := g_opt_blocks_ptr_t(il_11c)^[i];
@@ -1260,7 +1270,7 @@ begin
       s := b^.first_stmt;
       while s <> b^.last_stmt^.next do begin
         case s^.kind of
-          139:
+          eval_node:
             for k := 1 to s^.eval_count do
               if s^.eval_opnd[k] = t then begin
                 used_outside_loop := true;
@@ -1268,7 +1278,7 @@ begin
               end
               else
                 usewalk(s^.eval_opnd[k], t);
-          140: begin
+          assign_node: begin
             if s^.asg_rhs = t then begin
               used_outside_loop := true;
               return;
@@ -1293,14 +1303,14 @@ begin
             end;
             usewalk(s^.asg_lhs, t);
           end;
-          142: begin
+          cbranch_node: begin
             if s^.br_cond = t then begin
               used_outside_loop := true;
               return;
             end;
             usewalk(s^.br_cond, t);
           end;
-          151:
+          return_node:
             if s^.x48 <> nil then begin
               if s^.x48 = t then begin
                 used_outside_loop := true;
@@ -1308,7 +1318,7 @@ begin
               end;
               usewalk(s^.x48, t);
             end;
-          188: begin
+          use_def_ob: begin
             if s^.x48 = t then begin
               used_outside_loop := true;
               return;
@@ -1350,10 +1360,10 @@ procedure substitute_ptr_for_target(
     var slot: il_$node_ptr_t;
     n: integer32); options(val_param); internal;
 var
-  k: integer;
+  k: il_$kind_t;
 begin
   if slot = target then begin
-    if target^.kind = 145 then begin
+    if target^.kind = dindex_node then begin
       slot := ptr;
       g_opt_tree_ptr_t(ptr)^.uses := g_opt_tree_ptr_t(ptr)^.uses + n;
     end
@@ -1361,10 +1371,11 @@ begin
       slot := ptr^.xp[6];
       opt_str_$add_substitution_point(ptr^.xp[6], parent);
     end;
-    if target^.kind = 137 then
+    if target^.kind = tree_node then
       if g_opt_tree_ptr_t(target)^.uses > 1 then begin
         k := parent^.kind;
-        if (k = 145) or (k = 147) or (k = 146) or (k = 205) then begin
+        if (k = dindex_node) or (k = disp_node) or (k = ptr_node)
+            or (k = sym_disp_node) then begin
           if n > 1 then begin
             g_opt_tree_ptr_t(target)^.uses :=
               g_opt_tree_ptr_t(target)^.uses - n;
@@ -1382,7 +1393,7 @@ begin
   else
     subwalk(slot, ptr, target);
   k := slot^.kind;
-  if (k = 137) or (k = 164) or (k = 143) then begin
+  if (k = tree_node) or (k = cs_node) or (k = cmp_tree_node) then begin
     kfold(parent, slot);
     opt_str_$add_substitution_point(slot, parent);
   end;
@@ -1399,22 +1410,22 @@ var
   k: integer;
 begin
   case n^.kind of
-    137, 143:
+    tree_node, cmp_tree_node:
       for k := 1 to g_opt_tree_ptr_t(n)^.count do
         substitute_ptr_for_target(n, ptr, target,
                                   g_opt_tree_ptr_t(n)^.opnd[k], 1);
-    147, 146, 205:
+    disp_node, ptr_node, sym_disp_node:
       substitute_ptr_for_target(n, ptr, target, n^.xp[6],
                                 g_opt_tree_ptr_t(n)^.uses);
-    145: begin
+    dindex_node: begin
       substitute_ptr_for_target(n, ptr, target, n^.xp[6],
                                 g_opt_tree_ptr_t(n)^.uses);
       substitute_ptr_for_target(n, ptr, target, n^.xp[9],
                                 g_opt_tree_ptr_t(n)^.uses);
     end;
-    171, 175:
+    cc_call, pf_call:
       substitute_ptr_for_target(n, ptr, target, n^.xp[4], 1);
-    164: begin
+    cs_node: begin
       substitute_ptr_for_target(n, ptr, target, n^.xp[5], 1);
       substitute_ptr_for_target(n, ptr, target, n^.xp[6], 1);
     end;
@@ -1443,7 +1454,7 @@ begin
     repeat
       s := s^.next;
       case s^.kind of
-        140: begin
+        assign_node: begin
           substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
                                     s^.asg_rhs, 1);
           if s^.asg_x <> nil then
@@ -1452,14 +1463,14 @@ begin
           substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
                                     s^.asg_lhs, 1);
         end;
-        139:
+        eval_node:
           for k := 1 to s^.eval_count do
             substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
                                       s^.eval_opnd[k], 1);
-        142:
+        cbranch_node:
           substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
                                     s^.br_cond, 1);
-        151:
+        return_node:
           substitute_ptr_for_target(il_$node_ptr_t(s), ptr, target,
                                     s^.x48, 1);
         otherwise
@@ -1544,10 +1555,10 @@ var
   old, c: il_$node_ptr_t;
   r: g_opt_tree_ptr_t;
 begin
-  if t^.kind = 145 then
+  if t^.kind = dindex_node then
     if t^.xw[20] <> 0 then begin
       old := s^.asg_rhs;
-      c := smcontk(81, lshft(1, t^.xw[20]));
+      c := smcontk(integer_ob, lshft(1, t^.xw[20]));
       il_utils_$do_substitution(il_$node_ptr_t(s), s^.asg_rhs,
         opt_str_$product_of(3, s^.asg_rhs, c, s^.asg_rlen, s^.asg_rlen,
                             opt_str_$opmod_of_operand(c, 2, true), true,
@@ -1556,13 +1567,13 @@ begin
     end;
   if (s^.asg_rlen = 5) or (s^.asg_rlen = 4) then begin
     r := g_opt_tree_ptr_t(s^.asg_rhs);
-    if r^.kind = 137 then
+    if r^.kind = tree_node then
       if r^.rlen = 2 then
         if r^.op = 3 then
           r^.rlen := 4;
   end;
   if s^.asg_rlen = 5 then
-    if s^.asg_lhs^.kind = 109 then
+    if s^.asg_lhs^.kind = var_name then
       if s^.asg_lhs^.xl[9] = 16 then
         s^.asg_lhs^.xl[9] := 32;
 end;
@@ -1593,24 +1604,24 @@ var
   q, s: g_opt_stmt_ptr_t;
   reg: integer;
 begin
-  if t^.kind = 145 then begin
+  if t^.kind = dindex_node then begin
     ops[1] := t;
     x := buildtreenode(26, auto_desc, ops, 1);
     opt_str_$add_substitution_point(t, x);
   end;
   lhs := s1^.asg_lhs;
-  if lhs^.kind = 110 then
+  if lhs^.kind = fortran_symbol then
     lhs^.xc[10] := chr(ord(lhs^.xc[10]) & 16#F0 ! 11);
-  if t^.kind = 137 then
+  if t^.kind = tree_node then
     g_opt_tree_ptr_t(t)^.opnd[2] := s1^.asg_rhs;
-  if t^.kind = 145 then
+  if t^.kind = dindex_node then
     t^.xp[9] := s1^.asg_rhs;
-  if t^.kind = 145 then
+  if t^.kind = dindex_node then
     s1^.asg_rhs := x
   else
     s1^.asg_rhs := t;
   s1^.asg_desc := auto_desc;
-  if t^.kind = 145 then
+  if t^.kind = dindex_node then
     r := add_pn(s1^.asg_lhs, t^.xp[7], sr_index_ptr_t(t)^.align,
                 sr_index_ptr_t(t)^.b23)
   else
@@ -1622,7 +1633,7 @@ begin
   q := opt_4009c[opt_region];
   repeat
     if q <> s2 then
-      if q^.kind = 140 then
+      if q^.kind = assign_node then
         if q^.asg_lhs = s2^.asg_lhs then
           if q^.asg_desc <> auto_desc then begin
             q^.asg_desc := auto_desc;
@@ -1658,22 +1669,27 @@ var
 begin
   r := false;
   x := g_opt_tree_ptr_t(t);
-  if x^.kind = 137 then
+  if x^.kind = tree_node then
     if x^.op = 13 then
       if il_utils_$is_strength_reduction_temp(x^.opnd[2]) then
-        if x^.opnd[1]^.kind in [77..90, 92, 93, 101, 109, 110, 153, 154, 156,
-                                163, 176, 195, 198, 200] then
+        if x^.opnd[1]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                                char32_string_ob, char16_ob, var_name,
+                                fortran_symbol, sb_register, db_register,
+                                set_con_ob,
+                                addr_con, rec_const_ob,
+                                    reloc_absolute_addr_con, dpcomplex_ob,
+                                    binteger_ob] then
           if not il_utils_$is_strength_reduction_temp(x^.opnd[1]) then
             if not used_outside_loop(t) then begin
               v := find_var(x^.opnd[1]);
-              if x^.opnd[1]^.kind = 109 then begin
+              if x^.opnd[1]^.kind = var_name then begin
                 if v > 0 then begin
-                  if opt_var_types^[v].base^.kind <> 130 then
+                  if opt_var_types^[v].base^.kind <> ptr_type then
                     r := true;
                 end
                 else begin
                   type_exp(x^.opnd[1], addr(te));
-                  if te.base^.kind <> 130 then
+                  if te.base^.kind <> ptr_type then
                     r := true;
                 end;
               end
@@ -1703,15 +1719,17 @@ var
   b: g_opt_block_ptr_t;
   s: g_opt_stmt_ptr_t;
 begin
-  if t^.kind in [77..90, 92, 93, 101, 153, 154, 156, 163, 176, 195, 198,
-                 200] then begin
+  if t^.kind in [blogical_ob..complex_ob, char_string_ob, char32_string_ob,
+                 char16_ob, sb_register, db_register, set_con_ob, addr_con,
+                 rec_const_ob, reloc_absolute_addr_con, dpcomplex_ob,
+                 binteger_ob] then begin
     opt_str_$is_loop_invariant := true;
     return;
   end;
   case t^.kind of
-    109:
+    var_name:
       fl := t^.xl[8];
-    110:
+    fortran_symbol:
       fl := t^.xl[6];
     otherwise begin
       opt_str_$is_loop_invariant := false;
@@ -1766,10 +1784,10 @@ begin
   r := false;
   if il_utils_$is_strength_reduction_temp(t^.xp[9]) then
     if opt_str_$is_loop_invariant(t^.xp[6], r, nil, cur_loop) then begin
-      if t^.xp[6]^.kind = 109 then begin
+      if t^.xp[6]^.kind = var_name then begin
         v := find_var(t^.xp[6]);
         if v > 0 then begin
-          if opt_var_types^[v].base^.kind = 130 then begin
+          if opt_var_types^[v].base^.kind = ptr_type then begin
             c := opt_4009c[g_opt_tree_ptr_t(t)^.owner^.hdr.region]^.vars^[v]^.ud;
             while c <> nil do begin
               if c^.stmt^.block^.serial = cur_loop^.serial then begin
@@ -1783,7 +1801,7 @@ begin
         end
         else begin
           type_exp(t^.xp[6], addr(te));
-          if te.base^.kind <> 130 then
+          if te.base^.kind <> ptr_type then
             r := true;
         end;
       end
@@ -1809,9 +1827,9 @@ var
   p, s: g_opt_stmt_ptr_t;
   b: g_opt_block_ptr_t;
 begin
-  if t^.kind = 110 then
+  if t^.kind = fortran_symbol then
     s1 := sr_temp_ptr_t(t^.xp2[11])^.asg
-  else if t^.kind = 109 then
+  else if t^.kind = var_name then
     s1 := sr_temp_ptr_t(t^.xp[13])^.asg
   else
     s1 := nil;
@@ -1819,7 +1837,7 @@ begin
   if s1 = nil then
     return;
   p := s1;
-  while p^.kind = 140 do
+  while p^.kind = assign_node do
     p := p^.prev;
   if p^.hdr.region = 0 then
     return;
@@ -1833,7 +1851,7 @@ begin
     if s = nil then
       return;
     while s <> b^.last_stmt^.next do begin
-      if s^.kind = 140 then
+      if s^.kind = assign_node then
         if s^.asg_lhs = t then begin
           s2 := s;
           return;
@@ -1864,17 +1882,17 @@ procedure checkauto(
 var
   s1, s2: g_opt_stmt_ptr_t;
   t, v, ptr: il_$node_ptr_t;
-  k: integer;
+  k: il_$kind_t;
 begin
   t := slot;
-  if (t^.kind = 137) and check_tree_node(t) then begin
+  if (t^.kind = tree_node) and check_tree_node(t) then begin
     find_assigns(s1, s2, g_opt_tree_ptr_t(t)^.opnd[2]);
     if (s1 = nil) or (s2 = nil) then
       return;
     v := g_opt_tree_ptr_t(t)^.opnd[1];
   end
   else begin
-    if t^.kind <> 145 then
+    if t^.kind <> dindex_node then
       return;
     if not check_dindex(t) then
       return;
@@ -1883,34 +1901,37 @@ begin
       return;
     v := t^.xp[7];
   end;
-  if v^.kind = 110 then
+  if v^.kind = fortran_symbol then
     v^.xc[26] := chr(ord(v^.xc[26]) ! 16#10)
-  else if v^.kind = 109 then
+  else if v^.kind = var_name then
     v^.xc[34] := chr(ord(v^.xc[34]) ! 16#10)
   else
     return;
   doinsert(s1, s2, t, ptr);
   k := parent^.kind;
-  if (k = 145) or (k = 146) or (k = 205) or (k = 147) then
-    if t^.kind = 145 then
+  if (k = dindex_node) or (k = ptr_node) or (k = sym_disp_node)
+      or (k = disp_node) then
+    if t^.kind = dindex_node then
       g_opt_tree_ptr_t(ptr)^.uses := g_opt_tree_ptr_t(parent)^.uses;
-  if t^.kind = 145 then
+  if t^.kind = dindex_node then
     slot := ptr
   else
     slot := ptr^.xp[6];
   opt_str_$add_substitution_point(slot, parent);
   k := parent^.kind;
-  if (k = 145) or (k = 146) or (k = 205) or (k = 147) then
+  if (k = dindex_node) or (k = ptr_node) or (k = sym_disp_node)
+      or (k = disp_node) then
     if g_opt_tree_ptr_t(parent)^.uses > 1 then
       g_opt_tree_ptr_t(ptr)^.uses := g_opt_tree_ptr_t(parent)^.uses;
   if (g_opt_tree_ptr_t(t)^.uses > 1) or
-     ((g_opt_tree_ptr_t(slot)^.uses > 1) and (slot^.kind = 137) and
+     ((g_opt_tree_ptr_t(slot)^.uses > 1) and (slot^.kind = tree_node) and
       (g_opt_tree_ptr_t(slot)^.op = 26)) then
     ptrsub(cur_loop, ptr, t);
-  if t^.kind = 137 then
+  if t^.kind = tree_node then
     if g_opt_tree_ptr_t(t)^.uses > 1 then begin
       k := parent^.kind;
-      if (k = 145) or (k = 146) or (k = 205) or (k = 147) then begin
+      if (k = dindex_node) or (k = ptr_node) or (k = sym_disp_node)
+          or (k = disp_node) then begin
         if g_opt_tree_ptr_t(parent)^.uses > 1 then begin
           g_opt_tree_ptr_t(t)^.uses :=
             g_opt_tree_ptr_t(t)^.uses - g_opt_tree_ptr_t(parent)^.uses;
@@ -1964,67 +1985,72 @@ begin
             while l <> nil do begin
               for n := l^.first to l^.last do begin
                 t := g_opt_nodes_ptr_t(il_120)^[n];
-                if t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189,
-                               205] then
+                if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                               dindex_node..disp_node, cs_node, cc_call,
+                               pf_call, cse_use_ob,
+                               sym_disp_node] then
                   if 6 in g_opt_tree_ptr_t(t)^.flags then
                     while 6 in g_opt_tree_ptr_t(t)^.flags do
                       t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
-                if not ((t^.kind in [137, 138, 143, 145..147, 164, 171, 175,
-                                     189, 205]) and
+                if not ((t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                                     dindex_node..disp_node, cs_node, cc_call,
+                                     pf_call,
+                                     cse_use_ob, sym_disp_node]) and
                         (g_opt_tree_ptr_t(t)^.uses = 0)) then
                   case t^.kind of
-                    140: begin
-                      if (g_opt_stmt_ptr_t(t)^.asg_lhs^.kind = 145) or
-                         (g_opt_stmt_ptr_t(t)^.asg_lhs^.kind = 137) then
+                    assign_node: begin
+                      if (g_opt_stmt_ptr_t(t)^.asg_lhs^.kind = dindex_node) or
+                         (g_opt_stmt_ptr_t(t)^.asg_lhs^.kind = tree_node) then
                         checkauto(t, g_opt_stmt_ptr_t(t)^.asg_lhs);
-                      if (g_opt_stmt_ptr_t(t)^.asg_rhs^.kind = 145) or
-                         (g_opt_stmt_ptr_t(t)^.asg_rhs^.kind = 137) then
+                      if (g_opt_stmt_ptr_t(t)^.asg_rhs^.kind = dindex_node) or
+                         (g_opt_stmt_ptr_t(t)^.asg_rhs^.kind = tree_node) then
                         checkauto(t, g_opt_stmt_ptr_t(t)^.asg_rhs);
                       if g_opt_stmt_ptr_t(t)^.asg_x <> nil then
-                        if (g_opt_stmt_ptr_t(t)^.asg_x^.kind = 145) or
-                           (g_opt_stmt_ptr_t(t)^.asg_x^.kind = 137) then
+                        if (g_opt_stmt_ptr_t(t)^.asg_x^.kind = dindex_node) or
+                           (g_opt_stmt_ptr_t(t)^.asg_x^.kind = tree_node) then
                           checkauto(t, g_opt_stmt_ptr_t(t)^.asg_x);
                     end;
-                    139:
+                    eval_node:
                       for k := g_opt_stmt_ptr_t(t)^.eval_count downto 1 do
-                        if (g_opt_stmt_ptr_t(t)^.eval_opnd[k]^.kind = 145) or
-                           (g_opt_stmt_ptr_t(t)^.eval_opnd[k]^.kind = 137) then
+                        if (g_opt_stmt_ptr_t(t)^.eval_opnd[k]^.kind = dindex_node) or
+                           (g_opt_stmt_ptr_t(t)^.eval_opnd[k]^.kind = tree_node) then
                           checkauto(t, g_opt_stmt_ptr_t(t)^.eval_opnd[k]);
-                    137, 143: begin
+                    tree_node, cmp_tree_node: begin
                       x := g_opt_tree_ptr_t(g_opt_tree_ptr_t(t)^.opnd[2]);
                       if g_opt_tree_ptr_t(t)^.op = 13 then
-                        if x^.kind = 137 then
+                        if x^.kind = tree_node then
                           if x^.op = 1 then
-                            if (x^.opnd[1]^.kind = 110) or
-                               (x^.opnd[1]^.kind = 109) then
-                              if (x^.opnd[2]^.kind = 110) or
-                                 (x^.opnd[2]^.kind = 109) then
+                            if (x^.opnd[1]^.kind = fortran_symbol) or
+                               (x^.opnd[1]^.kind = var_name) then
+                              if (x^.opnd[2]^.kind = fortran_symbol) or
+                                 (x^.opnd[2]^.kind = var_name) then
                                 multidim(t, bn);
                       for k := 1 to g_opt_tree_ptr_t(t)^.count do
-                        if (g_opt_tree_ptr_t(t)^.opnd[k]^.kind = 145) or
-                           (g_opt_tree_ptr_t(t)^.opnd[k]^.kind = 137) then
+                        if (g_opt_tree_ptr_t(t)^.opnd[k]^.kind = dindex_node)
+                            or
+                           (g_opt_tree_ptr_t(t)^.opnd[k]^.kind = tree_node) then
                           checkauto(t, g_opt_tree_ptr_t(t)^.opnd[k]);
                     end;
-                    151:
+                    return_node:
                       if g_opt_stmt_ptr_t(t)^.x48 <> nil then
-                        if (g_opt_stmt_ptr_t(t)^.x48^.kind = 145) or
-                           (g_opt_stmt_ptr_t(t)^.x48^.kind = 137) then
+                        if (g_opt_stmt_ptr_t(t)^.x48^.kind = dindex_node) or
+                           (g_opt_stmt_ptr_t(t)^.x48^.kind = tree_node) then
                           checkauto(t, g_opt_stmt_ptr_t(t)^.x48);
-                    147, 146, 205:
+                    disp_node, ptr_node, sym_disp_node:
                       checkauto(t, t^.xp[6]);
-                    145: begin
+                    dindex_node: begin
                       x := g_opt_tree_ptr_t(t^.xp[9]);
-                      if x^.kind = 137 then
+                      if x^.kind = tree_node then
                         if x^.op = 1 then
-                          if (x^.opnd[1]^.kind = 110) or
-                             (x^.opnd[1]^.kind = 109) then
-                            if (x^.opnd[2]^.kind = 110) or
-                               (x^.opnd[2]^.kind = 109) then
+                          if (x^.opnd[1]^.kind = fortran_symbol) or
+                             (x^.opnd[1]^.kind = var_name) then
+                            if (x^.opnd[2]^.kind = fortran_symbol) or
+                               (x^.opnd[2]^.kind = var_name) then
                               multidim(t, bn);
                       checkauto(t, t^.xp[6]);
                       checkauto(t, t^.xp[9]);
                     end;
-                    164: begin
+                    cs_node: begin
                       checkauto(t, t^.xp[5]);
                       checkauto(t, t^.xp[6]);
                     end;
@@ -2059,17 +2085,17 @@ var
 begin
   found := false;
   n := t;
-  if n^.kind = 190 then
+  if n^.kind = cse_parent_ob then
     n := g_opt_cse_ptr_t(n)^.p_tree;
   case n^.kind of
-    139:
+    eval_node:
       for k := g_opt_stmt_ptr_t(n)^.eval_count downto 1 do
         if walkuses(g_opt_stmt_ptr_t(n)^.eval_opnd[k], r) then
           found := true;
-    142:
+    cbranch_node:
       if walkuses(g_opt_stmt_ptr_t(n)^.br_cond, r) then
         found := true;
-    140: begin
+    assign_node: begin
       if walkuses(g_opt_stmt_ptr_t(n)^.asg_lhs, r) or
          walkuses(g_opt_stmt_ptr_t(n)^.asg_rhs, r) then
         found := true;
@@ -2077,39 +2103,39 @@ begin
         if walkuses(g_opt_stmt_ptr_t(n)^.asg_x, r) then
           found := true;
     end;
-    151:
+    return_node:
       if g_opt_stmt_ptr_t(n)^.x48 <> nil then
         if walkuses(g_opt_stmt_ptr_t(n)^.x48, r) then
           found := true;
-    188:
+    use_def_ob:
       if g_opt_stmt_ptr_t(n)^.x48 <> nil then
         if walkuses(g_opt_stmt_ptr_t(n)^.x48, r) then
           found := true;
-    143, 137:
+    cmp_tree_node, tree_node:
       for k := 1 to g_opt_tree_ptr_t(n)^.count do begin
         if walkuses(g_opt_tree_ptr_t(n)^.opnd[k], r) then
           found := true;
         u := g_opt_cse_ptr_t(g_opt_tree_ptr_t(n)^.opnd[k]);
-        if u^.kind = 189 then
+        if u^.kind = cse_use_ob then
           if g_opt_tree_ptr_t(u^.u_tree)^.op = 26 then
             if walkuses(u^.u_tree, r) then
               found := true;
       end;
-    147, 146, 205:
+    disp_node, ptr_node, sym_disp_node:
       if walkuses(n^.xp[6], r) then
         found := true;
-    145:
+    dindex_node:
       if walkuses(n^.xp[6], r) or walkuses(n^.xp[9], r) then
         found := true;
-    164:
+    cs_node:
       if walkuses(n^.xp[5], r) then
         found := true
       else if walkuses(n^.xp[6], r) then
         found := true;
-    175, 171:
+    pf_call, cc_call:
       if walkuses(n^.xp[4], r) then
         found := true;
-    109, 110:
+    var_name, fortran_symbol:
       if n = r then
         found := true;
     otherwise
@@ -2141,7 +2167,7 @@ var
   n, r: integer;
   vr: g_opt_var_ptr_t;
 begin
-  if v^.kind = 109 then
+  if v^.kind = var_name then
     n := v^.xw[37]
   else
     n := v^.xw[8];
@@ -2220,10 +2246,10 @@ var
   reg, rr, k: integer;
 begin
   if op = 0 then begin
-    if temp^.kind = 109 then
+    if temp^.kind = var_name then
       if sr_temp_ptr_t(temp^.xp[13])^.asg <> nil then
         return;
-    if temp^.kind = 110 then
+    if temp^.kind = fortran_symbol then
       if sr_temp_ptr_t(temp^.xp2[11])^.asg <> nil then
         return;
   end;
@@ -2256,7 +2282,7 @@ begin
   n := gspace(80);
   if n = nil then
     cgerr_no_source(9, 0);
-  n^.kind := 140;
+  n^.kind := assign_node;
   n^.hdr.vnum := 0;
   n^.hdr.num := 0;
   if n^.vset <> nil then
@@ -2288,9 +2314,9 @@ begin
   n^.asg_x := nil;
   n^.asg_op := op;
   if op = 0 then begin
-    if temp^.kind = 109 then
+    if temp^.kind = var_name then
       sr_temp_ptr_t(temp^.xp[13])^.asg := n;
-    if temp^.kind = 110 then
+    if temp^.kind = fortran_symbol then
       sr_temp_ptr_t(temp^.xp2[11])^.asg := n;
     il_utils_$do_substitution(il_$node_ptr_t(n), n^.asg_rhs,
       opt_str_$product_of(3, init, factor, d.rlen, d.w6, d.w8,
@@ -2301,13 +2327,13 @@ begin
     opt_str_$add_substitution_point(factor, x);
   end
   else if step <> nil then begin
-    if temp^.kind = 109 then begin
+    if temp^.kind = var_name then begin
       q := gspace(8);
       q^.stmt := n;
       q^.next := sr_temp_ptr_t(temp^.xp[13])^.incs;
       sr_temp_ptr_t(temp^.xp[13])^.incs := q;
     end;
-    if temp^.kind = 110 then begin
+    if temp^.kind = fortran_symbol then begin
       q := gspace(8);
       q^.stmt := n;
       q^.next := sr_temp_ptr_t(temp^.xp2[11])^.incs;
@@ -2336,7 +2362,7 @@ begin
     n^.asg_size := 2
   else if n^.asg_rlen = 4 then
     n^.asg_size := 4;
-  if temp^.kind = 109 then
+  if temp^.kind = var_name then
     if temp^.xp[7] = il_$node_ptr_t(runbackend_10) then
       if (d.w6 = 2) and (d.rlen = 4) then
         temp^.xp[7] := il_$node_ptr_t(runbackend_0c);
@@ -2344,9 +2370,9 @@ begin
   n^.asg_w56 := 0;
   if reg <> 0 then
     if s^.hdr.region = reg then
-      if s^.kind = 139 then
+      if s^.kind = eval_node then
         if s^.eval_count = 1 then
-          if s^.eval_opnd[1]^.kind = 81 then
+          if s^.eval_opnd[1]^.kind = integer_ob then
             if opt_4009c[reg]^.block^.flags.latch then begin
               head_ptr_t(addr(n^.prev))^ := head_ptr_t(addr(s^.prev))^;
               if n^.hdr.first then
@@ -2385,25 +2411,33 @@ var
 begin
   r := t;
   x := g_opt_tree_ptr_t(t);
-  if s^.kind = 140 then
-    if not ((t^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) and
+  if s^.kind = assign_node then
+    if not ((t^.kind in [blogical_ob..complex_ob, char_string_ob,
+                         char32_string_ob, char16_ob, set_con_ob, rec_const_ob,
+                         dpcomplex_ob, binteger_ob]) and
             (s^.asg_op = 0)) then begin
       e := opt_4009c[s^.hdr.region];
       if e^.block^.serial <> cur_loop^.serial then
         r := s^.asg_lhs
-      else if not (t^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) then
-        if (t^.kind = 137) and ((x^.op = 2) or (x^.op = 1)) and
-           (x^.opnd[2]^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200]) then begin
+      else if not (t^.kind in [blogical_ob..complex_ob, char_string_ob,
+                               char32_string_ob, char16_ob, set_con_ob,
+                               rec_const_ob, dpcomplex_ob, binteger_ob]) then
+        if (t^.kind = tree_node) and ((x^.op = 2) or (x^.op = 1)) and
+           (x^.opnd[2]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                                 char32_string_ob, char16_ob, set_con_ob,
+                                 rec_const_ob, dpcomplex_ob,
+                                 binteger_ob]) then begin
           vn := opt_4009c[opt_region]^.vars^[v]^.node;
           if (x^.opnd[1] = vn) or
-             ((x^.opnd[1]^.kind = 147) and (x^.opnd[1]^.xp[6] = vn)) then begin
+             ((x^.opnd[1]^.kind = disp_node)
+              and (x^.opnd[1]^.xp[6] = vn)) then begin
             r := x^.opnd[2];
             if x^.op = 2 then
-              r := smcontk(81, -r^.int_value);
+              r := smcontk(integer_ob, -r^.int_value);
           end;
         end
-        else if t^.kind = 137 then
-          if s^.kind = 140 then
+        else if t^.kind = tree_node then
+          if s^.kind = assign_node then
             if e^.vset <> nil then
               if v in e^.vset^ then
                 if (x^.op = 2) or (x^.op = 1) then begin
@@ -2500,7 +2534,7 @@ var
     noincfound := true;
     p := opt_4009c[k]^.prev;
     while p^.hdr.region = 0 do begin
-      if p^.kind = 140 then
+      if p^.kind = assign_node then
         if p^.asg_lhs = temp then begin
           noincfound := false;
           return;
@@ -2509,7 +2543,7 @@ var
     end;
     p := opt_4009c[k]^.next;
     while p^.hdr.region = 0 do begin
-      if p^.kind = 140 then
+      if p^.kind = assign_node then
         if p^.asg_lhs = temp then begin
           noincfound := false;
           return;
@@ -2537,7 +2571,7 @@ begin
 10:
   cr := c^.stmt^.hdr.region;
   e := opt_4009c[cr];
-  if e^.kind = 140 then begin
+  if e^.kind = assign_node then begin
     if e^.hdr.vnum <> v then
       goto 20;
     val := getval(e^.asg_rhs, v, opt_4009c[cr]);
@@ -2545,11 +2579,11 @@ begin
       op2 := 1;
       if e^.asg_op = 2 then
         op2 := 2;
-      if e^.prev^.kind = 140 then
+      if e^.prev^.kind = assign_node then
         if (e^.prev^.asg_op = 2) or (e^.prev^.asg_op = 1) then
           if e^.prev^.asg_lhs = temp then
             goto 20;
-      if e^.next^.kind = 140 then
+      if e^.next^.kind = assign_node then
         if (e^.next^.asg_op = 2) or (e^.next^.asg_op = 1) then
           if e^.next^.hdr.region = 0 then begin
             if e^.next^.asg_lhs = temp then
@@ -2557,7 +2591,7 @@ begin
             p := e^.next;
             found := false;
             repeat
-              if p^.kind = 140 then
+              if p^.kind = assign_node then
                 if p^.asg_lhs = temp then
                   found := true;
               p := p^.next;
@@ -2569,7 +2603,8 @@ begin
          not ((e^.vset <> nil) and (v in e^.vset^)) then begin
         op := 0;
         x := opt_4009c[lastreg];
-        if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+        if (x^.kind = branch_node) or (x^.kind = nlbranch_node)
+            or (x^.kind = cbranch_node) then
           add_assign(opt_4009c[lastreg], temp, iv, nil, factor, op, d)
         else
           add_assign(opt_4009c[lastreg]^.next, temp, iv, nil, factor, op, d);
@@ -2581,7 +2616,7 @@ begin
         lt := h^.pred[k]^.last_stmt;
         rhs := g_opt_tree_ptr_t(e^.asg_rhs);
         nv := e^.asg_rhs;
-        if rhs^.kind = 137 then begin
+        if rhs^.kind = tree_node then begin
           nv := buildtreenode(rhs^.op, sr_tree_view_ptr_t(rhs)^.desc,
                               rhs^.opnd, rhs^.count);
           for j := 1 to rhs^.count do
@@ -2611,7 +2646,8 @@ begin
         q := q^.next;
       end;
       x := opt_4009c[lastreg];
-      if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+      if (x^.kind = branch_node) or (x^.kind = nlbranch_node)
+          or (x^.kind = cbranch_node) then
         add_assign(opt_4009c[lastreg], temp, iv, nil, factor, op, d)
       else
         add_assign(opt_4009c[lastreg]^.next, temp, iv, nil, factor, op, d);
@@ -2643,12 +2679,13 @@ begin
     done := true;
     goto 20;
   end;
-  if e^.kind = 188 then
+  if e^.kind = use_def_ob then
     if e^.block^.serial <> h^.serial then begin
       if not done then begin
         op := 0;
         x := opt_4009c[lastreg];
-        if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+        if (x^.kind = branch_node) or (x^.kind = nlbranch_node)
+            or (x^.kind = cbranch_node) then
           add_assign(opt_4009c[lastreg], temp, iv, nil, factor, op, d)
         else
           add_assign(opt_4009c[lastreg]^.next, temp, iv, nil, factor, op, d);
@@ -2718,7 +2755,7 @@ begin
       x := opt_4009c[k];
       if not x^.hdr.deleted then
         if x^.hdr.vnum = v then
-          if x^.kind = 140 then begin
+          if x^.kind = assign_node then begin
             if x^.vset <> nil then
               a := noincfound(k, temp) and (v in x^.vset^)
             else
@@ -2728,17 +2765,17 @@ begin
               op := 1;
               if x^.asg_op = 2 then
                 op := 2;
-              if not ((x^.prev^.kind = 140) and
+              if not ((x^.prev^.kind = assign_node) and
                       ((x^.prev^.asg_op = 2) or (x^.prev^.asg_op = 1)) and
                       (x^.prev^.asg_lhs = temp)) then
-                if (x^.next^.kind = 140) and
+                if (x^.next^.kind = assign_node) and
                    ((x^.next^.asg_op = 2) or (x^.next^.asg_op = 1)) and
                    (x^.next^.hdr.region = 0) then begin
                   if x^.next^.asg_lhs <> temp then begin
                     p := x^.next;
                     found := false;
                     repeat
-                      if p^.kind = 140 then
+                      if p^.kind = assign_node then
                         if p^.asg_lhs = temp then
                           found := true;
                       p := p^.next;
@@ -2758,7 +2795,8 @@ begin
   if not done then begin
     op := 0;
     x := g_opt_blocks_ptr_t(il_11c)^[preheader_num]^.last_stmt;
-    if (x^.kind = 141) or (x^.kind = 150) or (x^.kind = 142) then
+    if (x^.kind = branch_node) or (x^.kind = nlbranch_node)
+        or (x^.kind = cbranch_node) then
       add_assign(g_opt_blocks_ptr_t(il_11c)^[preheader_num]^.last_stmt,
                  temp, iv, nil, factor, op, d)
     else
@@ -2816,7 +2854,7 @@ begin
   t^.header := h;
   if rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2 then begin
     n := gspace(84);
-    n^.kind := 109;
+    n^.kind := var_name;
     n^.xp[5] := il_180;
     n^.xp[7] := typ;
     n^.xw[36] := 2;
@@ -2825,11 +2863,11 @@ begin
     n^.xw[39] := -1;
     n^.xl[15] := 0;
     opt_str_$make_name(name, ntemps);
-    n^.xp[1] := idntk(76, name.body, name.length);
+    n^.xp[1] := idntk(id_ob, name.body, name.length);
   end
   else begin
     n := gspace(83);
-    n^.kind := 110;
+    n^.kind := fortran_symbol;
     n^.xc[44] := chr(ord(n^.xc[44]) & 16#0F ! 16#30);
     n^.xp[1] := nil;
     n^.xc[10] := chr(ord(n^.xc[10]) & 16#F0 ! 2);
@@ -2855,8 +2893,8 @@ procedure setflag(
     n: il_$node_ptr_t); options(val_param); internal;
 begin
   if n <> nil then
-    if (n^.kind = 110) or (n^.kind = 109) then
-      if n^.kind = 109 then
+    if (n^.kind = fortran_symbol) or (n^.kind = var_name) then
+      if n^.kind = var_name then
         n^.xc[33] := chr(ord(n^.xc[33]) ! 16#10)
       else
         n^.xc[25] := chr(ord(n^.xc[25]) ! 16#10);
@@ -2870,8 +2908,8 @@ procedure removeflag(
     n: il_$node_ptr_t); options(val_param); internal;
 begin
   if n <> nil then
-    if (n^.kind = 110) or (n^.kind = 109) then
-      if n^.kind = 109 then
+    if (n^.kind = fortran_symbol) or (n^.kind = var_name) then
+      if n^.kind = var_name then
         n^.xc[33] := chr(ord(n^.xc[33]) & 16#EF)
       else
         n^.xc[25] := chr(ord(n^.xc[25]) & 16#EF);
@@ -2956,7 +2994,7 @@ begin
   found := false;
   x := g_opt_tree_ptr_t(t);
   case t^.kind of
-    143, 137: begin
+    cmp_tree_node, tree_node: begin
       if (x^.op = 16) or (x^.op = 15) then
         return;
       if (x^.op = 27) or (x^.op = 3) then
@@ -2969,28 +3007,28 @@ begin
           return;
       end;
     end;
-    147, 146, 205:
+    disp_node, ptr_node, sym_disp_node:
       walkexpr(t^.xp[6], found);
-    145: begin
+    dindex_node: begin
       walkexpr(t^.xp[6], found);
       if found then
         return;
       walkexpr(t^.xp[9], found);
     end;
-    164: begin
+    cs_node: begin
       walkexpr(t^.xp[5], found);
       if found then
         return;
       walkexpr(t^.xp[6], found);
     end;
-    175:
+    pf_call:
       found := false;
-    171:
+    cc_call:
       found := false;
-    109:
+    var_name:
       if (t^.xl[8] & 16#100000) <> 0 then
         found := true;
-    110:
+    fortran_symbol:
       if (t^.xl[6] & 16#100000) <> 0 then
         found := true;
     otherwise
@@ -3018,35 +3056,47 @@ begin
   while e <> nil do begin
     walkexpr(e^.node, ok);
     t := g_opt_tree_ptr_t(e^.node);
-    if t^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then
+    if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                   dindex_node..disp_node, cs_node, cc_call, pf_call,
+                   cse_use_ob, sym_disp_node] then
       if 20 in t^.flags then
         ok := false;
     if ok then
-      if t^.kind = 137 then begin
+      if t^.kind = tree_node then begin
         ok := false;
         for k := 1 to t^.count do begin
           x := g_opt_tree_ptr_t(t^.opnd[k]);
-          if x^.kind = 137 then
+          if x^.kind = tree_node then
             if (x^.op = 3) or (x^.op = 36) or (x^.op = 27) then begin
-              if x^.opnd[1]^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200] then begin
+              if x^.opnd[1]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                                      char32_string_ob, char16_ob, var_name,
+                                      fortran_symbol, disp_node, set_con_ob,
+                                      rec_const_ob, dpcomplex_ob,
+                                      binteger_ob] then begin
                 ok := true;
                 exit;
               end;
-              if x^.opnd[2]^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200] then begin
+              if x^.opnd[2]^.kind in [blogical_ob..complex_ob, char_string_ob,
+                                      char32_string_ob, char16_ob, var_name,
+                                      fortran_symbol, disp_node, set_con_ob,
+                                      rec_const_ob, dpcomplex_ob,
+                                      binteger_ob] then begin
                 ok := true;
                 exit;
               end;
               y := g_opt_tree_ptr_t(x^.opnd[1]);
-              if y^.kind = 137 then
+              if y^.kind = tree_node then
                 if y^.op = 18 then
-                  if (y^.opnd[1]^.kind = 110) or (y^.opnd[1]^.kind = 109) then begin
+                  if (y^.opnd[1]^.kind = fortran_symbol)
+                      or (y^.opnd[1]^.kind = var_name) then begin
                     ok := true;
                     exit;
                   end;
               y := g_opt_tree_ptr_t(x^.opnd[2]);
-              if y^.kind = 137 then
+              if y^.kind = tree_node then
                 if y^.op = 18 then
-                  if (y^.opnd[1]^.kind = 110) or (y^.opnd[1]^.kind = 109) then begin
+                  if (y^.opnd[1]^.kind = fortran_symbol)
+                      or (y^.opnd[1]^.kind = var_name) then begin
                     ok := true;
                     exit;
                   end;
@@ -3085,13 +3135,13 @@ var
       t: il_$node_ptr_t): integer; options(val_param);
   begin
     case t^.kind of
-      145:
+      dindex_node:
         fetch_uc := g_opt_tree_ptr_t(t)^.uses;
-      137, 143:
+      tree_node, cmp_tree_node:
         fetch_uc := g_opt_tree_ptr_t(t)^.uses;
-      147, 205:
+      disp_node, sym_disp_node:
         fetch_uc := g_opt_tree_ptr_t(t)^.uses;
-      146:
+      ptr_node:
         fetch_uc := g_opt_tree_ptr_t(t)^.uses;
       otherwise
         fetch_uc := 0;
@@ -3112,18 +3162,18 @@ var
     k: integer;
   begin
     case t^.kind of
-      137, 143:
+      tree_node, cmp_tree_node:
         for k := 1 to g_opt_tree_ptr_t(t)^.count do
           if g_opt_tree_ptr_t(t)^.opnd[k] = e^.node then
             count := count + 1
           else
             exitwalk(g_opt_tree_ptr_t(t)^.opnd[k], e, count);
-      147, 205, 146:
+      disp_node, sym_disp_node, ptr_node:
         if t^.xp[6] = e^.node then
           count := count + 1
         else
           exitwalk(t^.xp[6], e, count);
-      145: begin
+      dindex_node: begin
         if t^.xp[6] = e^.node then
           count := count + 1
         else
@@ -3133,15 +3183,15 @@ var
         else
           exitwalk(t^.xp[9], e, count);
       end;
-      175:
+      pf_call:
         if t^.xp[4] = e^.node then
           count := count + 1
         else
           exitwalk(t^.xp[4], e, count);
-      171:
+      cc_call:
         if t^.xp[4] = e^.node then
           count := count + 1;
-      164: begin
+      cs_node: begin
         if t^.xp[5] = e^.node then
           count := count + 1
         else
@@ -3158,7 +3208,7 @@ var
 begin
   e := exprs;
   while e <> nil do begin
-    if e^.node^.kind = 145 then
+    if e^.node^.kind = dindex_node then
       if fetch_uc(e^.node) > 1 then begin
         cnt := 0;
         uc := fetch_uc(e^.node);
@@ -3167,21 +3217,21 @@ begin
           s := b^.first_stmt;
           while s <> b^.last_stmt^.next do begin
             case s^.kind of
-              139:
+              eval_node:
                 for k := s^.eval_count downto 1 do
                   exitwalk(s^.eval_opnd[k], e, cnt);
-              140: begin
+              assign_node: begin
                 exitwalk(s^.asg_lhs, e, cnt);
                 exitwalk(s^.asg_rhs, e, cnt);
                 if s^.asg_x <> nil then
                   exitwalk(s^.asg_x, e, cnt);
               end;
-              142:
+              cbranch_node:
                 exitwalk(s^.br_cond, e, cnt);
-              151:
+              return_node:
                 if s^.x48 <> nil then
                   exitwalk(s^.x48, e, cnt);
-              188:
+              use_def_ob:
                 exitwalk(s^.x48, e, cnt);
               otherwise
             end;
@@ -3222,10 +3272,10 @@ begin
       t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[n]);
   10:
       case t^.kind of
-        137:
+        tree_node:
           for k := 1 to t^.count do begin
             x := g_opt_tree_ptr_t(t^.opnd[k]);
-            if x^.kind = 137 then
+            if x^.kind = tree_node then
               if (x^.op = 3) or (x^.op = 36) or (x^.op = 27) then
                 if 6 in t^.flags then begin
                   t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[t^.stmt]);
@@ -3234,11 +3284,11 @@ begin
                 else
                   newexpr(il_$node_ptr_t(t));
           end;
-        145: begin
+        dindex_node: begin
           while 6 in t^.flags do
             t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[t^.stmt]);
           x := g_opt_tree_ptr_t(il_$node_ptr_t(t)^.xp[9]);
-          if x^.kind = 137 then
+          if x^.kind = tree_node then
             if (x^.op = 3) or (x^.op = 36) or (x^.op = 27) then
               newexpr(il_$node_ptr_t(t));
         end;
@@ -3320,14 +3370,14 @@ begin
       v := s^.hdr.vnum;
       one := [v];
       invariant := invariant - one;
-      if s^.kind <> 140 then
+      if s^.kind <> assign_node then
         others := others + one
       else if v <> 0 then
         if opt_main_$symidx_of_varn_or_fsym(s^.asg_lhs) = v then
           case s^.asg_op of
             0: begin
               r := g_opt_tree_ptr_t(s^.asg_rhs);
-              if r^.kind <> 137 then
+              if r^.kind <> tree_node then
                 others := others + one
               else
                 case r^.op of
@@ -3373,7 +3423,7 @@ begin
     if v in ivset then begin
       n := opt_4009c[opt_region]^.vars^[v]^.node;
       newindvar(n);
-      if n^.kind = 109 then
+      if n^.kind = var_name then
         n^.xc[33] := chr(ord(n^.xc[33]) ! 16#10)
       else
         n^.xc[25] := chr(ord(n^.xc[25]) ! 16#10);
@@ -3426,7 +3476,7 @@ begin
     prtcats(s, '      ', 6);
     prthex(s, integer32(v), 8);
     prtcats(s, '  ', 2);
-    if v^.kind = 110 then begin
+    if v^.kind = fortran_symbol then begin
       prtint(s, v^.xw[8], 3, true);
       prtcats(s, '  ', 2);
       prtcats(s, v^.xc[72], v^.xw[35]);
@@ -3525,27 +3575,29 @@ begin
   while e <> nil do begin
     t := g_opt_tree_ptr_t(e^.node);
     case t^.kind of
-      137: begin
+      tree_node: begin
         if t^.op <> 13 then begin
           for k := 1 to t^.count do begin
             x := g_opt_tree_ptr_t(t^.opnd[k]);
-            if x^.kind = 137 then
+            if x^.kind = tree_node then
               if (x^.op = 3) or (x^.op = 36) or (x^.op = 27) then begin
                 y := g_opt_tree_ptr_t(x^.opnd[1]);
-                if (y^.kind = 137) and (y^.op = 1) and
-                   (x^.opnd[2]^.kind in [77..87, 101, 200]) and
-                   (y^.opnd[1]^.kind in [109, 110, 205, 147]) and
+                if (y^.kind = tree_node) and (y^.op = 1) and
+                   (x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                         binteger_ob]) and
+                   (y^.opnd[1]^.kind in [var_name, fortran_symbol,
+                                         sym_disp_node, disp_node]) and
                    il_utils_$is_strength_reduction_temp(y^.opnd[2]) then begin
                   iv := y^.opnd[1];
-                  if iv^.kind = 147 then
+                  if iv^.kind = disp_node then
                     iv := iv^.xp[6];
                   if not il_utils_$is_strength_reduction_temp(iv) then
                     goto 90;
-                  if x^.kind = 137 then
+                  if x^.kind = tree_node then
                     if x^.op = 27 then
                       if not ((x^.w28 = 4) or (x^.w28 = 2)) then
                         goto 90;
-                  if iv^.kind = 110 then begin
+                  if iv^.kind = fortran_symbol then begin
                     n := iv^.xw[8];
                     if n <= 0 then
                       goto 90;
@@ -3555,14 +3607,15 @@ begin
                     rg := x^.owner^.hdr.region;
                     sr_temp_ptr_t(temp^.xp2[11])^.tree := x;
                     findvalues(rg, n, hb, temp,
-                      opt_str_$product_of(x^.op, smcontk(81, 1), x^.opnd[2],
+                      opt_str_$product_of(x^.op, smcontk(integer_ob, 1),
+                                          x^.opnd[2],
                         x^.rlen, class_size[x^.rlen],
                         opt_str_$opmod1_of_multiplier(x), x^.dflags.signed,
                         nil),
                       sr_tree_view_ptr_t(x)^.desc, iv);
                     s := opt_4009c[x^.owner^.hdr.region];
                     while s <> nil do begin
-                      if s^.kind = 140 then
+                      if s^.kind = assign_node then
                         if s^.asg_lhs = g_opt_tree_ptr_t(x^.opnd[1])^.opnd[2] then
                           if s^.asg_op = 1 then begin
                             il_utils_$do_substitution(il_$node_ptr_t(s), s^.asg_rhs,
@@ -3570,7 +3623,8 @@ begin
                                 s^.asg_rlen, s^.asg_rlen, x^.w28,
                                 x^.dflags.signed, nil));
                             if (s^.asg_lhs^.xl[6] & 16#20000) <> 0 then
-                              if ((s^.asg_rhs^.kind in [77..87, 101, 200]) and
+                              if ((s^.asg_rhs^.kind in [blogical_ob..char_ob,
+                                  char16_ob, binteger_ob]) and
                                   ((s^.asg_rhs^.int_value > 32767) or
                                    (s^.asg_rhs^.int_value < -32768))) or
                                  (x^.rlen = 4) then begin
@@ -3584,7 +3638,7 @@ begin
                     end;
                     s := x^.owner;
                     while s <> nil do begin
-                      if s^.kind = 140 then
+                      if s^.kind = assign_node then
                         if s^.asg_lhs = g_opt_tree_ptr_t(x^.opnd[1])^.opnd[2] then
                           if s^.asg_op = 0 then begin
                             il_utils_$do_substitution(il_$node_ptr_t(s), s^.asg_rhs,
@@ -3592,7 +3646,8 @@ begin
                                 s^.asg_rlen, s^.asg_rlen, x^.w28,
                                 x^.dflags.signed, nil));
                             if (s^.asg_lhs^.xl[6] & 16#20000) <> 0 then
-                              if ((s^.asg_rhs^.kind in [77..87, 101, 200]) and
+                              if ((s^.asg_rhs^.kind in [blogical_ob..char_ob,
+                                  char16_ob, binteger_ob]) and
                                   ((s^.asg_rhs^.int_value > 32767) or
                                    (s^.asg_rhs^.int_value < -32768))) or
                                  (x^.rlen = 4) then begin
@@ -3610,7 +3665,7 @@ begin
                     x^.op := 1;
                     if x^.rlen = 4 then begin
                       w := x^.opnd[1];
-                      if w^.kind = 110 then
+                      if w^.kind = fortran_symbol then
                         if ((ord(w^.xc[10]) & 15) = 2) or
                            ((ord(w^.xc[10]) & 15) = 1) then begin
                           ops[1] := w;
@@ -3627,7 +3682,7 @@ begin
                     end;
                     if x^.rlen = 4 then begin
                       w := x^.opnd[2];
-                      if w^.kind = 110 then
+                      if w^.kind = fortran_symbol then
                         if ((ord(w^.xc[10]) & 15) = 2) or
                            ((ord(w^.xc[10]) & 15) = 1) then begin
                           ops[1] := w;
@@ -3647,10 +3702,16 @@ begin
                 else begin
                   if k = 1 then
                     if t^.op in [1, 3, 9, 10, 19, 20, 34, 36, 44..46] then
-                      if t^.opnd[1]^.kind = 137 then begin
+                      if t^.opnd[1]^.kind = tree_node then begin
                         z := g_opt_tree_ptr_t(t^.opnd[1]);
                         if (z^.op = 3) or (z^.op = 36) or (z^.op = 27) then
-                          if t^.opnd[2]^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200] then begin
+                          if t^.opnd[2]^.kind in [blogical_ob..complex_ob,
+                                                  char_string_ob,
+                                                  char32_string_ob, char16_ob,
+                                                  var_name, fortran_symbol,
+                                                  disp_node, set_con_ob,
+                                                  rec_const_ob, dpcomplex_ob,
+                                                  binteger_ob] then begin
                             t^.opnd[1] := t^.opnd[2];
                             t^.opnd[2] := il_$node_ptr_t(x);
                             if t^.op = 3 then begin
@@ -3661,25 +3722,35 @@ begin
                             goto 50;
                           end;
                       end;
-                  if t^.opnd[1]^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200] then
-                    if t^.opnd[2]^.kind = 137 then begin
+                  if t^.opnd[1]^.kind in [blogical_ob..complex_ob,
+                                          char_string_ob, char32_string_ob,
+                                          char16_ob, var_name, fortran_symbol,
+                                          disp_node, set_con_ob, rec_const_ob,
+                                          dpcomplex_ob, binteger_ob] then
+                    if t^.opnd[2]^.kind = tree_node then begin
                       z := g_opt_tree_ptr_t(t^.opnd[2]);
                       if (z^.op = 3) or (z^.op = 36) or (z^.op = 27) then
                         goto 50;
                     end;
                   iv := x^.opnd[1];
-                  if (iv^.kind = 109) or (iv^.kind = 147) or (iv^.kind = 110) then
-                    if x^.opnd[2]^.kind in [77..90, 92, 93, 101, 156, 176, 198, 200] then begin
-                      if iv^.kind = 147 then
+                  if (iv^.kind = var_name) or (iv^.kind = disp_node)
+                      or (iv^.kind = fortran_symbol) then
+                    if x^.opnd[2]^.kind in [blogical_ob..complex_ob,
+                                            char_string_ob, char32_string_ob,
+                                            char16_ob, set_con_ob,
+                                            rec_const_ob, dpcomplex_ob,
+                                            binteger_ob] then begin
+                      if iv^.kind = disp_node then
                         iv := iv^.xp[6];
-                      if (iv^.kind = 110) or (iv^.kind = 109) then begin
-                        if iv^.kind = 110 then begin
+                      if (iv^.kind = fortran_symbol)
+                          or (iv^.kind = var_name) then begin
+                        if iv^.kind = fortran_symbol then begin
                           if (iv^.xl[6] & 16#100000) = 0 then
                             goto 60;
                           if iv^.xw[8] = 0 then
                             goto 60;
                         end;
-                        if iv^.kind = 109 then begin
+                        if iv^.kind = var_name then begin
                           if (iv^.xl[8] & 16#100000) = 0 then
                             goto 60;
                           if iv^.xw[37] = 0 then
@@ -3688,22 +3759,22 @@ begin
                         if x^.op = 27 then
                           if not ((x^.w28 = 4) or (x^.w28 = 2)) then
                             goto 60;
-                        if iv^.kind = 110 then begin
+                        if iv^.kind = fortran_symbol then begin
                           n := iv^.xw[8];
                           temp := create_sr_temp_var(nil, h);
                           if x^.rlen = 4 then
                             temp^.xc[10] := chr(ord(temp^.xc[10]) & 16#F0 ! 3);
                           sr_temp_ptr_t(temp^.xp2[11])^.tree := x;
                         end
-                        else if iv^.kind = 109 then begin
+                        else if iv^.kind = var_name then begin
                           n := iv^.xw[37];
-                          if x^.opnd[1]^.kind = 109 then
+                          if x^.opnd[1]^.kind = var_name then
                             temp := create_sr_temp_var(x^.opnd[1]^.xp[7], h)
-                          else if x^.opnd[1]^.kind = 147 then
-                            if x^.opnd[1]^.xp[6]^.kind = 109 then
+                          else if x^.opnd[1]^.kind = disp_node then
+                            if x^.opnd[1]^.xp[6]^.kind = var_name then
                               temp := create_sr_temp_var(x^.opnd[1]^.xp[6]^.xp[7], h);
                           sr_temp_ptr_t(temp^.xp[13])^.tree := x;
-                          if x^.opnd[1]^.kind = 147 then begin
+                          if x^.opnd[1]^.kind = disp_node then begin
                             w := x^.opnd[1]^.xp[6]^.xp[7];
                             if (w <> il_$node_ptr_t(runbackend_10)) and
                                (w <> il_$node_ptr_t(runbackend_0c)) and (n > 0) then
@@ -3712,7 +3783,7 @@ begin
                               else if opt_var_types^[n].size = 4 then
                                 temp^.xp[7] := il_$node_ptr_t(runbackend_0c);
                           end;
-                          if x^.opnd[1]^.kind = 109 then begin
+                          if x^.opnd[1]^.kind = var_name then begin
                             w := x^.opnd[1]^.xp[7];
                             if (w <> il_$node_ptr_t(runbackend_10)) and
                                (w <> il_$node_ptr_t(runbackend_0c)) and (n > 0) then
@@ -3725,7 +3796,8 @@ begin
                         end;
                         rg := x^.owner^.hdr.region;
                         findvalues(rg, n, hb, temp,
-                          opt_str_$product_of(x^.op, smcontk(81, 1), x^.opnd[2],
+                          opt_str_$product_of(x^.op, smcontk(integer_ob, 1),
+                                              x^.opnd[2],
                             x^.rlen, class_size[x^.rlen],
                             opt_str_$opmod1_of_multiplier(x), x^.dflags.signed,
                             nil),
@@ -3741,32 +3813,35 @@ begin
         end;
   50:
         x := g_opt_tree_ptr_t(t^.opnd[2]);
-        if x^.kind <> 137 then
+        if x^.kind <> tree_node then
           goto 90;
         if not ((x^.op = 3) or (x^.op = 36) or (x^.op = 27)) then
           goto 90;
-        if not (x^.opnd[1]^.kind in [109, 110, 147, 137]) then
+        if not (x^.opnd[1]^.kind in [var_name, fortran_symbol, disp_node,
+                                     tree_node]) then
           goto 90;
-        if not (x^.opnd[2]^.kind in [77..87, 101, 200]) then
+        if not (x^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
+                                     binteger_ob]) then
           goto 90;
         iv := x^.opnd[1];
-        if iv^.kind = 147 then
+        if iv^.kind = disp_node then
           iv := iv^.xp[6];
-        if iv^.kind = 137 then
+        if iv^.kind = tree_node then
           if g_opt_tree_ptr_t(iv)^.op = 18 then begin
             if g_opt_tree_ptr_t(iv)^.w26 = 1 then
               goto 90;
             if g_opt_tree_ptr_t(iv)^.uses > 1 then
               goto 90;
             w := g_opt_tree_ptr_t(iv)^.opnd[1];
-            if (w^.kind = 110) and ((w^.xl[6] & 16#100000) <> 0) then
+            if (w^.kind = fortran_symbol)
+                and ((w^.xl[6] & 16#100000) <> 0) then
               iv := w
-            else if (w^.kind = 109) and ((w^.xl[8] & 16#100000) <> 0) then
+            else if (w^.kind = var_name) and ((w^.xl[8] & 16#100000) <> 0) then
               iv := w;
           end;
-        if not ((iv^.kind = 110) or (iv^.kind = 109)) then
+        if not ((iv^.kind = fortran_symbol) or (iv^.kind = var_name)) then
           goto 90;
-        if x^.kind = 137 then
+        if x^.kind = tree_node then
           if x^.op = 27 then
             if not ((x^.w28 = 4) or (x^.w28 = 2)) then
               goto 90;
@@ -3787,7 +3862,7 @@ begin
           minimally_size_sr_temp(x^.rlen, temp);
         end
         else begin
-          if iv^.kind <> 110 then
+          if iv^.kind <> fortran_symbol then
             goto 90;
           n := iv^.xw[8];
           if n = 0 then
@@ -3801,57 +3876,68 @@ begin
         end;
         rg := x^.owner^.hdr.region;
         findvalues(rg, n, hb, temp,
-          opt_str_$product_of(x^.op, smcontk(81, 1), x^.opnd[2], x^.rlen,
+          opt_str_$product_of(x^.op, smcontk(integer_ob, 1), x^.opnd[2],
+                              x^.rlen,
             class_size[x^.rlen], opt_str_$opmod1_of_multiplier(x),
             x^.dflags.signed, nil),
           sr_tree_view_ptr_t(x)^.desc, iv);
         il_utils_$do_substitution(il_$node_ptr_t(t), t^.opnd[2], temp);
       end;
-      145: begin
+      dindex_node: begin
         iv := nil;
         if 6 in t^.flags then
           goto 90;
         x := g_opt_tree_ptr_t(il_$node_ptr_t(t)^.xp[9]);
-        if x^.kind <> 137 then
+        if x^.kind <> tree_node then
           goto 90;
         if not ((x^.op = 3) or (x^.op = 36) or (x^.op = 27)) then
           goto 90;
-        if (x^.kind = 137) and (x^.count >= 2) then begin
+        if (x^.kind = tree_node) and (x^.count >= 2) then begin
           y := g_opt_tree_ptr_t(x^.opnd[1]);
-          if (y^.kind = 137) and (y^.op = 18) and (y^.w26 = 1) then
+          if (y^.kind = tree_node) and (y^.op = 18) and (y^.w26 = 1) then
             goto 90;
-          if (y^.kind = 137) and (y^.op = 18) and (y^.opnd[1]^.kind = 109) and
+          if (y^.kind = tree_node) and (y^.op = 18)
+              and (y^.opnd[1]^.kind = var_name) and
              ((y^.opnd[1]^.xl[8] & 16#100000) <> 0) then
             iv := y^.opnd[1]
-          else if (y^.kind = 137) and (y^.op = 18) and
-                  (y^.opnd[1]^.kind = 110) and
+          else if (y^.kind = tree_node) and (y^.op = 18) and
+                  (y^.opnd[1]^.kind = fortran_symbol) and
                   ((y^.opnd[1]^.xl[6] & 16#100000) <> 0) then
             iv := y^.opnd[1]
           else begin
-            if not (y^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200]) then
-              if not (x^.opnd[2]^.kind in [77..90, 92, 93, 101, 109, 110, 147, 156, 176, 198, 200]) then
+            if not (y^.kind in [blogical_ob..complex_ob, char_string_ob,
+                                char32_string_ob, char16_ob, var_name,
+                                fortran_symbol, disp_node, set_con_ob,
+                                rec_const_ob, dpcomplex_ob, binteger_ob]) then
+              if not (x^.opnd[2]^.kind in [blogical_ob..complex_ob,
+                                           char_string_ob, char32_string_ob,
+                                           char16_ob, var_name, fortran_symbol,
+                                           disp_node, set_con_ob, rec_const_ob,
+                                           dpcomplex_ob, binteger_ob]) then
                 goto 90;
-            if (y^.kind = 109) or (y^.kind = 147) or (y^.kind = 110) then
+            if (y^.kind = var_name) or (y^.kind = disp_node)
+                or (y^.kind = fortran_symbol) then
               iv := il_$node_ptr_t(y)
-            else if (x^.opnd[2]^.kind = 109) or (x^.opnd[2]^.kind = 147) or
-                    (x^.opnd[2]^.kind = 110) then
+            else if (x^.opnd[2]^.kind = var_name)
+                or (x^.opnd[2]^.kind = disp_node) or
+                    (x^.opnd[2]^.kind = fortran_symbol) then
               iv := il_$node_ptr_t(y);
           end;
         end;
         if iv = nil then
           goto 90;
-        if iv^.kind = 147 then
+        if iv^.kind = disp_node then
           iv := iv^.xp[6];
-        if x^.kind = 137 then
+        if x^.kind = tree_node then
           if x^.op = 27 then
             if not ((x^.w28 = 4) or (x^.w28 = 2)) then
               goto 90;
-        if x^.opnd[1]^.kind = 137 then
+        if x^.opnd[1]^.kind = tree_node then
           if g_opt_tree_ptr_t(x^.opnd[1])^.uses > 1 then
             goto 90;
-        if not ((iv^.kind = 110) or (iv^.kind = 109)) then
+        if not ((iv^.kind = fortran_symbol) or (iv^.kind = var_name)) then
           goto 90;
-        if iv^.kind = 109 then begin
+        if iv^.kind = var_name then begin
           if iv^.xw[37] <= 0 then
             goto 90;
           if (iv^.xl[8] & 16#100000) = 0 then
@@ -3880,7 +3966,8 @@ begin
         end;
         rg := x^.owner^.hdr.region;
         findvalues(rg, n, hb, temp,
-          opt_str_$product_of(x^.op, smcontk(81, 1), x^.opnd[2], x^.rlen,
+          opt_str_$product_of(x^.op, smcontk(integer_ob, 1), x^.opnd[2],
+                              x^.rlen,
             class_size[x^.rlen], opt_str_$opmod1_of_multiplier(x),
             x^.dflags.signed, nil),
           sr_tree_view_ptr_t(x)^.desc, iv);
@@ -3927,14 +4014,14 @@ begin
   for v := 1 to il_180^.xw[145] do begin
     n := opt_4009c[opt_region]^.vars^[v]^.node;
     if n <> nil then
-      if n^.kind = 109 then begin
+      if n^.kind = var_name then begin
         if (n^.xw[36] = 5) or (n^.xw[37] = 0) or
            ((n^.xl[8] & 16#201101) <> 0) then begin
           one := [v];
           excluded := excluded + one;
         end;
       end
-      else if n^.kind = 110 then
+      else if n^.kind = fortran_symbol then
         if (n^.xw[8] = 0) or ((n^.xl[6] & 16#201101) <> 0) then begin
           one := [v];
           excluded := excluded + one;
@@ -3995,7 +4082,7 @@ begin
     if s^.hdr.first then
       if s^.block <> nil then
         blk := s^.block;
-    if s^.kind = 140 then
+    if s^.kind = assign_node then
       if s^.block = nil then
         if not s^.hdr.first then
           if new_block(s) then begin

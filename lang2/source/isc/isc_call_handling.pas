@@ -53,7 +53,7 @@ module isc_call_handling;
 function get_slevel(
     node: isc_node_ptr_t): integer; options(val_param);
 begin
-  if (node^.kind = 107) or (node^.kind = 108) then
+  if (node^.kind = procedure_blk) or (node^.kind = function_blk) then
     get_slevel := node^.bk_f294.slevel
   else
     get_slevel := 0;
@@ -76,9 +76,9 @@ begin
   n := 0;
   while arg <> nil do begin
     loc := arg^.ar_loc;
-    if loc^.kind = 204 then
+    if loc^.kind = argument_block_location_ob then
       n := n + 1
-    else if loc^.kind = 203 then begin
+    else if loc^.kind = physical_register_ob then begin
       n := n + 1;
       if loc^.lo_class = 2 then
         n := n + 1
@@ -103,9 +103,9 @@ begin
   n := 0;
   while arg <> nil do begin
     loc := arg^.ar_loc;
-    if loc^.kind = 204 then
+    if loc^.kind = argument_block_location_ob then
       n := n + 1
-    else if loc^.kind = 203 then begin
+    else if loc^.kind = physical_register_ob then begin
       n := n + 1;
       if loc^.lo_class = 2 then
         n := n + 1

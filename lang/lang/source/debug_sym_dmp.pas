@@ -497,8 +497,8 @@ var
   s: il_$node_ptr_t;
 begin
   s := gspace(56);
-  s^.kind := 111;
-  s^.xp[1] := idntk(76, '.some_symbol_section', 20);
+  s^.kind := common_block_name;
+  s^.xp[1] := idntk(id_ob, '.some_symbol_section', 20);
   s^.xp[2] := sym_sections;
   s^.xl[3] := 0;
   s^.xl[4] := 0;
@@ -533,10 +533,10 @@ begin
   s := il_$node_ptr_t(section);
   if s = nil then
     bug_check('\\DEBUG_SYM_DMP_\ADD_NAME_TO_SECTION -- handle is NIL.%$');
-  if (s^.kind <> 111) or
-     (idntk(76, '.some_symbol_section', 20) <> s^.xp[1]) then
+  if (s^.kind <> common_block_name) or
+     (idntk(id_ob, '.some_symbol_section', 20) <> s^.xp[1]) then
     bug_check('\\DEBUG_SYM_DMP_\ADD_NAME_TO_SECTION -- handle does not point to a section$debug section.%$');
-  s^.xp[1] := idntk(76, name, len);
+  s^.xp[1] := idntk(id_ob, name, len);
 end;
 
 { varn_from_fortran_symbol - a variable node (kind 109, 88 bytes from
@@ -565,11 +565,11 @@ begin
   end;
   if fortran_var = nil then begin
     fortran_var := gspace(88);
-    fortran_var^.kind := 109;
+    fortran_var^.kind := var_name;
   end;
   if fresh then begin
     v := gspace(88);
-    v^.kind := 109;
+    v^.kind := var_name;
   end
   else
     v := fortran_var;
@@ -578,7 +578,7 @@ begin
   v^.xp[7] := sym;
   b := sym^.xp[10];
   if b <> nil then
-    if b^.kind = 167 then
+    if b^.kind = entry_blk then
       b := b^.xp[37];
   v^.xp[5] := b;
   k := (ord(sym^.xc[11]) & 16#F0) div 16;
@@ -622,7 +622,7 @@ begin
   end;
   if fortran_label = nil then begin
     fortran_label := gspace(40);
-    fortran_label^.kind := 117;
+    fortran_label^.kind := label_name;
   end;
   l := fortran_label;
   l^.xp[1] := sym;
@@ -671,10 +671,10 @@ procedure add_to_reloc_obj_list(
 begin
   nrelocs := nrelocs + 1;
   case obj^.kind of
-    183: obj^.xw[21] := nrelocs;
-    182: obj^.xw[31] := nrelocs;
-    111: obj^.xw[26] := nrelocs;
-    109: obj^.xw[39] := nrelocs;
+    data_section: obj^.xw[21] := nrelocs;
+    procedure_section: obj^.xw[31] := nrelocs;
+    common_block_name: obj^.xw[26] := nrelocs;
+    var_name: obj^.xw[39] := nrelocs;
     otherwise
       bug_check('\\DEBUG_SYM_DMP_\ADD_TO_RELOC_OBJ_LIST -- Don''t know how to relocate this object.%$');
   end;
@@ -865,11 +865,12 @@ begin
             flag := true;
         end
         else if ((ord(blk^.xc[378]) & 16) = 0) and
-                (v^.xp[7]^.kind = 121) then
+                (v^.xp[7]^.kind = param_name) then
           reg := 15
         else
           reg := 14;
-        if (v^.xp[7]^.kind = 121) and (v^.xp[7]^.xp[4]^.kind = 206) then
+        if (v^.xp[7]^.kind = param_name)
+            and (v^.xp[7]^.xp[4]^.kind = dynamic_array_type) then
           loc := loc_build__relative_loc(2, reg, v^.xl[14],
                                          addr(indirect_cell), nil)
         else if flag then
@@ -1022,7 +1023,7 @@ begin
                                       (target_properties.p_10 <= 3)));
     repeat
       if r^.v <> nil then begin
-        if r^.v^.kind = 110 then
+        if r^.v^.kind = fortran_symbol then
           r^.v := varn_from_fortran_symbol(r^.v, blk, true);
         loc := get_memory_loc(r^.v, blk, failed);
       end
@@ -1136,16 +1137,16 @@ begin
   f := fixups;
   while f <> nil do begin
     case f^.obj^.kind of
-      117: begin
+      label_name: begin
         loc := get_sect_rel_location_rep(f^.blk^.xp[47]^.xw[31],
                                          f^.obj^.xp[7]^.xl[14]);
         pds_$add_label_loc(f^.rec, loc);
       end;
-      109: begin
+      var_name: begin
         loc := get_var_location_rep(f^.obj, f^.blk);
         pds_$add_var_loc(f^.rec, loc);
       end;
-      105, 107, 108: begin
+      program_blk, procedure_blk, function_blk: begin
         r := f^.blk;
         if not has_ecb(f^.blk) or (r^.xl[27] = 0) or
            (dsd_$block_p_t(r)^.level > 0) then
@@ -1216,37 +1217,37 @@ begin
   if typ_p = nil then
     bug_check('\\DEBUG_SYM_DMP_\MAY_NEED_COMMON_AUX -- typ_p is NIL.%$');
   case typ_p^.kind of
-    109: begin
+    var_name: begin
       flags := typ_p^.xl[10];
       t := typ_p^.xp[7];
       size := typ_p^.xl[9];
       align := typ_p^.xw[22];
     end;
-    118: begin
+    type_name: begin
       flags := typ_p^.xl[10];
       t := typ_p^.xp[7];
       size := typ_p^.xl[11];
       align := typ_p^.xw[25];
     end;
-    121: begin
+    param_name: begin
       flags := typ_p^.xl[6];
       t := typ_p^.xp[4];
       size := typ_p^.xl[7];
       align := typ_p^.xw[17];
     end;
-    108: begin
+    function_blk: begin
       flags := typ_p^.xl[78];
       t := typ_p^.xp[7];
       size := typ_p^.xl[79];
       align := typ_p^.xw[161];
     end;
-    174: begin
+    func__type: begin
       flags := typ_p^.xl[3];
       t := typ_p^.xp[7];
       size := typ_p^.xl[4];
       align := typ_p^.xw[11];
     end;
-    120, 119: begin
+    pfield_name, field_name: begin
       if field_num = 0 then
         bug_check('\\DEBUG_SYM_DMP_\MAY_NEED_COMMON_AUX -- field_num may not be zero for fields.%$');
       flags := typ_p^.xl[7];
@@ -1254,7 +1255,7 @@ begin
       size := typ_p^.xl[6];
       align := typ_p^.xw[16];
     end;
-    133: begin
+    file_type: begin
       flags := typ_p^.xl[4];
       t := typ_p^.xp[1];
       size := typ_p^.xl[3];
@@ -1263,7 +1264,7 @@ begin
     otherwise
       bug_check('\\DEBUG_SYM_DMP_\MAY_NEED_COMMON_AUX -- Unexpected object kind.%$');
   end;
-  if t^.kind = 118 then
+  if t^.kind = type_name then
     flags := flags & ~t^.xl[10];
   if (flags & 16#800) <> 0 then begin
     if field_num = 0 then
@@ -1293,13 +1294,14 @@ end;
 function is_simple_type(
     t: il_$node_ptr_t): boolean; options(val_param); internal;
 begin
-  if t^.kind in [122..126, 135, 136, 210, 234] then
+  if t^.kind in [integer_type..char_string_con_type, univ_ptr_type,
+                 null_set_type, void_type, cc_func_returning_type] then
     is_simple_type := true
-  else if (t^.kind = 128) and (t^.xp[1]^.kind = 122) and
+  else if (t^.kind = subr_type) and (t^.xp[1]^.kind = integer_type) and
           (((t^.xp[2]^.xl[2] = -32767) and (t^.xp[3]^.xl[2] = 32767)) or
            ((t^.xp[2]^.xl[2] = -128) and (t^.xp[3]^.xl[2] = 127))) then
     is_simple_type := true
-  else if (t^.kind = 130) and (t^.xp[1]^.kind = 210) then
+  else if (t^.kind = ptr_type) and (t^.xp[1]^.kind = void_type) then
     is_simple_type := true
   else
     is_simple_type := false;
@@ -1317,19 +1319,19 @@ function get_name_rep(
 var
   len: integer;
 begin
-  if sp^.kind = 76 then begin
+  if sp^.kind = id_ob then begin
     len := sp^.idnt_len;
     if sp^.idnt_name[len] = chr(0) then
       len := len - 1;
     get_name_rep := pds_$make_name(sp^.idnt_name, len);
   end
-  else if sp^.kind = 92 then begin
+  else if sp^.kind = char_string_ob then begin
     len := sp^.str_len;
     if sp^.str_chars[len] = chr(0) then
       len := len - 1;
     get_name_rep := pds_$make_name(sp^.str_chars, len);
   end
-  else if sp^.kind = 110 then begin
+  else if sp^.kind = fortran_symbol then begin
     len := sp^.xw[35];
     if sp^.xc[71 + len] = chr(0) then
       len := len - 1;
@@ -1398,7 +1400,7 @@ begin
     get_variable_rep := nil;
     return;
   end;
-  if vp^.kind <> 109 then
+  if vp^.kind <> var_name then
     bug_check('\\DEBUG_SYM_DMP_\GET_VARIABLE_REP -- vp is not a var_name.%$');
   if vp^.xp[16] <> nil then begin
     get_variable_rep := vp^.xp[16];
@@ -1408,7 +1410,7 @@ begin
   attr := pds_$make_var_attr;
   src := get_src_loc_rep(vp^.xw[4]);
   t := vp^.xp[7];
-  if t^.kind = 121 then
+  if t^.kind = param_name then
     typ := get_type_rep(t^.xp[4])
   else
     typ := get_type_rep(t);
@@ -1419,11 +1421,12 @@ begin
   if (vp^.xl[8] & 16#20000) <> 0 then
     pds_$add_var_attr(r, 3);
   vp^.xp[16] := r;
-  if vp^.xp[7]^.kind = 110 then
+  if vp^.xp[7]^.kind = fortran_symbol then
     vp^.xp[7]^.xp2[12] := r;
   t := vp^.xp[7];
-  if ((t^.kind = 121) and then (t^.xp[4]^.kind <> 207)) or else
-     ((t^.kind = 110) and then (((ord(t^.xc[11]) & 16#F0) div 16 = 5) or else
+  if ((t^.kind = param_name) and then (t^.xp[4]^.kind <> dope_vector)) or else
+     ((t^.kind = fortran_symbol)
+      and then (((ord(t^.xc[11]) & 16#F0) div 16 = 5) or else
                                 ((ord(t^.xc[10]) & 16#40) <> 0))) then begin
     npairs := npairs + 1;
     pairs[npairs].typ := vp^.xp[7];
@@ -1508,7 +1511,7 @@ function get_tag(
 var
   b, t: il_$node_ptr_t;
 begin
-  if (rec^.kind = 132) and (rec^.xp[9] <> nil) then begin
+  if (rec^.kind = record_type) and (rec^.xp[9] <> nil) then begin
     get_tag := rec^.xp[9];
     return;
   end;
@@ -1550,7 +1553,7 @@ var
   i: integer;
   offset: integer32;
 begin
-  if not ((t^.kind = 196) or (t^.kind = 132)) then
+  if not ((t^.kind = varying_type) or (t^.kind = record_type)) then
     bug_check('\\DEBUG_SYM_DMP_\GET_RECORD_REP -- object is not a record.%$');
   if t^.xp[10] <> nil then begin
     get_record_rep := t^.xp[10];
@@ -1561,7 +1564,7 @@ begin
   f := t^.xp[1];
   while f <> nil do begin
     nfields := nfields + 1;
-    if f^.kind = 120 then
+    if f^.kind = pfield_name then
       has_bits := true;
     f := f^.xp[1];
   end;
@@ -1603,7 +1606,7 @@ begin
     while f <> nil do begin
       name := get_name_rep(f^.xp[2]);
       typ := get_type_rep(f^.xp[4]);
-      if f^.kind = 120 then begin
+      if f^.kind = pfield_name then begin
         offset := (ord(f^.xc[48]) & 63) div 8 + f^.xl[11];
         fld := pds_$make_field(name, typ, 1, offset,
                                (ord(f^.xc[48]) & 63) & 7, ord(f^.xc[49]),
@@ -1645,7 +1648,7 @@ var
   value: integer32;
   i: integer;
 begin
-  if t^.kind <> 129 then
+  if t^.kind <> enum_type then
     bug_check('\\DEBUG_SYM_DMP_\GET_ENUM_REP -- object is not an enum.%$');
   if t^.xp[3] <> nil then begin
     get_enum_rep := t^.xp[3];
@@ -1703,7 +1706,7 @@ var
   l68: integer32;
 begin
   case t^.kind of
-    122:
+    integer_type:
       if dsd_$bools_p_t(t)^[6] then
         case t^.xw[2] of
           1: get_type_rep := pds_$make_type(1, nil);
@@ -1716,44 +1719,44 @@ begin
           2: get_type_rep := pds_$make_type(5, nil);
           otherwise get_type_rep := pds_$make_type(6, nil);
         end;
-    123:
+    real_type:
       if t^.xw[2] = 6 then
         get_type_rep := pds_$make_type(7, nil)
       else
         get_type_rep := pds_$make_type(8, nil);
-    126: get_type_rep := pds_$make_type(15, nil);
-    125: get_type_rep := pds_$make_type(14, nil);
-    124: get_type_rep := pds_$make_type(11, nil);
-    210: get_type_rep := pds_$make_type(20, nil);
-    234: get_type_rep := pds_$make_type(19, nil);
-    135: get_type_rep := pds_$make_type(16, nil);
-    118:
+    char_string_con_type: get_type_rep := pds_$make_type(15, nil);
+    char_type: get_type_rep := pds_$make_type(14, nil);
+    bool_type: get_type_rep := pds_$make_type(11, nil);
+    void_type: get_type_rep := pds_$make_type(20, nil);
+    cc_func_returning_type: get_type_rep := pds_$make_type(19, nil);
+    univ_ptr_type: get_type_rep := pds_$make_type(16, nil);
+    type_name:
       if (t^.xp[5] = il_184) and then is_simple_type(t^.xp[7]) then
         get_type_rep := get_type_rep(t^.xp[7])
       else begin
         r := get_alias_rep(t);
         get_type_rep := pds_$make_type(22, r);
       end;
-    130:
-      if (t^.xp[1]^.kind = 210) or (t^.xp[1]^.kind = 76) then
+    ptr_type:
+      if (t^.xp[1]^.kind = void_type) or (t^.xp[1]^.kind = id_ob) then
         get_type_rep := pds_$make_type(16, nil)
       else begin
         et := get_type_rep(t^.xp[1]);
         r := pds_$make_pointer_rec(nil, nil, et);
         get_type_rep := pds_$make_type(22, r);
       end;
-    136: get_type_rep := pds_$make_type(17, nil);
-    134: begin
+    null_set_type: get_type_rep := pds_$make_type(17, nil);
+    set_type: begin
       type_exp(t, addr(te));
       et := get_type_rep(t^.xp[1]);
       r := pds_$make_set_rec(nil, nil, et, te.size, t^.xw[6]);
       get_type_rep := pds_$make_type(22, r);
     end;
-    128:
-      if (t^.xp[1]^.kind = 122) and (t^.xp[2]^.xl[2] = -32767) and
+    subr_type:
+      if (t^.xp[1]^.kind = integer_type) and (t^.xp[2]^.xl[2] = -32767) and
          (t^.xp[3]^.xl[2] = 32767) then
         get_type_rep := pds_$make_type(2, nil)
-      else if (t^.xp[1]^.kind = 122) and (t^.xp[2]^.xl[2] = -128) and
+      else if (t^.xp[1]^.kind = integer_type) and (t^.xp[2]^.xl[2] = -128) and
               (t^.xp[3]^.xl[2] = 127) then
         get_type_rep := pds_$make_type(1, nil)
       else begin
@@ -1763,22 +1766,22 @@ begin
                                     t^.xp[3]^.xl[2], te.size);
         get_type_rep := pds_$make_type(22, r);
       end;
-    133: begin
+    file_type: begin
       et := get_type_rep(t^.xp[1]);
       r := pds_$make_file_rec(nil, nil, et);
       may_need_common_aux(r, t, 0);
       get_type_rep := pds_$make_type(22, r);
     end;
-    197, 131, 127: begin
+    parray_type, array_type, char_array_type: begin
       type_exp(t^.xp[1], addr(te));
-      if (t^.kind = 127) and
-         ((te.base^.kind = 128) or (te.base^.kind = 122)) then
+      if (t^.kind = char_array_type) and
+         ((te.base^.kind = subr_type) or (te.base^.kind = integer_type)) then
         et := pds_$make_type(14, nil)
       else
         et := get_type_rep(t^.xp[1]);
       it := get_type_rep(t^.xp[2]);
       type_exp(t^.xp[2], addr(te));
-      if t^.kind = 197 then begin
+      if t^.kind = parray_type then begin
         conformant := true;
         b128 := dsd_$bools_p_t(t)^[46];
         w120 := t^.xw[22];
@@ -1795,8 +1798,8 @@ begin
                                false, w120);
       get_type_rep := pds_$make_type(22, r);
     end;
-    177: begin
-      if t^.xp[9]^.kind = 76 then
+    offset_type: begin
+      if t^.xp[9]^.kind = id_ob then
         at := pds_$make_type(16, nil)
       else
         at := get_type_rep(t^.xp[9]);
@@ -1807,11 +1810,11 @@ begin
                                 t^.xw[25], t^.xl[13], te.size);
       get_type_rep := pds_$make_type(22, r);
     end;
-    129: begin
+    enum_type: begin
       r := get_enum_rep(t);
       get_type_rep := pds_$make_type(22, r);
     end;
-    174, 173: begin
+    func__type, proc__type: begin
       r := pds_$make_signature_rec(nil, nil, nil, t^.xw[37]);
       i := 1;
       a := t^.xp[1];
@@ -1835,11 +1838,11 @@ begin
       end;
       get_type_rep := pds_$make_type(22, r);
     end;
-    108, 107: begin
+    function_blk, procedure_blk: begin
       r := get_signature_rep(t);
       get_type_rep := pds_$make_type(22, r);
     end;
-    132, 196: begin
+    record_type, varying_type: begin
       r := get_record_rep(t);
       get_type_rep := pds_$make_type(22, r);
     end;
@@ -1857,7 +1860,7 @@ function get_label_rep(
 var
   name, src, r: univ_ptr;
 begin
-  if lp^.kind <> 117 then
+  if lp^.kind <> label_name then
     bug_check('\\DEBUG_SYM_DMP_\GET_LABEL_REP -- lp is not a label_name.%$');
   name := get_name_rep(lp^.xp[1]);
   src := get_src_loc_rep(lp^.xw[4]);
@@ -1896,15 +1899,15 @@ var
   quad: array [1..4] of integer32;
   name, src, typ, val: univ_ptr;
 begin
-  if c^.kind = 110 then
+  if c^.kind = fortran_symbol then
     te.size := sz_fsym(c)
   else begin
     v := c^.xp[8];
-    if v^.kind = 92 then
+    if v^.kind = char_string_ob then
       te.size := v^.str_len
-    else if v^.kind = 212 then
+    else if v^.kind = namelist_constant_ob then
       te.size := v^.str_len
-    else if v^.kind = 156 then begin
+    else if v^.kind = set_con_ob then begin
       len := v^.set_len;
       zeros := 0;
       for i := 1 to (len + 1) div 2 do begin
@@ -1923,27 +1926,27 @@ begin
   end;
   name := get_name_rep(c^.xp[1]);
   src := get_src_loc_rep(c^.xw[4]);
-  if c^.xp[8]^.kind = 92 then
+  if c^.xp[8]^.kind = char_string_ob then
     typ := pds_$make_type(15, nil)
   else
     typ := get_type_rep(c^.xp[7]);
   v := c^.xp[8];
-  if v^.kind in [77..87, 101, 200] then
+  if v^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     value := v^.int_value;
   case v^.kind of
-    77, 86, 200: begin
+    blogical_ob, ubinteger_ob, binteger_ob: begin
       shifted := lshft(value, 24);
       val := pds_$make_constant_value(shifted, te.size);
     end;
-    78, 80, 83: begin
+    slogical_ob, sinteger_ob, usinteger_ob: begin
       shifted := lshft(value, 16);
       val := pds_$make_constant_value(shifted, te.size);
     end;
-    79, 82, 85: begin
+    llogical_ob, linteger_ob, ulinteger_ob: begin
       single := value;
       val := pds_$make_constant_value(single, te.size);
     end;
-    81:
+    integer_ob:
       if te.size = 1 then begin
         shifted := lshft(value, 24);
         val := pds_$make_constant_value(shifted, te.size);
@@ -1956,21 +1959,22 @@ begin
         single := value;
         val := pds_$make_constant_value(single, te.size);
       end;
-    88: val := pds_$make_constant_value(v^.xl[4], te.size);
-    89: val := pds_$make_constant_value(v^.xl[3], te.size);
-    87: begin
+    real_ob: val := pds_$make_constant_value(v^.xl[4], te.size);
+    dpreal_ob: val := pds_$make_constant_value(v^.xl[3], te.size);
+    char_ob: begin
       shifted := lshft(v^.int_value, 24);
       val := pds_$make_constant_value(shifted, te.size);
     end;
-    92: val := pds_$make_constant_value(v^.str_chars, te.size);
-    156, 212: val := pds_$make_constant_value(v^.set_words[zeros + 1],
+    char_string_ob: val := pds_$make_constant_value(v^.str_chars, te.size);
+    set_con_ob,
+        namelist_constant_ob: val := pds_$make_constant_value(v^.set_words[zeros + 1],
                                               te.size);
-    90: begin
+    complex_ob: begin
       pair[1] := v^.xl[3];
       pair[2] := v^.xl[4];
       val := pds_$make_constant_value(pair, te.size);
     end;
-    198: begin
+    dpcomplex_ob: begin
       quad[1] := v^.xl[3];
       quad[2] := v^.xl[4];
       quad[3] := v^.xl[5];
@@ -1994,7 +1998,8 @@ function get_entry_rep(
 var
   name, src, sig, e: univ_ptr;
 begin
-  if not ((r^.kind = 108) or (r^.kind = 107) or (r^.kind = 105)) then
+  if not ((r^.kind = function_blk) or (r^.kind = procedure_blk)
+          or (r^.kind = program_blk)) then
     bug_check('\\DEBUG_SYM_DMP_\GET_ENTRY_REP -- unknown entry block.%$');
   name := get_name_rep(r^.xp[74]);
   src := get_src_loc_rep(r^.xw[150]);
@@ -2019,13 +2024,13 @@ begin
     skip_unreferenced_include_object := false
   else begin
     case o^.kind of
-      118, 116: begin
+      type_name, const_name: begin
         in_main := spos_$line_is_in_main_source_file(o^.xw[4]);
         referenced := dsd_$bools_p_t(o)^[10];
         in_main := not in_main;
         referenced := not referenced;
       end;
-      6, 16, 17: begin
+      with_ob, array_ob, record_ob: begin
         in_main := spos_$line_is_in_main_source_file(o^.xw[12]);
         referenced := dsd_$bools_p_t(o)^[26];
         in_main := not in_main;
@@ -2073,39 +2078,40 @@ begin
   o := blk^.xp[4];
   while o <> nil do begin
     if not skip_unreferenced_include_object(o) then begin
-      if o^.kind = 109 then begin
+      if o^.kind = var_name then begin
         if (o^.xw[17] & 16#4000) <> 0 then
           goto 10;
         t := o^.xp[7];
-        if (t^.kind = 108) or (t^.kind = 107) then
+        if (t^.kind = function_blk) or (t^.kind = procedure_blk) then
           goto 10;
         if (o^.xp[5] = il_178) or (o^.xp[5] = nil) then
           goto 10;
-        if (o^.xw[36] = 5) and (t^.kind = 121) and (t^.xw[22] = 0) then
+        if (o^.xw[36] = 5) and (t^.kind = param_name) and (t^.xw[22] = 0) then
           goto 10;
-        if (t^.kind = 121) and (t^.xp[4]^.kind = 207) then
+        if (t^.kind = param_name) and (t^.xp[4]^.kind = dope_vector) then
           goto 10;
         rec := get_variable_rep(o, blk);
       end
-      else if o^.kind = 118 then begin
+      else if o^.kind = type_name then begin
         if (o^.xp[5] = il_184) and then is_simple_type(o^.xp[7]) then
           goto 10;
         rec := get_alias_rep(o);
       end
-      else if o^.kind = 116 then begin
+      else if o^.kind = const_name then begin
         v := o^.xp[8];
-        if ((v^.kind = 138) or (v^.kind = 137)) and (v^.xw[18] = 26) then
+        if ((v^.kind = gen_tree_node) or (v^.kind = tree_node))
+            and (v^.xw[18] = 26) then
           goto 10;
         t := o^.xp[7];
-        if t^.kind = 129 then
+        if t^.kind = enum_type then
           for i := 1 to t^.xw[3] do
             if dsd_$nodes_p_t(t^.xp[4])^[i] = o then
               goto 10;
         rec := get_const_rep(o);
       end
-      else if (o^.kind = 117) and (o^.xp[1]^.kind = 76) then
+      else if (o^.kind = label_name) and (o^.xp[1]^.kind = id_ob) then
         rec := get_label_rep(o)
-      else if o^.kind = 110 then begin
+      else if o^.kind = fortran_symbol then begin
         cls := (ord(o^.xc[44]) & 16#F0) div 16;
         if ((cls = 3) and (((o^.xw[13] & 16#4000) = 0) or
                            (o = blk^.xp[24]))) or
@@ -2136,7 +2142,7 @@ begin
       pds_$enter_named_record_current_scope(rec);
     end;
 10:
-    if o^.kind = 110 then
+    if o^.kind = fortran_symbol then
       o := o^.xp[1]
     else
       o := o^.xp[4];
@@ -2149,9 +2155,9 @@ begin
   while tg <> nil do begin
     if (tg^.xp[2] <> nil) and (tg^.xp[5] <> il_178) and then
        not skip_unreferenced_include_object(tg) then begin
-      if tg^.xp[2]^.kind = 132 then
+      if tg^.xp[2]^.kind = record_type then
         rec := get_record_rep(tg^.xp[2])
-      else if tg^.xp[2]^.kind = 129 then
+      else if tg^.xp[2]^.kind = enum_type then
         rec := get_enum_rep(tg^.xp[2])
       else
         bug_check('\\DEBUG_SYM_DMP_\PROCESS_NAMED_OBJECTS --- Unknown kind on su chain.%$');
@@ -2161,7 +2167,8 @@ begin
     end;
     tg := tg^.xp[1];
   end;
-  if (blk^.kind = 105) or (blk^.kind = 108) or (blk^.kind = 107) then begin
+  if (blk^.kind = program_blk) or (blk^.kind = function_blk)
+      or (blk^.kind = procedure_blk) then begin
     rec := get_entry_rep(blk);
     pds_$enter_named_record_current_scope(rec);
   end;
@@ -2179,8 +2186,8 @@ var
 begin
   b := il_184;
   if b <> nil then
-    if b^.kind = 106 then
-      if (b^.xp[1]^.kind = 106) or (b^.xp[1]^.kind = 105) then
+    if b^.kind = module_blk then
+      if (b^.xp[1]^.kind = module_blk) or (b^.xp[1]^.kind = program_blk) then
         b := b^.xp[1];
   first := b;
   while b <> nil do begin
@@ -2304,8 +2311,8 @@ procedure clear_emitted_marker(
     var tbl: dsd_$string_table_t;
     id: il_$node_ptr_t); options(val_param); internal;
 begin
-  if id^.kind = 110 then
-    id := idntk(76, id^.xc[72], id^.xw[35]);
+  if id^.kind = fortran_symbol then
+    id := idntk(id_ob, id^.xc[72], id^.xw[35]);
   dsd_$idnt_ref_p_t(id)^.entered := dsd_$idnt_ref_p_t(id)^.entered -
                                     [tbl.mark];
 end;
@@ -2320,10 +2327,10 @@ var
   e: dsd_$str_entry_p_t;
 begin
   new(e);
-  if id^.kind <> 110 then
+  if id^.kind <> fortran_symbol then
     e^.node := id
   else
-    e^.node := idntk(76, id^.xc[72], id^.xw[35]);
+    e^.node := idntk(id_ob, id^.xc[72], id^.xw[35]);
   e^.next := tbl.list;
   tbl.list := e;
   tbl.size := tbl.size + (e^.node^.idnt_len + 1);
@@ -2338,8 +2345,8 @@ procedure add_string(
     var tbl: dsd_$string_table_t;
     id: il_$node_ptr_t); options(val_param); internal;
 begin
-  if id^.kind = 110 then
-    id := idntk(76, id^.xc[72], id^.xw[35]);
+  if id^.kind = fortran_symbol then
+    id := idntk(id_ob, id^.xc[72], id^.xw[35]);
   if not (tbl.mark in dsd_$idnt_ref_p_t(id)^.entered) then
     force_add_string(tbl, id);
 end;
@@ -2353,10 +2360,10 @@ function get_debug_offset(
 var
   n: il_$node_ptr_t;
 begin
-  if id^.kind <> 110 then
+  if id^.kind <> fortran_symbol then
     n := id
   else
-    n := idntk(76, id^.xc[72], id^.xw[35]);
+    n := idntk(id_ob, id^.xc[72], id^.xw[35]);
   get_debug_offset := dsd_$idnt_ref_p_t(n)^.offset;
 end;
 
@@ -2439,7 +2446,8 @@ begin
     b := e^.block;
     off := obj_offset;
     has_exc := false;
-    if not ((b^.kind = 209) or (b^.kind = 167) or (b^.kind = 106)) then begin
+    if not ((b^.kind = blockdata_blk) or (b^.kind = entry_blk)
+            or (b^.kind = module_blk)) then begin
       if b^.xp[38] = nil then
         n := 1
       else begin
@@ -2477,31 +2485,32 @@ begin
     end;
     rec^.b3 := 0;
     case b^.kind of
-      106: rec^.block_kind := 0;
-      105: begin
+      module_blk: rec^.block_kind := 0;
+      program_blk: begin
         rec^.block_kind := 1;
         rec^.b3 := 3;
       end;
-      107: begin
+      procedure_blk: begin
         rec^.block_kind := 2;
         rec^.b3 := 2;
       end;
-      108: begin
+      function_blk: begin
         rec^.block_kind := 3;
         rec^.b3 := 2;
       end;
-      172, 167: begin
+      inner_blk, entry_blk: begin
         rec^.block_kind := 9;
         rec^.b3 := 2;
       end;
-      209: rec^.block_kind := 5;
+      blockdata_blk: rec^.block_kind := 5;
       otherwise
         bug_check('\\DEBUG_SYM_DMP_\WRITE_BLOCKS -- Unknown block kind.%$');
     end;
     if b^.xp[74] <> nil then
-      if b^.xp[74]^.kind <> 73 then
+      if b^.xp[74]^.kind <> error_ob then
         rec^.name := make_relative_ref(get_debug_offset(b^.xp[74]), off);
-    if not ((b^.kind = 106) or (b^.kind = 209) or (b^.kind = 167)) then
+    if not ((b^.kind = module_blk) or (b^.kind = blockdata_blk)
+            or (b^.kind = entry_blk)) then
       if b^.xp[38] <> nil then begin
         rec^.nranges := n;
         r := dsd_$code_rng_p_t(b^.xp[38]);
@@ -2742,19 +2751,19 @@ begin
     for i := 1 to b^.count do begin
       o := b^.e[i];
       case o^.kind of
-        182: begin
+        procedure_section: begin
           rec^.e[k] := o^.xl[14];
           add_reloc(first + (k - 1) * 4, uobj_sym_sect, o^.xw[32], nil);
         end;
-        183: begin
+        data_section: begin
           rec^.e[k] := o^.xl[9] - o^.xl[4];
           add_reloc(first + (k - 1) * 4, uobj_sym_sect, o^.xw[22], nil);
         end;
-        111: begin
+        common_block_name: begin
           rec^.e[k] := o^.xl[11];
           add_reloc(first + (k - 1) * 4, uobj_sym_sect, o^.xw[16], nil);
         end;
-        109: begin
+        var_name: begin
           rec^.e[k] := o^.xl[14];
           add_reloc(first + (k - 1) * 4, uobj_sym_sect, o^.xw[38], nil);
         end;
@@ -2783,13 +2792,13 @@ var
 begin
   b := il_184;
   if b <> nil then
-    if b^.kind = 106 then
-      if (b^.xp[1]^.kind = 106) or (b^.xp[1]^.kind = 105) then
+    if b^.kind = module_blk then
+      if (b^.xp[1]^.kind = module_blk) or (b^.xp[1]^.kind = program_blk) then
         b := b^.xp[1];
   first := b;
   head := nil;
   while b <> nil do begin
-    if (b^.kind <> 209) and
+    if (b^.kind <> blockdata_blk) and
        (((ord(b^.xc[379]) & 4) <> 0) or (b = first)) then begin
       e := mrh_$alloc_fixed(block_heap);
       e^.block := b;
@@ -2838,8 +2847,8 @@ begin
   create_string_table(1, false, strings_27);
   b := il_184;
   if b <> nil then
-    if b^.kind = 106 then
-      if (b^.xp[1]^.kind = 106) or (b^.xp[1]^.kind = 105) then
+    if b^.kind = module_blk then
+      if (b^.xp[1]^.kind = module_blk) or (b^.xp[1]^.kind = program_blk) then
         b := b^.xp[1];
   first := b;
   while b <> nil do begin

@@ -153,7 +153,7 @@ begin
   if n = nil then
     assert_is_label_node := false
   else
-    assert_is_label_node := n^.kind = 144;
+    assert_is_label_node := n^.kind = label_node;
 end;
 
 function assert_is_nlbranch(
@@ -162,7 +162,7 @@ begin
   if n = nil then
     assert_is_nlbranch := false
   else
-    assert_is_nlbranch := n^.kind = 150;
+    assert_is_nlbranch := n^.kind = nlbranch_node;
 end;
 
 { forceobjcache - setobjcache without the tests of the flags: n (and a
@@ -180,19 +180,21 @@ var
   m: il_$node_ptr_t;
 begin
   if (n <> nil) and (r <> 31) then
-    if n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205] then begin
+    if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                   dindex_node..disp_node, cs_node, cc_call, pf_call,
+                   cse_use_ob, sym_disp_node] then begin
       n^.xw[5] := r;
       n^.xw[3] := n^.xw[3] ! 16#400;
     end
-    else if n^.kind = 109 then begin
+    else if n^.kind = var_name then begin
       n^.xw[37] := r;
       n^.xl[8] := n^.xl[8] ! 16#1000000;
     end
-    else if n^.kind = 110 then begin
+    else if n^.kind = fortran_symbol then begin
       n^.xw[8] := r;
       n^.xl[6] := n^.xl[6] ! 16#1000000;
     end
-    else if n^.kind = 190 then begin
+    else if n^.kind = cse_parent_ob then begin
       forceobjcache(n^.xp[1], r);
       m := n^.xp[5];
       repeat
@@ -217,20 +219,24 @@ var
   m: il_$node_ptr_t;
 begin
   if (n <> nil) and (r <> 31) then
-    if (n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) and
+    if (n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                    dindex_node..disp_node, cs_node, cc_call, pf_call,
+                    cse_use_ob, sym_disp_node]) and
         ((n^.xw[3] & 16#400) = 0) then begin
       n^.xw[5] := r;
       n^.xw[3] := n^.xw[3] ! 16#400;
     end
-    else if (n^.kind = 109) and ((n^.xl[8] & 16#1000000) = 0) then begin
+    else if (n^.kind = var_name) and ((n^.xl[8] & 16#1000000) = 0) then begin
       n^.xw[37] := r;
       n^.xl[8] := n^.xl[8] ! 16#1000000;
     end
-    else if (n^.kind = 110) and ((n^.xl[6] & 16#1000000) = 0) then begin
+    else if (n^.kind = fortran_symbol)
+        and ((n^.xl[6] & 16#1000000) = 0) then begin
       n^.xw[8] := r;
       n^.xl[6] := n^.xl[6] ! 16#1000000;
     end
-    else if (n^.kind = 190) and ((n^.xp[1]^.xw[3] & 16#400) = 0) then begin
+    else if (n^.kind = cse_parent_ob)
+        and ((n^.xp[1]^.xw[3] & 16#400) = 0) then begin
       setobjcache(n^.xp[1], r);
       m := n^.xp[5];
       repeat
@@ -258,17 +264,20 @@ var
 begin
   getobjcache := 31;
   if n <> nil then
-    if n^.kind = 190 then
+    if n^.kind = cse_parent_ob then
       getobjcache := getobjcache(n^.xp[1])
-    else if n^.kind = 189 then
+    else if n^.kind = cse_use_ob then
       getobjcache := getobjcache(n^.xp[5])
     else begin
-      if (n^.kind in [137, 138, 143, 145..147, 164, 171, 175, 189, 205]) and
+      if (n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
+                      dindex_node..disp_node, cs_node, cc_call, pf_call,
+                      cse_use_ob, sym_disp_node]) and
           ((n^.xw[3] & 16#400) <> 0) then
         r := n^.xw[5]
-      else if (n^.kind = 109) and ((n^.xl[8] & 16#1000000) <> 0) then
+      else if (n^.kind = var_name) and ((n^.xl[8] & 16#1000000) <> 0) then
         r := n^.xw[37]
-      else if (n^.kind = 110) and ((n^.xl[6] & 16#1000000) <> 0) then
+      else if (n^.kind = fortran_symbol)
+          and ((n^.xl[6] & 16#1000000) <> 0) then
         r := n^.xw[8]
       else
         r := 31;
@@ -328,9 +337,9 @@ begin
   end;
   if n = nil then
     m := n
-  else if n^.kind = 190 then
+  else if n^.kind = cse_parent_ob then
     m := n^.xp[1]
-  else if n^.kind = 189 then
+  else if n^.kind = cse_use_ob then
     m := n^.xp[5]
   else
     m := n;
@@ -360,13 +369,13 @@ begin
     check_use := true
   else if (x <> nil) and (y <> nil) then begin
     case x^.kind of
-      190: x := x^.xp[1];
-      189: x := x^.xp[5];
+      cse_parent_ob: x := x^.xp[1];
+      cse_use_ob: x := x^.xp[5];
       otherwise
     end;
     case y^.kind of
-      190: y := y^.xp[1];
-      189: y := y^.xp[5];
+      cse_parent_ob: y := y^.xp[1];
+      cse_use_ob: y := y^.xp[5];
       otherwise
     end;
     if x = y then
@@ -394,7 +403,7 @@ function weight;
 var
   w1: integer;
   w2: integer;
-  k: integer;
+  k: il_$kind_t;
 begin
   if (r in [0..23]) and cg_addr_cache[r].live then begin
     weight := 32767;
@@ -405,21 +414,25 @@ begin
       w1 := 0
     else begin
       k := obj^.kind;
-      if (k = 143) or (k = 138) then begin
+      if (k = cmp_tree_node) or (k = gen_tree_node) then begin
         if cg_tree_ptr_t(obj)^.uses = 0 then
           w1 := 0
         else
           w1 := 16001 - cg_tree_ptr_t(obj)^.uses;
       end
-      else if (k = 145) or (k = 146) or (k = 164) or (k = 147) then begin
+      else if (k = dindex_node) or (k = ptr_node) or (k = cs_node)
+          or (k = disp_node) then begin
         if cg_tree_ptr_t(obj)^.uses = 0 then
           w1 := 0
         else
           w1 := 15001 - cg_tree_ptr_t(obj)^.uses;
       end
-      else if k in [77..90, 92, 93, 101, 156, 163, 176, 195, 198, 200] then
+      else if k in [blogical_ob..complex_ob, char_string_ob, char32_string_ob,
+                    char16_ob, set_con_ob, addr_con, rec_const_ob,
+                    reloc_absolute_addr_con, dpcomplex_ob, binteger_ob] then
         w1 := 1
-      else if (k = 110) and (rshft(ord(obj^.xc[11]) & 16#F0, 4) = 5) then
+      else if (k = fortran_symbol) and (rshft(ord(obj^.xc[11]) & 16#F0,
+                                              4) = 5) then
         w1 := 1
       else
         w1 := w12 + 2;
@@ -428,7 +441,8 @@ begin
       w2 := 0
     else begin
       k := obj2^.kind;
-      if (k = 145) or (k = 146) or (k = 164) or (k = 147) then begin
+      if (k = dindex_node) or (k = ptr_node) or (k = cs_node)
+          or (k = disp_node) then begin
         if cg_tree_ptr_t(obj2)^.uses = 0 then
           w2 := 0
         else
@@ -538,9 +552,9 @@ var
 begin
   if n = nil then
     chk_assign := 31
-  else if n^.kind = 190 then
+  else if n^.kind = cse_parent_ob then
     chk_assign := chk_assign(n^.xp[1], size)
-  else if n^.kind = 189 then
+  else if n^.kind = cse_use_ob then
     chk_assign := chk_assign(n^.xp[5], size)
   else begin
     r := getobjcache(n);
@@ -583,50 +597,52 @@ var
   c: il_$node_ptr_t;
 begin
   register_tickle := false;
-  if (n^.kind in [77..87, 101, 200]) and (n^.xl[2] = 0) then
+  if (n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+      and (n^.xl[2] = 0) then
     return;
-  if (n^.kind = 88) or (n^.kind = 89) then
+  if (n^.kind = real_ob) or (n^.kind = dpreal_ob) then
     if n^.real_value = 0.0 then
       return;
-  if n^.kind = 92 then
+  if n^.kind = char_string_ob then
     return;
   if 1 in getphase(n) then
     return;
   s := cg_stmt;
   repeat
     s := s^.xp[2];
-  until s^.kind <> 191;
+  until s^.kind <> reg_list_ob;
   case s^.kind of
-    142: begin
+    cbranch_node: begin
       t := s^.xp[14];
       if t = n then
         register_tickle := true
-      else if t^.kind = 143 then
+      else if t^.kind = cmp_tree_node then
         if (cg_tree_ptr_t(t)^.op = 12) or (cg_tree_ptr_t(t)^.op = 40) then begin
           a := n;
-          if n^.kind = 152 then
+          if n^.kind = alloc_temp then
             a := n^.xp[4];
           c := cg_tree_ptr_t(t)^.opnd[1];
-          if c^.kind = 152 then
+          if c^.kind = alloc_temp then
             c := c^.xp[4];
           if c <> a then begin
             c := cg_tree_ptr_t(t)^.opnd[2];
-            if c^.kind = 152 then
+            if c^.kind = alloc_temp then
               c := c^.xp[4];
             if c <> a then
               return;
           end;
           if not zero_ok then begin
-            if (c^.kind in [77..87, 101, 200]) and (c^.xl[2] = 0) then
+            if (c^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+                and (c^.xl[2] = 0) then
               return;
-            if (c^.kind = 89) or (c^.kind = 88) then
+            if (c^.kind = dpreal_ob) or (c^.kind = real_ob) then
               if c^.real_value = 0.0 then
                 return;
           end;
           register_tickle := true;
         end;
     end;
-    140:
+    assign_node:
       if s^.xp[16] = n then
         register_tickle := true;
     otherwise
@@ -652,14 +668,14 @@ begin
     if cg_addr_regs[r].size = size then begin
       o := cg_addr_regs[r].obj;
       if o <> nil then
-        if o^.kind = 147 then
+        if o^.kind = disp_node then
           if (o^.xp[6] = base) and (o^.xl[8] = disp) then begin
             peekdisp := r;
             return;
           end;
       o := cg_addr_regs[r].obj2;
       if o <> nil then
-        if o^.kind = 147 then
+        if o^.kind = disp_node then
           if (o^.xp[6] = base) and (o^.xl[8] = disp) then begin
             peekdisp := r;
             return;
@@ -694,11 +710,11 @@ begin
   peek := 31;
   if n = nil then
     return;
-  if n^.kind = 190 then begin
+  if n^.kind = cse_parent_ob then begin
     peek := peek(n^.xp[1], size);
     return;
   end;
-  if n^.kind = 189 then begin
+  if n^.kind = cse_use_ob then begin
     peek := peek(n^.xp[5], size);
     return;
   end;
@@ -771,7 +787,7 @@ begin
           return;
         end;
     peek := 31;
-    if (n^.kind = 147) and (size < 4) then begin
+    if (n^.kind = disp_node) and (size < 4) then begin
       t := 31;
       case n^.xl[8] * 10 + size of
         11: t := peek(n^.xp[6], 2);
@@ -814,17 +830,17 @@ begin
   s := 0;
   if n = nil then
     cg_addr_$operand_in_reg_any_rlen := 0
-  else if n^.kind = 190 then
+  else if n^.kind = cse_parent_ob then
     cg_addr_$operand_in_reg_any_rlen := cg_addr_$operand_in_reg_any_rlen(n^.xp[1])
-  else if n^.kind = 189 then
+  else if n^.kind = cse_use_ob then
     cg_addr_$operand_in_reg_any_rlen := cg_addr_$operand_in_reg_any_rlen(n^.xp[5])
   else begin
     for r := 0 to 23 do
       if (cg_addr_regs[r].obj2 = n) and cg_addr_cache[r].live then
         s := s ! lshft(1, r);
-    if n^.kind = 147 then begin
+    if n^.kind = disp_node then begin
       b := n^.xp[6];
-      if (b^.kind = 110) or (b^.kind = 109) then
+      if (b^.kind = fortran_symbol) or (b^.kind = var_name) then
         s := s ! cg_addr_$operand_in_reg_any_rlen(b);
     end;
     cg_addr_$operand_in_reg_any_rlen := s;
@@ -897,8 +913,8 @@ var
   ph: add_node_$phase_t;
 begin
   case n^.kind of
-    190: m := n^.xp[1];
-    189: m := n^.xp[5];
+    cse_parent_ob: m := n^.xp[1];
+    cse_use_ob: m := n^.xp[5];
     otherwise
       m := n;
   end;
@@ -910,7 +926,7 @@ begin
     if (o = m) or
         ((m^.xp[6] = o) and
          (delay_378[size] + m^.xl[8] = delay_378[cg_addr_regs[a.f2].size]) and
-         (m^.kind = 147)) then begin
+         (m^.kind = disp_node)) then begin
       if cg_addr_regs[a.f2].w14 = 2 then begin
         r := 31;
         if (size = 4) or (size = 6) or (size = 5) then begin
@@ -949,7 +965,7 @@ begin
     a.f1 := 0;
   a.y := 0;
   a.f5 := 0;
-  if m^.kind <> 138 then begin
+  if m^.kind <> gen_tree_node then begin
     ph := getphase(m);
     if ph * [1, 2] <> [] then
       a.f5 := a.f5 ! 1;
@@ -1011,15 +1027,15 @@ begin
   n := il_$node_ptr_t(a.x);
   if n <> nil then
     case n^.kind of
-      140: n := n^.xp[16];
-      152: begin
+      assign_node: n := n^.xp[16];
+      alloc_temp: begin
         owner := n^.xp[4];
         n^.xp[4] := nil;
       end;
       otherwise
     end;
   alias_$alias_desc_with_size(n, size, ad);
-  if n^.kind = 152 then
+  if n^.kind = alloc_temp then
     n^.xp[4] := owner;
   if cg_fp_in_peb <> nil then begin
     alias_$alias_desc_with_size(cg_fp_in_peb, 4, d);
@@ -1035,31 +1051,31 @@ begin
     with cg_addr_regs[r] do begin
       if (obj <> nil) and (obj <> cg_addr_cache[r].obj) then
         if not ((cg_addr_cache[r].obj <> nil) and
-                (cg_addr_cache[r].obj^.kind = 190) and
+                (cg_addr_cache[r].obj^.kind = cse_parent_ob) and
                 (cg_addr_cache[r].obj^.xp[1] = obj)) then begin
           alias_$alias_desc_with_size(obj, delay_378[size], d);
           if alias_$related(ad, d) then
             obj := nil;
           ph := getphase(obj);
-          if (2 in ph) and (obj^.kind <> 138) then
+          if (2 in ph) and (obj^.kind <> gen_tree_node) then
             obj := nil
           else if obj <> nil then
-            if obj^.kind = 109 then
+            if obj^.kind = var_name then
               if (obj^.xw[36] <> 5) and (1 in ph) then
                 obj := nil;
         end;
       if (obj2 <> nil) and (obj2 <> cg_addr_cache[r].obj) then
         if not ((cg_addr_cache[r].obj <> nil) and
-                (cg_addr_cache[r].obj^.kind = 190) and
+                (cg_addr_cache[r].obj^.kind = cse_parent_ob) and
                 (cg_addr_cache[r].obj^.xp[1] = obj2)) then begin
           alias_$alias_desc_with_size(obj2, delay_378[size], d);
           if alias_$related(ad, d) then
             obj2 := nil;
           ph := getphase(obj2);
-          if (2 in ph) and (obj2^.kind <> 138) then
+          if (2 in ph) and (obj2^.kind <> gen_tree_node) then
             obj2 := nil
           else if obj2 <> nil then
-            if obj2^.kind = 109 then
+            if obj2^.kind = var_name then
               if (obj2^.xw[36] <> 5) and (1 in ph) then
                 obj2 := nil;
         end;
@@ -1110,7 +1126,7 @@ begin
       end;
   end;
   p := gspace(22);
-  p^.kind := 152;
+  p^.kind := alloc_temp;
   p^.xl[2] := sz;
   if (sz = 2) and (cg_addr_half_disp <> 0) and (il_180 = cg_addr_half_blk) then begin
     p^.xl[1] := cg_addr_half_disp;
@@ -1145,14 +1161,14 @@ end;
 
 function cg_addr_$addr_of_cse;
 var
-  k: integer;
+  k: il_$kind_t;
 begin
   k := n^.kind;
-  if (k = 190) or (k = 189) then
+  if (k = cse_parent_ob) or (k = cse_use_ob) then
     cg_addr_$addr_of_cse := true
-  else if k = 152 then begin
+  else if k = alloc_temp then begin
     k := n^.xp[4]^.kind;
-    cg_addr_$addr_of_cse := (k = 190) or (k = 189);
+    cg_addr_$addr_of_cse := (k = cse_parent_ob) or (k = cse_use_ob);
   end
   else
     cg_addr_$addr_of_cse := false;
@@ -1180,9 +1196,9 @@ var
   k: integer;
 begin
   c := cg_tree_ptr_t(n)^.opnd[1];
-  if c^.kind = 152 then
+  if c^.kind = alloc_temp then
     c := c^.xp[4];
-  if c^.kind = 190 then
+  if c^.kind = cse_parent_ob then
     d := c^.xp[1]
   else
     d := c^.xp[5];
@@ -1193,7 +1209,7 @@ begin
     len := delay_378[k];
   if not ((k = 11) or (k = 9)) then begin
     load_operand(c, k, t);
-    if cg_tree_ptr_t(n)^.opnd[1]^.kind <> 152 then
+    if cg_tree_ptr_t(n)^.opnd[1]^.kind <> alloc_temp then
       cg_tree_ptr_t(n)^.opnd[1] := allocate_temp(len, true, cg_tree_ptr_t(n)^.opnd[1]);
     address(cg_tree_ptr_t(n)^.opnd[1], k, a);
     emit(0, k, a, t, k);
@@ -1204,7 +1220,7 @@ begin
     load_address(c, t);
     kill_register(t.f2);
     t.f1 := 8;
-    if cg_tree_ptr_t(n)^.opnd[1]^.kind <> 152 then
+    if cg_tree_ptr_t(n)^.opnd[1]^.kind <> alloc_temp then
       cg_tree_ptr_t(n)^.opnd[1] := allocate_temp(len, true, cg_tree_ptr_t(n)^.opnd[1]);
     load_address(cg_tree_ptr_t(n)^.opnd[1], a);
     kill_register(a.f2);
@@ -1279,10 +1295,10 @@ begin
   else
     len := delay_378[k];
   if cg_tree_ptr_t(n)^.op = 26 then
-    if cg_tree_ptr_t(n)^.opnd[1]^.kind = 138 then
+    if cg_tree_ptr_t(n)^.opnd[1]^.kind = gen_tree_node then
       if cg_tree_ptr_t(cg_tree_ptr_t(n)^.opnd[1])^.op = 26 then
         cg_addr_$remove_temp_from_free_list(len);
-  if cg_tree_ptr_t(n)^.opnd[1]^.kind <> 152 then
+  if cg_tree_ptr_t(n)^.opnd[1]^.kind <> alloc_temp then
     cg_tree_ptr_t(n)^.opnd[1] := allocate_temp(len, true, cg_tree_ptr_t(n)^.opnd[1])
   else if ((len + 1) & (-2)) <> cg_tree_ptr_t(n)^.opnd[1]^.xl[2] then
     cgerr(3, cg_line, n);
@@ -1339,7 +1355,7 @@ end;
 
 procedure get_agg_temp;
 begin
-  n^.kind := 138;
+  n^.kind := gen_tree_node;
   get_temp(n, false);
 end;
 
@@ -1355,9 +1371,9 @@ function get_childs_agg_temp;
 var
   c: il_$node_ptr_t;
 begin
-  n^.kind := 138;
+  n^.kind := gen_tree_node;
   c := cg_tree_ptr_t(n)^.opnd[1];
-  if ((c^.kind = 138) or (c^.kind = 137)) and
+  if ((c^.kind = gen_tree_node) or (c^.kind = tree_node)) and
       (cg_tree_ptr_t(c)^.op in [19..22, 72, 73]) then begin
     if not at_backend_506 then
       cg_tree_ptr_t(n)^.opnd[1] := il_node_153
@@ -1385,10 +1401,10 @@ procedure cg_addr_$free_alloc_temp(
 var
   t: il_$node_ptr_t;
 begin
-  if (n^.kind = 143) or (n^.kind = 138) then begin
+  if (n^.kind = cmp_tree_node) or (n^.kind = gen_tree_node) then begin
     t := cg_tree_ptr_t(n)^.opnd[1];
     if at_backend_506 and (cg_tree_ptr_t(n)^.w18 < 0) then begin
-      if t^.kind <> 152 then
+      if t^.kind <> alloc_temp then
         cgerr(14, cg_line, n);
       cg_tree_ptr_t(n)^.opnd[1] := t^.xp[4];
       if t^.xw[10] = cg_top_13a then begin
@@ -1420,18 +1436,18 @@ begin
     unlock(a);
     n := il_$node_ptr_t(a.x);
     if n <> nil then begin
-      if n^.kind = 190 then
+      if n^.kind = cse_parent_ob then
         n := n^.xp[1]
-      else if n^.kind = 189 then
+      else if n^.kind = cse_use_ob then
         n := n^.xp[5];
-      while (n^.kind = 146) or (n^.kind = 147) do begin
+      while (n^.kind = ptr_node) or (n^.kind = disp_node) do begin
         if cg_tree_ptr_t(n)^.uses = 0 then
           cgerr(3, cg_line, n)
         else
           cg_tree_ptr_t(n)^.uses := cg_tree_ptr_t(n)^.uses - 1;
         n := n^.xp[6];
       end;
-      if (n^.kind = 143) or (n^.kind = 138) then begin
+      if (n^.kind = cmp_tree_node) or (n^.kind = gen_tree_node) then begin
         if cg_tree_ptr_t(n)^.uses = 0 then
           cgerr(3, cg_line, n)
         else
@@ -1439,7 +1455,7 @@ begin
         if cg_tree_ptr_t(n)^.uses = 0 then
           cg_addr_$free_alloc_temp(n);
       end;
-      if n^.kind = 145 then begin
+      if n^.kind = dindex_node then begin
         if cg_tree_ptr_t(n)^.uses = 0 then
           cgerr(3, cg_line, n)
         else
@@ -1450,7 +1466,7 @@ begin
         b.x := integer32(n^.xp[9]);
         release(b);
       end;
-      if n^.kind = 164 then begin
+      if n^.kind = cs_node then begin
         if cg_tree_ptr_t(n)^.uses = 0 then
           cgerr(3, cg_line, n)
         else
@@ -1492,11 +1508,11 @@ var
   hi: integer;
 begin
   if n <> nil then
-    if n^.kind = 190 then begin
+    if n^.kind = cse_parent_ob then begin
       get_register(n^.xp[1], size, a);
       return;
     end
-    else if n^.kind = 189 then begin
+    else if n^.kind = cse_use_ob then begin
       get_register(n^.xp[5], size, a);
       return;
     end;
@@ -1580,9 +1596,9 @@ var
   r: integer;
 begin
   m := n;
-  if m^.kind = 190 then
+  if m^.kind = cse_parent_ob then
     m := m^.xp[1];
-  if m^.kind = 189 then
+  if m^.kind = cse_use_ob then
     m := m^.xp[5];
   for r := 0 to 23 do
     if (cg_addr_cache[r].obj = m) and cg_addr_cache[r].live then
@@ -1665,9 +1681,9 @@ var
 begin
   need := false;
   m := n;
-  if m^.kind = 164 then
+  if m^.kind = cs_node then
     m := m^.xp[5];
-  if m^.kind = 146 then begin
+  if m^.kind = ptr_node then begin
     r := peek(m^.xp[6], 5);
     if r = 31 then
       need := true
@@ -1691,8 +1707,8 @@ begin
     release(t);
     get_temp_register(m, 5, a);
     case m^.kind of
-      80, 83: emit(22, 2, a, t, 0);
-      81, 82, 84, 85: emit(22, 4, a, t, 0);
+      sinteger_ob, usinteger_ob: emit(22, 2, a, t, 0);
+      integer_ob, linteger_ob, uinteger_ob, ulinteger_ob: emit(22, 4, a, t, 0);
       otherwise
         emit(22, 1, a, t, 0);
     end;
@@ -1719,9 +1735,9 @@ var
 begin
   case size of
     5: begin
-      if n^.kind = 153 then
+      if n^.kind = sb_register then
         address_reg(14, t)
-      else if n^.kind = 154 then
+      else if n^.kind = db_register then
         address_reg(cg_data_reg, t)
       else
         load_address(n, t);
@@ -1806,11 +1822,11 @@ begin
     cg_addr_regs[a.f2].obj := nil;
     cg_addr_regs[a.f2].obj2 := nil;
   end;
-  if (n^.kind <> 154) and (n^.kind <> 153) then
+  if (n^.kind <> db_register) and (n^.kind <> sb_register) then
     for r := 8 to 15 do
       with cg_addr_regs[r] do
         if (size = 5) and (obj <> nil) then
-          if (obj^.kind = 138) and (cg_tree_ptr_t(obj)^.op = 26) and
+          if (obj^.kind = gen_tree_node) and (cg_tree_ptr_t(obj)^.op = 26) and
               (cg_tree_ptr_t(obj)^.opnd[1] = n) and (w14 = 0) then begin
             address(obj, 5, t);
             t.f1 := 2;
@@ -1857,7 +1873,7 @@ begin
   if dfree or (peek(n^.xp[9], n^.xw[21]) in [0..7]) then begin
     i := n^.xp[9];
     small := false;
-    if i^.kind in [77..87, 101, 200] then begin
+    if i^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
       d := lshft(i^.xl[2], n^.xw[20]) + n^.xl[8];
       if (3 in cargs_$options.cpu) or ((d >= -128) and (d < 128)) then begin
         a.f1 := 2;
@@ -1876,17 +1892,18 @@ begin
     return;
   end;
   i := n^.xp[9];
-  if i^.kind in [77..87, 101, 200] then begin
+  if i^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
     d := lshft(i^.xl[2], n^.xw[20]) + n^.xl[8];
     if (3 in cargs_$options.cpu) or ((d >= -32768) and (d < 32767)) then begin
       load_dereference(n^.xp[6], a);
       a.y := d;
       return;
     end;
-    if not ((n^.xp[6]^.kind = 154) or (n^.xp[6]^.kind = 153)) then
+    if not ((n^.xp[6]^.kind = db_register)
+            or (n^.xp[6]^.kind = sb_register)) then
       load_dereference(n^.xp[6], a);
     a.f1 := 1;
-    if (n^.xp[6]^.kind = 154) or (n^.xp[6]^.kind = 153) then
+    if (n^.xp[6]^.kind = db_register) or (n^.xp[6]^.kind = sb_register) then
       load_modifiable(n^.xp[6], 5, a);
     anyconst(d, 4, t);
     emit(1, 4, a, t, 0);
@@ -1970,9 +1987,10 @@ begin
   for r := 12 downto 0 do begin
     with cg_addr_cache[r] do
       if (obj <> nil) and live then
-        if (obj^.kind = 138) and (cg_tree_ptr_t(obj)^.op = 26) then begin
+        if (obj^.kind = gen_tree_node)
+            and (cg_tree_ptr_t(obj)^.op = 26) then begin
           o := cg_tree_ptr_t(obj)^.opnd[1];
-          if o^.kind = 152 then begin
+          if o^.kind = alloc_temp then begin
             if n = o^.xp[4] then
               found := true;
           end
@@ -2056,8 +2074,8 @@ begin
   if (a.f1 = 1) and (a.x <> 0) then begin
     m := il_$node_ptr_t(a.x);
     case m^.kind of
-      190: a.x := integer32(m^.xp[1]);
-      189: a.x := integer32(m^.xp[5]);
+      cse_parent_ob: a.x := integer32(m^.xp[1]);
+      cse_use_ob: a.x := integer32(m^.xp[5]);
       otherwise
     end;
   end
@@ -2090,18 +2108,22 @@ begin
   if a.f1 <> 0 then
     goto tail;
   if size <> 0 then
-    if (n^.kind = 109) or (n^.kind = 110) or (n^.kind = 138) or (n^.kind = 137) then
+    if (n^.kind = var_name) or (n^.kind = fortran_symbol)
+        or (n^.kind = gen_tree_node) or (n^.kind = tree_node) then
       for r := 0 to 23 do
         if cg_addr_cache[r].obj <> nil then
           if (cg_addr_cache[r].obj = n) and cg_addr_cache[r].live then
             cgerr(23, cg_line, n);
   case n^.kind of
-    77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 92, 156, 198,
-    200, 212:
+    blogical_ob, slogical_ob, llogical_ob, sinteger_ob, integer_ob,
+        linteger_ob, usinteger_ob, uinteger_ob, ulinteger_ob, ubinteger_ob,
+        char_ob, real_ob, dpreal_ob, complex_ob, char_string_ob, set_con_ob,
+        dpcomplex_ob,
+    binteger_ob, namelist_constant_ob:
       a.f1 := 3;
-    105, 106:
+    program_blk, module_blk:
       a.f1 := 7;
-    107, 108, 167, 172:
+    procedure_blk, function_blk, entry_blk, inner_blk:
       if rshft(n^.xw[188] & 16#180, 7) = 3 then begin
         a.f1 := 2;
         a.f2 := 14;
@@ -2111,7 +2133,7 @@ begin
         a.f1 := 15
       else
         a.f1 := 7;
-    109: begin
+    var_name: begin
       a.f1 := 2;
       a.y := n^.xl[14];
       k := n^.xw[36];
@@ -2127,7 +2149,7 @@ begin
         a.f2 := 14;
       cg_addr_used[a.f2] := true;
     end;
-    110:
+    fortran_symbol:
       if rshft(ord(n^.xc[44]) & 16#F0, 4) = 6 then begin
         address(n^.xp[12], size, a);
         return;
@@ -2142,8 +2164,8 @@ begin
         a.y := n^.xl[3];
         cg_addr_used[a.f2] := true;
       end;
-    137, 138, 143: begin
-      if n^.kind <> 137 then begin
+    tree_node, gen_tree_node, cmp_tree_node: begin
+      if n^.kind <> tree_node then begin
         if (cg_tree_ptr_t(n)^.op = 16) and (cg_tree_ptr_t(n)^.desc.rlen = 9) then begin
           address(cg_tree_ptr_t(n)^.opnd[2], 0, a);
           goto tail;
@@ -2161,7 +2183,7 @@ begin
       a.f2 := 14;
       if at_backend_506 then begin
         m := cg_tree_ptr_t(n)^.opnd[1];
-        if (m^.kind <> 152) or
+        if (m^.kind <> alloc_temp) or
             ((delay_378[size] > m^.xl[2]) and ((size <= 8) or (size = 12))) then
           cgerr(14, cg_line, n);
         a.y := cg_tree_ptr_t(n)^.opnd[1]^.xl[1];
@@ -2169,15 +2191,15 @@ begin
       else if cg_tree_ptr_t(n)^.w18 > 0 then
         cg_tree_ptr_t(n)^.w18 := -cg_tree_ptr_t(n)^.w18;
     end;
-    190: begin
+    cse_parent_ob: begin
       address(n^.xp[1], size, a);
       return;
     end;
-    189: begin
+    cse_use_ob: begin
       address(n^.xp[5], size, a);
       return;
     end;
-    147: begin
+    disp_node: begin
       r := chk_addr(n, a);
       if r <> 31 then begin
         makedeferred(a, cg_addr_cache[r].obj);
@@ -2206,13 +2228,14 @@ begin
         a := b;
       end;
     end;
-    146: begin
+    ptr_node: begin
       r := chk_addr(n, a);
       if r <> 31 then begin
         makedeferred(a, cg_addr_cache[r].obj);
         goto tail;
       end;
-      if (7 in cargs_$options.flags_286) and (n^.xp[6]^.kind = 195) and
+      if (7 in cargs_$options.flags_286)
+          and (n^.xp[6]^.kind = reloc_absolute_addr_con) and
           (n^.xp[6]^.xw[10] in [1..3]) then begin
         inquire(n^.xp[6], 5, a);
         if a.f1 = 0 then
@@ -2223,34 +2246,34 @@ begin
       else
         load_dereference(n^.xp[6], a);
     end;
-    145: begin
+    dindex_node: begin
       r := chk_addr(n, a);
       if r <> 31 then
         makedeferred(a, cg_addr_cache[r].obj)
       else
         load_dindex(n, a);
     end;
-    164:
+    cs_node:
       address(n^.xp[5], 0, a);
-    152: begin
+    alloc_temp: begin
       a.f1 := 2;
       a.f2 := 14;
       a.y := n^.xl[1];
     end;
-    165: begin
+    cs_temp: begin
       a.f1 := 2;
       a.f2 := 14;
       a.y := n^.xl[4];
     end;
-    153:
+    sb_register:
       address_reg(14, a);
-    154:
+    db_register:
       address_reg(cg_data_reg, a);
-    155: begin
+    display_register: begin
       address_reg(9, a);
       cg_addr_locks[9] := cg_addr_locks[9] + 1;
     end;
-    163: begin
+    addr_con: begin
       a.f1 := 2;
       a.y := n^.xl[4];
       if ord(n^.xc[20]) = 0 then
@@ -2259,11 +2282,11 @@ begin
         a.f2 := cg_data_reg;
       cg_addr_used[a.f2] := true;
     end;
-    195:
+    reloc_absolute_addr_con:
       a.f1 := 3;
-    183, 192:
+    data_section, transfer_vector:
       a.f1 := 15;
-    144: begin
+    label_node: begin
       if ord(n^.xc[74]) >= 128 then
         a.f5 := a.f5 ! 1;
       a.f1 := 7;
@@ -2273,7 +2296,7 @@ begin
   end;
 tail:
   if a.f2 > 7 then
-    if not (a.f1 in [3, 7]) and (n^.kind <> 138) then begin
+    if not (a.f1 in [3, 7]) and (n^.kind <> gen_tree_node) then begin
       ph := getphase(n);
       if 1 in ph then
         a.f5 := a.f5 ! 1
@@ -2372,7 +2395,8 @@ begin
     end
     else begin
       o := cg_tree_ptr_t(n)^.opnd[i];
-      if (o^.kind in [77..87, 101, 200]) and (cst = 0) then begin
+      if (o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (cst = 0) then begin
         v := o^.xl[2];
         if (v >= -128) and (v <= 0) then
           cst := i
@@ -2467,14 +2491,14 @@ var
   mask: integer32;
   r: integer;
 begin
-  c := smcontk(81, value);
+  c := smcontk(integer_ob, value);
   inquire(c, size, a);
   if a.f1 = 0 then begin
     mask := ~lshft(-1, size * 8);
     for r := 0 to 7 do
       if size < cg_addr_regs[r].size then
         if cg_addr_regs[r].obj <> nil then
-          if cg_addr_regs[r].obj^.kind = 81 then
+          if cg_addr_regs[r].obj^.kind = integer_ob then
             if (cg_addr_regs[r].obj^.xl[2] & mask) = (value & mask) then begin
               inquire(cg_addr_regs[r].obj, cg_addr_regs[r].size, a);
               return;
@@ -2689,11 +2713,11 @@ begin
     if runbackend_08 = nil then begin
       if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then begin
         lab^.xp[16] := gspace(396);
-        lab^.xp[16]^.kind := 180;
+        lab^.xp[16]^.kind := ext_state_save;
       end
       else begin
         lab^.xp[16] := gspace(264);
-        lab^.xp[16]^.kind := 161;
+        lab^.xp[16]^.kind := state_save;
       end;
     end
     else begin
@@ -2810,27 +2834,29 @@ end;
 procedure edit_register;
 var
   o2: il_$node_ptr_t;
-  k: integer;
+  k: il_$kind_t;
 begin
   if reg.obj <> nil then begin
     k := reg.obj^.kind;
-    if (k = 143) or (k = 138) then begin
+    if (k = cmp_tree_node) or (k = gen_tree_node) then begin
       if cg_tree_ptr_t(reg.obj)^.uses = 0 then
         reg.obj := nil;
     end
-    else if not (k in [77..89, 101, 109, 110, 163, 200]) then
+    else if not (k in [blogical_ob..dpreal_ob, char16_ob, var_name,
+                       fortran_symbol, addr_con, binteger_ob]) then
       reg.obj := nil;
   end;
   if reg.obj2 <> nil then begin
     o2 := reg.obj2;
-    if (o2^.kind = 110) or (o2^.kind = 109) then
+    if (o2^.kind = fortran_symbol) or (o2^.kind = var_name) then
       if reg.obj = nil then begin
         reg.obj := o2;
         reg.w14 := 0;
       end
       else if ((cg_addr_cache[r].obj = o2) and (reg.size = cg_addr_cache[r].size)) or
           ((reg.obj <> cg_addr_cache[r].obj) and
-           not ((reg.obj^.kind = 143) or (reg.obj^.kind = 138))) then begin
+           not ((reg.obj^.kind = cmp_tree_node)
+                or (reg.obj^.kind = gen_tree_node))) then begin
         reg.obj := reg.obj2;
         reg.w14 := 0;
       end;

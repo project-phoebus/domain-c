@@ -141,7 +141,7 @@ type
   pe_node_ptr_t = ^pe_node_t;
   pe_node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [4..111] of char;   { +4 }
     l112: integer32;                    { +112 }
     unused_116: array [116..147] of char;    { +116 }
@@ -219,7 +219,7 @@ type
   sym_node_ptr_t = ^sym_node_t;
   sym_node_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     l4: integer32;                      { +4 }
   end;
 
@@ -789,7 +789,7 @@ var
 begin
   pe := info;
   rtn := node;
-  if rtn^.kind = 167 then
+  if rtn^.kind = entry_blk then
     vfmt_$ws(lst_140, '%/%$')
   else
     vfmt_$ws(lst_140, '%/%/%$');
@@ -904,7 +904,7 @@ begin
     if not sym_$append_symbol_print_name(addr(line), rtn) then
       bug_check('LST_$DISPLAY_ENTRY -- can''t print block name%$');
   end;
-  if rtn^.kind = 167 then
+  if rtn^.kind = entry_blk then
     rtn := rtn^.parent;
   i := rtn^.l176 - rtn^.l112;
   if i > 0 then begin
@@ -1877,7 +1877,9 @@ begin
           operand$immediate:
             if cell^.opnds[k].link <> nil then begin
               sn := univ_ptr(cell^.opnds[k].link);
-              if not (sn^.kind in [45..58, 60, 61, 69, 156, 176, 198, 200]) then begin
+              if not (sn^.kind in [cast_ob..ge_ob, sub_ob, open_ob,
+                                   ampersand_ob, set_con_ob, rec_const_ob,
+                                   dpcomplex_ob, binteger_ob]) then begin
                 sym := sn;
                 if sym_$has_displacement(sym) then
                   offset := cell^.opnds[k].value - sym_$displacement(sym)
@@ -1888,7 +1890,9 @@ begin
           operand$displacement_arg_block, operand$displacement_stack_frame:
             if cell^.opnds[k].link <> nil then begin
               sn := univ_ptr(cell^.opnds[k].link);
-              if not (sn^.kind in [45..58, 60, 61, 69, 156, 176, 198, 200]) then begin
+              if not (sn^.kind in [cast_ob..ge_ob, sub_ob, open_ob,
+                                   ampersand_ob, set_con_ob, rec_const_ob,
+                                   dpcomplex_ob, binteger_ob]) then begin
                 sym := sn;
                 if sym = nil then
                   offset := 0
@@ -2019,13 +2023,15 @@ begin
         continued := true;
       if sym <> nil then begin
         sn := sym;
-        if (sn^.kind <> 109) or (sn^.l4 <> 0) then begin
+        if (sn^.kind <> var_name) or (sn^.l4 <> 0) then begin
           col := line.length + 1;
           if col < col_code_comment then
             col := col_code_comment;
           tab_to_column(col);
           add_2_chars(';', ' ');
-          if sn^.kind in [45..58, 60, 61, 69, 156, 176, 198, 200] then
+          if sn^.kind in [cast_ob..ge_ob, sub_ob, open_ob, ampersand_ob,
+                          set_con_ob, rec_const_ob, dpcomplex_ob,
+                          binteger_ob] then
             add_2_chars('=', ' ');
           if not sym_$append_symbol_print_name(addr(line), sym) then
             prtobj(line, sym);

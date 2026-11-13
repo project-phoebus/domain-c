@@ -67,7 +67,7 @@ type
   exs_node_ptr_t = ^exs_node_t;
   exs_node_t = record
     w0: integer;                        { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     p4: univ_ptr;                       { +4: kind 190's operand }
     unused_8: array [8..19] of char;    { +8 }
     p20: univ_ptr;                      { +20: kind 189's operand }
@@ -126,7 +126,7 @@ type
   exs_block_ptr_t = ^exs_block_t;
   exs_block_t = record
     w0: integer;                        { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [4..31] of char;    { +4 }
     frames: univ_ptr;                   { +32 }
     info: exs_info_ptr_t;               { +36 }
@@ -143,7 +143,7 @@ type
   exs_frame_ptr_t = ^exs_frame_t;
   exs_frame_t = record
     w0: integer;                        { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     next: exs_frame_ptr_t;              { +4 }
     unused_8: integer32;                { +8 }
     subprogram: univ_ptr;               { +12 }
@@ -221,7 +221,7 @@ procedure check_frame(
     f: exs_frame_ptr_t); options(val_param); internal;
 begin
   if f <> nil then begin
-    if f^.kind <> 222 then
+    if f^.kind <> exception_frame then
       ass_$precondition_fail(
         'EXS_$CHECK_FRAME -- not an exception frame of current subprogram%$');
     if f^.subprogram <> subprogram then
@@ -243,9 +243,9 @@ begin
   if e = nil then
     ass_$precondition_fail('EXS_$EXCEPTION_NAME_INDEX -- NIL exception name%$');
   case exs_node_ptr_t(e)^.kind of
-    109:
+    var_name:
       exception_name_index := exs_var_ptr_t(e)^.num;
-    163:
+    addr_con:
       exception_name_index :=
         exception_name_index(exs_addr_con_ptr_t(e)^.name);
     otherwise
@@ -380,7 +380,7 @@ begin
     return;
   end;
   case site^.kind of
-    224: begin
+    raise_exception: begin
       site_flag := exs_raise_ptr_t(site)^.site_flag;
       site_word := exs_raise_ptr_t(site)^.site_word;
       explicit := true;
@@ -392,9 +392,9 @@ begin
       else
         reset_bit_vector(true);
     end;
-    228, 149, 148, 225:
+    bit_field_assign, blk_end_node, block_entry_node, release_dynamic_space:
       set_access_fault;
-    140:
+    assign_node:
       case exs_check_ptr_t(site)^.check of
         1, 2, 14, 19, 20, 21, 22, 23, 24, 26: begin
           reset_bit_vector(false);
@@ -413,7 +413,7 @@ begin
         otherwise
           set_access_fault;
       end;
-    143, 138, 137:
+    cmp_tree_node, gen_tree_node, tree_node:
       case exs_tree_ptr_t(site)^.op of
         48, 80, 81: begin
           site_flag := exs_tree_ptr_t(site)^.site_flag;
@@ -427,8 +427,8 @@ begin
             reset_bit_vector(false)
           else begin
             callee := exs_tree_ptr_t(site)^.opnd;
-            if ((callee^.kind = 105) or (callee^.kind = 108)
-                or (callee^.kind = 107))
+            if ((callee^.kind = program_blk) or (callee^.kind = function_blk)
+                or (callee^.kind = procedure_blk))
                and (callee^.info <> nil) then begin
               explicit := callee^.info^.explicit;
               copy_bit_vector(callee^.info^.raised);
@@ -463,14 +463,14 @@ begin
         otherwise
           set_access_fault;
       end;
-    205, 147, 146, 145:
+    sym_disp_node, disp_node, ptr_node, dindex_node:
       set_access_fault;
-    190: begin
+    cse_parent_ob: begin
       exception_info(site^.p4, check_storage, exc, site_flag, site_word,
                      v, nothing_raised, explicit);
       return;
     end;
-    189: begin
+    cse_use_ob: begin
       exception_info(site^.p20, check_storage, exc, site_flag, site_word,
                      v, nothing_raised, explicit);
       return;
@@ -567,7 +567,8 @@ begin
   if subprogram <> nil then
     exs_$end_current_subprogram;
   if (blk = nil) or else
-     not ((blk^.kind = 108) or (blk^.kind = 107) or (blk^.kind = 105)) then
+     not ((blk^.kind = function_blk) or (blk^.kind = procedure_blk)
+          or (blk^.kind = program_blk)) then
     ass_$precondition_fail(
       'EXS_$START_SUBPROGRAM -- b is not a subprogram block_rec%$');
   if propagation_on then begin
@@ -844,14 +845,15 @@ begin
       'EXS_$END_EXCEPTION_HANDLER_ENQUIRY -- no enquiry started%$');
   if (next_state <> 2) or (walk_frame <> nil) then begin
     site := cache_site;
-    if (site^.kind = 143) or (site^.kind = 138) or (site^.kind = 137) then begin
+    if (site^.kind = cmp_tree_node) or (site^.kind = gen_tree_node)
+        or (site^.kind = tree_node) then begin
       n := exs_tree_ptr_t(site)^.op;
       ass_$precondition_fail(
         'EXS_$END_EXCEPTION_HANDLER_ENQUIRY -- have not processed all handlers of tree node enquiry (ord(tree_node.op)=%lsd)%$',
         n);
     end
     else begin
-      n := site^.kind;
+      n := ord(site^.kind);
       ass_$precondition_fail(
         'EXS_$END_EXCEPTION_HANDLER_ENQUIRY -- have not processed all handlers of node enquiry (ord(node^.kind)=%lsd)%$',
         n);
@@ -895,7 +897,7 @@ function exs_$map_to_predefined_exception(
 var
   k: integer;
 begin
-  if (e = nil) or else (exs_node_ptr_t(e)^.kind <> 109) then
+  if (e = nil) or else (exs_node_ptr_t(e)^.kind <> var_name) then
     ass_$precondition_fail(
       'EXS_$MAP_TO_PREDEFINED_EXCEPTION -- exception not a var_name%$');
   k := 0;
@@ -1001,7 +1003,8 @@ var
 begin
   blk := b;
   if (blk = nil) or else
-     not ((blk^.kind = 108) or (blk^.kind = 107) or (blk^.kind = 105)) then
+     not ((blk^.kind = function_blk) or (blk^.kind = procedure_blk)
+          or (blk^.kind = program_blk)) then
     ass_$precondition_fail(
       'EXS_$SUBPROGRAM_MAY_PROPOGATE_EXCEPTIONS_BY_EXPLICIT_RAISE -- b is not a subprogram block_rec%$');
   if not propagation_on then

@@ -206,7 +206,7 @@ type
   fn_lnode_ptr_t = ^fn_lnode_t;
   fn_lnode_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [4..40] of char;    { +4 }
     b41: boolean;                       { +41 }
     unused_42: array [42..71] of char;  { +42 }
@@ -571,7 +571,7 @@ begin
     if k = casejmp_instyp then
       goto 1;
     if k = block_end_instyp then
-      if p^.blk^.kind <> 172 then
+      if p^.blk^.kind <> inner_blk then
         goto 1;
     nx := p^.next;
     if not ((k = block_end_instyp) or (k = block_start_instyp) or
@@ -790,7 +790,7 @@ function assert_is_fp040_libname(
 begin
   if n = nil then
     assert_is_fp040_libname := false
-  else if (n^.kind = 159) and (n^.xw[4] > 7) then
+  else if (n^.kind = lib_dsc) and (n^.xw[4] > 7) then
     assert_is_fp040_libname :=
         substr(fn_chars_ptr_t(addr(n^.xc[12]))^, 1, 7) = 'fp040_$'
   else
@@ -813,7 +813,7 @@ begin
   r := false;
   if final_$is_call(c) and (c^.ads2.x <> 0) then begin
     n := il_$node_ptr_t(c^.ads2.x);
-    if (n^.kind = 192) and (n^.xp[2] <> nil) then
+    if (n^.kind = transfer_vector) and (n^.xp[2] <> nil) then
       if assert_is_fp040_libname(n^.xp[2]) then
         r := true;
     if not (7 in cargs_$options.flags_286) then
@@ -833,7 +833,8 @@ begin
   if n = nil then
     assert_is_addr_con_ref := false
   else
-    assert_is_addr_con_ref := (n^.kind = 195) or (n^.kind = 163);
+    assert_is_addr_con_ref := (n^.kind = reloc_absolute_addr_con)
+        or (n^.kind = addr_con);
 end;
 
 { assert_is_pic_routine_address_load - without -ABS or -AC, c loads A0
@@ -951,7 +952,7 @@ begin
   r := false;
   if (a.f1 = 3) and (a.x <> 0) then begin
     n := il_$node_ptr_t(a.x);
-    if n^.kind in [77..87, 101, 200] then
+    if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
       if n^.int_value = v then
         r := true;
   end;
@@ -1030,14 +1031,14 @@ begin
         na := il_$node_ptr_t(a.x);
         if na = il_$node_ptr_t(b.x) then
           r := true
-        else if na^.kind = 184 then begin
+        else if na^.kind = inline_constant then begin
           nb := il_$node_ptr_t(b.x);
-          if nb^.kind = 157 then
+          if nb^.kind = def_const_ob then
             r := nb^.xp[2] = na;
         end
-        else if na^.kind = 157 then begin
+        else if na^.kind = def_const_ob then begin
           nb := il_$node_ptr_t(b.x);
-          if nb^.kind = 184 then
+          if nb^.kind = inline_constant then
             r := na^.xp[2] = nb;
         end;
       end;
@@ -1149,7 +1150,7 @@ begin
   else begin
     n := il_$node_ptr_t(c^.ads2.x);
     if (c^.kind = moverm_instyp) and ((c^.op = 207) or (c^.op = 206)) and
-       (c^.ads2.f1 = 3) and (n^.kind = 81) and (reg in [0..15]) and
+       (c^.ads2.f1 = 3) and (n^.kind = integer_ob) and (reg in [0..15]) and
        odd(n^.int_value div fn_regmask[reg]) then
       r := true
     else if c^.kind = bsr_instyp then
@@ -1184,7 +1185,7 @@ begin
     if involves(c^.ads2, reg) and (c^.ads2.f1 = 13) then
       r := true
     else if ((c^.kind = m881_moverm_instyp) or (c^.op in [358..363])) and
-            (c^.ads2.f1 = 3) and (n^.kind = 81) and
+            (c^.ads2.f1 = 3) and (n^.kind = integer_ob) and
             odd(n^.int_value div fn_regmask[reg]) then
       r := true
     else if c^.kind = bsr_instyp then
@@ -1631,12 +1632,12 @@ begin
     if (c^.ads1.f6 = 2) and (v.w[2] = 0) and (c^.op <> 41) then begin
       if ((ord(v.c[2]) = 0) and (c^.op <> 41)) or
          ((ord(v.c[2]) = 255) and (c^.op = 41)) then begin
-        c^.ads1.x := integer32(smcontk(81, ord(v.c[1])));
+        c^.ads1.x := integer32(smcontk(integer_ob, ord(v.c[1])));
         c^.op := c^.op - 2;
         c^.ads1.f6 := 0;
       end
       else begin
-        c^.ads1.x := integer32(smcontk(81, v.w[1]));
+        c^.ads1.x := integer32(smcontk(integer_ob, v.w[1]));
         c^.op := c^.op - 1;
         c^.ads1.f6 := 1;
       end;
@@ -1645,7 +1646,7 @@ begin
     else if c^.ads1.f6 = 1 then
       if ((ord(v.c[4]) = 0) and (c^.op <> 40)) or
          ((ord(v.c[4]) = 255) and (c^.op = 40)) then begin
-        c^.ads1.x := integer32(smcontk(81, ord(v.c[3])));
+        c^.ads1.x := integer32(smcontk(integer_ob, ord(v.c[3])));
         c^.op := c^.op - 1;
         c^.ads1.f6 := 0;
         c^.size := ilength(c);
@@ -1735,7 +1736,7 @@ begin
         if c^.ads1.f1 in [2, 4..6, 12, 15] then
           c^.ads1.y := c^.ads1.y + fn_adjust[old][c^.op]
         else if c^.ads1.f1 = 3 then begin
-          c^.ads1.x := integer32(smcontk(81,
+          c^.ads1.x := integer32(smcontk(integer_ob,
               il_$node_ptr_t(c^.ads1.x)^.int_value & fn_mask[old][c^.op]));
           c^.ads1.f6 := fn_size_f6[c^.op];
         end;
@@ -2009,7 +2010,7 @@ begin
         c := codegen_$cell_ptr_t(r^.target);
         if (c^.ads1.f1 = 7) and (c^.ads1.x <> 0) then begin
           n := il_$node_ptr_t(c^.ads1.x);
-          if n^.kind = 144 then begin
+          if n^.kind = label_node then begin
             if n^.xp[20] = il_$node_ptr_t(l) then
               n^.xp[20] := il_$node_ptr_t(lab);
             c^.ads1.x := lab^.ads2.x;
@@ -2018,7 +2019,7 @@ begin
         c := codegen_$cell_ptr_t(r^.target);
         if (c^.ads2.f1 = 7) and (c^.ads2.x <> 0) then begin
           n := il_$node_ptr_t(c^.ads2.x);
-          if n^.kind = 144 then begin
+          if n^.kind = label_node then begin
             if n^.xp[20] = il_$node_ptr_t(l) then
               n^.xp[20] := il_$node_ptr_t(lab);
             c^.ads2.x := lab^.ads2.x;
@@ -2180,7 +2181,7 @@ begin
     if k = casejmp_instyp then
       goto 1;
     if k = block_end_instyp then
-      if p^.blk^.kind <> 172 then
+      if p^.blk^.kind <> inner_blk then
         goto 1;
     if lines and match then
       if not (k in [17..18, 22, 30, 32..34, 39]) then begin
@@ -2316,12 +2317,12 @@ var
 begin
   r := false;
   if a^.kind = b^.kind then
-    if a^.kind = 140 then begin
+    if a^.kind = assign_node then begin
       if (a^.xp[16] = b^.xp[16]) and (a^.xw[27] = b^.xw[27]) and
          (a^.xw[28] = b^.xw[28]) then
         r := true;
     end
-    else if a^.kind = 138 then begin
+    else if a^.kind = gen_tree_node then begin
       if a = b then
         r := true
       else if (a^.xw[18] = b^.xw[18]) and (a^.xl[5] = b^.xl[5]) and
@@ -2739,7 +2740,7 @@ begin
   n := fn_lnode_ptr_t(c^.ads2.x);
   if n = nil then
     goto 9;
-  if n^.kind <> 144 then
+  if n^.kind <> label_node then
     goto 9;
   if (n^.x72.cls = 13) and not n^.b41 then
     goto 9;
@@ -2976,8 +2977,9 @@ begin
         1:
           v := dfetch(n^.int_value, 2, true);
         2:
-          if (n^.kind = 163) or (n^.kind = 182) or (n^.kind = 195) or
-             (n^.kind = 183) then
+          if (n^.kind = addr_con) or (n^.kind = procedure_section)
+              or (n^.kind = reloc_absolute_addr_con) or
+             (n^.kind = data_section) then
             v := 1
           else
             v := n^.int_value;
@@ -3094,14 +3096,14 @@ begin
   if (c^.kind = m020_src2_instyp) and
      ((c^.op = 215) or (c^.op <> 214)) and (c^.ads1.x <> 0) then begin
     n := il_$node_ptr_t(c^.ads1.x);
-    if n^.kind = 138 then
+    if n^.kind = gen_tree_node then
       if n^.xw[19] = 2 then
         r := true
       else if (n^.xw[19] = 3) and (n^.xp[11] <> nil) then begin
         lo := n^.xp[11];
-        if (lo^.kind = 81) and (n^.xp[12] <> nil) then begin
+        if (lo^.kind = integer_ob) and (n^.xp[12] <> nil) then begin
           hi := n^.xp[12];
-          if hi^.kind = 81 then begin
+          if hi^.kind = integer_ob then begin
             w := hi^.xw[5] - lo^.xw[5] + 1;
             if w <= final_$sizeof(nx, 1) * 8 then
               r := true;
@@ -3499,12 +3501,12 @@ begin
               done := true
             else begin
               if (p^.ads1.f1 = 3) and
-                 (il_$node_ptr_t(p^.ads1.x)^.kind = 81) and
+                 (il_$node_ptr_t(p^.ads1.x)^.kind = integer_ob) and
                  ((p^.op = 24) or (p^.op = 23) or (p^.op = 22) or
                   (p^.op = 21) or (p^.op = 20)) then
                 disp := disp + il_$node_ptr_t(p^.ads1.x)^.int_value
               else if (p^.ads1.f1 = 3) and
-                      (il_$node_ptr_t(p^.ads1.x)^.kind = 81) and
+                      (il_$node_ptr_t(p^.ads1.x)^.kind = integer_ob) and
                       ((p^.op = 33) or (p^.op = 32) or (p^.op = 31) or
                        (p^.op = 30) or (p^.op = 29)) then
                 disp := disp - il_$node_ptr_t(p^.ads1.x)^.int_value
@@ -3692,7 +3694,7 @@ begin
   y := getcodecell(i_instyp);
   y^.op := s2 + 39;
   y^.ads1.f1 := 3;
-  y^.ads1.x := integer32(smcontk(81, 1));
+  y^.ads1.x := integer32(smcontk(integer_ob, 1));
   y^.ads1.f6 := s2;
   y^.ads2 := e^.ads2;
   y^.size := ilength(y);
@@ -3838,7 +3840,8 @@ begin
         goto 9;
       end;
       nd := il_$node_ptr_t(c^.ads1.x);
-      if (c^.ads1.f1 <> 3) or not (nd^.kind in [77..87, 101, 200]) or
+      if (c^.ads1.f1 <> 3) or not (nd^.kind in [blogical_ob..char_ob,
+                                                char16_ob, binteger_ob]) or
          (nd^.int_value <> 0) then begin
         if nd^.int_value <> -1 then
           goto 9;
@@ -3910,7 +3913,7 @@ begin
       if c^.ads1.f1 <> 3 then
         goto 9;
       nd := il_$node_ptr_t(c^.ads1.x);
-      if not (nd^.kind in [77..87, 101, 200]) then
+      if not (nd^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) then
         goto 9;
       if nd^.int_value <> 0 then
         goto 9;
@@ -3974,7 +3977,8 @@ begin
      (pv^.ads1.f2 in [0..7]) and (pv^.ads2.f1 = 1) and
      (pv^.ads2.f2 = c^.ads1.f2) and (pp^.kind = q_instyp) and
      (pp^.op = 24) and (pp^.ads1.f1 = 3) and
-     (n^.kind in [77..87, 101, 200]) and (n^.int_value = 4) and
+     (n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+         and (n^.int_value = 4) and
      (pp^.ads2.f1 = 1) and (pp^.ads2.f2 = pv^.ads1.f2) then begin
     c^.ads1.f1 := 8;
     c^.ads1.y := 0;
@@ -4030,7 +4034,8 @@ var
 begin
   if (c^.op = 0) and (c^.ads1.f1 = 3) then begin
     n := il_$node_ptr_t(c^.ads1.x);
-    if (n^.kind in [77..87, 101, 200]) and ((n^.int_value & 255) = 255) and
+    if (n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+        and ((n^.int_value & 255) = 255) and
        not has_untouchable_mem_attrs(c^.ads2) then
       if not testcc(nxtcc(c), 15) then begin
         c^.kind := logicize_instyp;
@@ -4044,7 +4049,7 @@ begin
      (p^.ads1.f1 = 3) and (c^.ads1.f1 = 3) and (p^.ads2.f1 = 9) and
      (p^.ads2.f2 = 15) and (c^.ads2.f1 = 9) and (c^.ads2.f2 = 15) then begin
     c^.op := 2;
-    c^.ads1.x := integer32(smcontk(81,
+    c^.ads1.x := integer32(smcontk(integer_ob,
         lshft(il_$node_ptr_t(p^.ads1.x)^.int_value, 16) !
         (il_$node_ptr_t(c^.ads1.x)^.int_value & 16#FFFF)));
     c^.ads1.f6 := 2;
@@ -4054,8 +4059,9 @@ begin
   if (c^.op <= 2) and (c^.ads1.f1 = 3) then
     if not has_untouchable_mem_attrs(c^.ads2) or (3 in cargs_$options.cpu) then begin
       n := il_$node_ptr_t(c^.ads1.x);
-      if ((n^.kind in [77..87, 101, 200]) and (n^.int_value = 0)) or
-         ((n^.kind = 88) and (n^.bits[1] = 0)) then begin
+      if ((n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (n^.int_value = 0)) or
+         ((n^.kind = real_ob) and (n^.bits[1] = 0)) then begin
         c^.kind := dest1_sz_instyp;
         c^.op := c^.op + 9;
         c^.ads1.f1 := 0;
@@ -4078,7 +4084,8 @@ begin
     end;
     if (c^.op = 2) and (c^.ads1.f1 = 3) then begin
       n := il_$node_ptr_t(c^.ads1.x);
-      if (n^.kind in [77..87, 101, 200]) and (n^.int_value <= 32767) and
+      if (n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+          and (n^.int_value <= 32767) and
          (n^.int_value >= -32768) then
         if not testcc(nxtcc(c), 15) then begin
           c^.ads1.f1 := 12;
@@ -4190,7 +4197,7 @@ begin
   if ((c^.kind = i_instyp) or (c^.kind = q_instyp) or (c^.kind = a_instyp)) and
      (c^.ads1.f1 = 3) then begin
     n := il_$node_ptr_t(c^.ads1.x);
-    if n^.kind in [77..87, 101, 200] then
+    if n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
       case c^.op of
       17, 18, 19, 20, 21, 22, 23, 24: begin
         ch := '+';
@@ -4332,7 +4339,7 @@ begin
           end;
         end;
       end;
-      c^.ads1.x := integer32(smcontk(81, v));
+      c^.ads1.x := integer32(smcontk(integer_ob, v));
       if (c^.kind = q_instyp) and (v > 8) then begin
         if s1 = '+' then
           d := c^.op - 22
@@ -4412,7 +4419,7 @@ begin
       r := true;
       v := il_$node_ptr_t(m^.ads1.x)^.int_value -
            il_$node_ptr_t(s^.ads1.x)^.int_value;
-      m^.ads1.x := integer32(smcontk(81, v));
+      m^.ads1.x := integer32(smcontk(integer_ob, v));
       detach(c);
       c := m;
     end;
@@ -4493,7 +4500,7 @@ begin
             c^.op := 33
           else
             c^.op := 24;
-          c^.ads1.x := integer32(smcontk(81, a));
+          c^.ads1.x := integer32(smcontk(integer_ob, a));
         end
         else begin
           c^.kind := a_instyp;
@@ -4663,7 +4670,7 @@ begin
     c := t;
   end
   else
-    c^.ads1.x := integer32(smcontk(81, v));
+    c^.ads1.x := integer32(smcontk(integer_ob, v));
   r := true;
 9:
   try_pre_dec := r;
@@ -4816,7 +4823,7 @@ begin
     c := t;
   end
   else
-    c^.ads1.x := integer32(smcontk(81, v));
+    c^.ads1.x := integer32(smcontk(integer_ob, v));
   r := true;
 9:
   try_post_incr := r;
@@ -4922,7 +4929,7 @@ begin
           c^.kind := q_instyp;
           c^.size := 2;
           c^.ads1.f1 := 3;
-          c^.ads1.x := integer32(smcontk(81, c^.ads1.y));
+          c^.ads1.x := integer32(smcontk(integer_ob, c^.ads1.y));
           c^.ads1.y := 0;
           c^.ads1.f6 := 2;
           c^.size := ilength(c);
@@ -4934,7 +4941,7 @@ begin
         c^.kind := q_instyp;
         c^.size := 2;
         c^.ads1.f1 := 3;
-        c^.ads1.x := integer32(smcontk(81, -c^.ads1.y));
+        c^.ads1.x := integer32(smcontk(integer_ob, -c^.ads1.y));
         c^.ads1.y := 0;
         c^.ads1.f6 := 2;
         c^.size := ilength(c);
@@ -4954,10 +4961,11 @@ begin
   else if ((c^.op = 106) or (c^.op = 35) or (c^.op = 34) or (c^.op = 17) or
            (c^.op = 18)) and (c^.ads1.f1 = 3) then begin
     nd := il_$node_ptr_t(c^.ads1.x);
-    if (nd^.kind in [77..87, 101, 200]) and (nd^.int_value >= -32767) and
+    if (nd^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+        and (nd^.int_value >= -32767) and
        (nd^.int_value <= 32767) then begin
       if (c^.op = 35) or (c^.op = 34) then
-        c^.ads1.x := integer32(smcontk(81, -nd^.int_value));
+        c^.ads1.x := integer32(smcontk(integer_ob, -nd^.int_value));
       if c^.op = 106 then begin
         c^.ads1.f6 := 1;
         c^.op := 105;
@@ -4974,7 +4982,8 @@ begin
 8:
   if ((c^.op = 105) or (c^.op = 106)) and (c^.ads1.f1 = 3) then begin
     nd := il_$node_ptr_t(c^.ads1.x);
-    if (nd^.kind in [77..87, 101, 200]) and (nd^.int_value = 0) then begin
+    if (nd^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+        and (nd^.int_value = 0) then begin
       c := opttest(c);
       c := c^.prev;
     end;
@@ -5071,7 +5080,7 @@ begin
   if c^.ads1.f1 <> 3 then
     goto 9;
   n := il_$node_ptr_t(c^.ads1.x);
-  if (n^.kind <> 88) and (n^.kind <> 89) then
+  if (n^.kind <> real_ob) and (n^.kind <> dpreal_ob) then
     goto 9;
   v.d := n^.real_value;
   if (c^.op in [224..229]) and (4 in cargs_$options.cpu) and
@@ -5081,15 +5090,15 @@ begin
         c^.kind := m68881_i_instyp;
         c^.op := 237;
         c^.size := 4;
-        c^.ads1.x := integer32(smcontk(81, fn_fmovecr[i].tag));
+        c^.ads1.x := integer32(smcontk(integer_ob, fn_fmovecr[i].tag));
         goto 9;
       end;
   if 5 in cargs_$options.cpu then
     goto 9;
   e := (rshft(n^.bits[1], 16) & 16#7FFF) - 1023;
-  if n^.kind = 89 then
+  if n^.kind = dpreal_ob then
     if (n^.real_value = 0.0) or
-       ((n^.kind = 89) and (v.s * [0..28] = []) and (e <= 128) and
+       ((n^.kind = dpreal_ob) and (v.s * [0..28] = []) and (e <= 128) and
         (e >= -127)) then begin
       c^.ads1.x := integer32(rlcontk(n^.real_value));
       c^.ads1.f6 := 4;
@@ -5111,7 +5120,7 @@ begin
   if c^.ads1.f6 = 4 then
     if not final_$in_15bit_range(iv) then
       goto 9;
-  c^.ads1.x := integer32(smcontk(81, iv));
+  c^.ads1.x := integer32(smcontk(integer_ob, iv));
   if c^.ads1.f6 = 5 then begin
     c^.size := c^.size - 4;
     c^.op := c^.op - 1;
@@ -5152,7 +5161,7 @@ begin
     k := getcodecell(i_instyp);
     k^.op := 41;
     k^.ads1.f1 := 3;
-    k^.ads1.x := integer32(smcontk(81, 1));
+    k^.ads1.x := integer32(smcontk(integer_ob, 1));
     k^.ads1.f6 := 2;
     k^.ads2 := n1^.ads2;
     k^.size := ilength(k);
@@ -5329,7 +5338,7 @@ begin
         n := il_180^.xp[4];
         v := nil;
         while n <> nil do begin
-          if (n^.kind = 109) and (n^.xp[1] = l^.xp[2]) then begin
+          if (n^.kind = var_name) and (n^.xp[1] = l^.xp[2]) then begin
             v := n;
             goto 1;
           end;
@@ -5339,9 +5348,9 @@ begin
         l := l^.xp[1];
       end;
       if v <> nil then
-        if v^.kind = 110 then
+        if v^.kind = fortran_symbol then
           v^.xl[3] := v^.xl[3] - 4
-        else if v^.kind = 109 then
+        else if v^.kind = var_name then
           v^.xl[14] := v^.xl[14] - 4;
     end;
   end;
@@ -5410,7 +5419,7 @@ begin
       0:
         backtrack(p);
       32, 33:
-        if p^.blk^.kind <> 172 then
+        if p^.blk^.kind <> inner_blk then
           goto 9;
       17, 18, 23, 27, 29, 30, 31, 39:
         goto 9;
@@ -5481,7 +5490,7 @@ var
   begin
     if (a.f1 = 3) and (a.f6 = 3) then begin
       n := il_$node_ptr_t(a.x);
-      if n^.kind <> 184 then
+      if n^.kind <> inline_constant then
         if (n^.xp[2] <> nil) and (n^.xp[2]^.xp[1] = il_$node_ptr_t(fn_sect)) then
           a.x := integer32(n^.xp[2])
         else begin
@@ -5490,7 +5499,7 @@ var
           k^.ads2 := a;
           k^.size := ilength(k);
           m := gspace(12);
-          m^.kind := 184;
+          m^.kind := inline_constant;
           m^.xp[1] := il_$node_ptr_t(fn_sect);
           m^.xp[2] := il_$node_ptr_t(k);
           n^.xp[2] := m;
@@ -5565,7 +5574,7 @@ var
             size := n^.xl[28] - n^.xl[44]
           else
             size := n^.xl[28];
-          p^.ads2.x := integer32(smcontk(81, size));
+          p^.ads2.x := integer32(smcontk(integer_ob, size));
           p^.ads2.f1 := 3;
           if (3 in cargs_$options.cpu) and (size < -32768) then begin
             p^.ads2.f6 := 2;
@@ -5611,12 +5620,13 @@ var
           p := c;
           if (p^.op = 0) and (p^.ads1.f1 = 3) then begin
             n := il_$node_ptr_t(p^.ads1.x);
-            if (n^.kind in [77..87, 101, 200]) and
+            if (n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) and
                ((n^.int_value & 255) <> 255) and (p^.ads2.f1 = 9) and
                (p^.ads2.f2 = 15) then begin
               p^.op := 1;
               p^.ads1.f6 := 1;
-              p^.ads1.x := integer32(smcontk(81, lshft(n^.int_value, 8)));
+              p^.ads1.x := integer32(smcontk(integer_ob, lshft(n^.int_value,
+                  8)));
             end;
           end;
         end;
@@ -5659,7 +5669,8 @@ var
       if not (kind in [0, 24, 28, 32..33]) then begin
         if (kind = move_instyp) and (p^.ads2.f1 = 1) and (p^.ads1.f1 = 3) then begin
           n := il_$node_ptr_t(p^.ads1.x);
-          if (n^.kind in [77..87, 101, 200]) and (n^.int_value >= -128) and
+          if (n^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
+              and (n^.int_value >= -128) and
              (n^.int_value <= 127) then begin
             p^.kind := moveq_instyp;
             p^.op := 3;
@@ -5684,7 +5695,7 @@ var
       else
         case p^.kind of
           block_end_instyp: begin
-            if p^.blk^.kind <> 172 then begin
+            if p^.blk^.kind <> inner_blk then begin
               if consts2 <> nil then begin
                 last := consts2^.prev;
                 join(p, consts2);

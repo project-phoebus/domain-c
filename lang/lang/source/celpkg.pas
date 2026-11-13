@@ -316,7 +316,7 @@ var
   n: il_$node_ptr_t;
 begin
   n := gspace(84);
-  n^.kind := 144;
+  n^.kind := label_node;
   n^.xc[72] := chr(ord(n^.xc[72]) & 16#01 ! 28);
   n^.xw[24] := il_146[14];
   il_146[14] := il_146[14] + 1;

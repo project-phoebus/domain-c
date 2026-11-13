@@ -373,7 +373,8 @@ begin
     xfer^.quad := true;
   if cand and xfer^.prolog then begin
     sym := arg^.sym;
-    if (sym^.kind = 109) and ((sym^.xw[36] = 5) or (arg^.f22.mode = 2)) then begin
+    if (sym^.kind = var_name) and ((sym^.xw[36] = 5)
+                                   or (arg^.f22.mode = 2)) then begin
       sol := nil;
       r := arg^.f22.reg;
       if arg^.f18.loc = ord(arg_loc$ip_reg) then begin
@@ -419,7 +420,7 @@ begin
     xfer^.split := home^.kind = 9;
   xfer^.opc := lm_move_by_loc[arg^.f18.loc];
   sym := arg^.sym;
-  if sym^.kind = 109 then begin
+  if sym^.kind = var_name then begin
     vat := sym^.xw[36];
     if vat = 5 then
       n := 32
@@ -726,7 +727,7 @@ begin
     mem_max := 0;
     repeat
       if not ((ord(blk^.xc[294]) > 0) and (ord(blk^.xc[294]) < 128)) then begin
-        if blk^.kind = 167 then
+        if blk^.kind = entry_blk then
           lir_main_c8b := true;
         conv := call_conv_$ptr_t(blk^.xp[32]);
         for j := 1 to conv^.nargs do begin
@@ -782,7 +783,7 @@ begin
       end;
       blk := blk^.xp[1];
     until (blk = nil)
-          or ((blk^.kind <> 167)
+          or ((blk^.kind <> entry_blk)
               and not ((ord(blk^.xc[294]) > 0) and (ord(blk^.xc[294]) < 128)));
     if (ent_reg <> nil) or (ent_mem <> nil) then begin
       lm_nconvs := 0;
@@ -915,7 +916,7 @@ var
 begin
   nd := node;
   blk := nd^.xp[12];
-  if blk^.kind = 167 then
+  if blk^.kind = entry_blk then
     rtn := rtn_ptr_t(blk^.xp[37]^.xp[31])
   else
     rtn := rtn_ptr_t(blk^.xp[31]);
@@ -984,7 +985,7 @@ begin
         lir_main_250.object_with_name := arg^.sym;
         if arg^.w6 = 0 then begin
           v := arg^.sym;
-          if v^.kind = 109 then
+          if v^.kind = var_name then
             v^.xl[14] := arg^.offset + 16
           else
             v^.xl[3] := arg^.offset + 16;
@@ -1111,7 +1112,7 @@ begin
   else begin
     il_$node_ptr_t(lm_entry_node)^.xp[2] := nd^.xp[2];
     nd^.xp[2]^.xp[1] := lm_entry_node;
-    if blk^.kind = 167 then
+    if blk^.kind = entry_blk then
       blk := blk^.xp[37];
     v := blk^.xp[45];
     if v <> nil then begin
@@ -1146,7 +1147,7 @@ begin
             else if (d <= 65535) and not odd(d) then
               sh := 1
             else begin
-              lir_main_250.object_with_name := smcontk(82, d);
+              lir_main_250.object_with_name := smcontk(linteger_ob, d);
               lir_main_250.bytes := 4;
               lir_$load_instruction(inh, ord(opc$loadl), 0, addr(lir_main_250),
                                     isc_user_routines_330, addr(lir_main_400),
@@ -1289,7 +1290,7 @@ begin
           if (at_backend_switches.level & 4) <> 0 then begin
             v := lr^.memory_home;
             rn := il_180^.xp[74];
-            if v^.kind = 110 then
+            if v^.kind = fortran_symbol then
               vfmt_$write('Silly register candidate in %A: %A%.',
                           rn^.str_chars, rn^.str_len, v^.xc[72], v^.xw[35])
             else begin
@@ -1406,7 +1407,7 @@ begin
   while p <> nil do begin
     lir_$label(p^.lab);
     v := p^.v;
-    if v^.kind <> 109 then
+    if v^.kind <> var_name then
       bug_check('LIR_MAIN_\BY_BRANCH_PROLOGS_FOR_HANDLER -- exception not identified by a var_name%$');
     vat := v^.xw[36];
     if vat in [3, 7, 8] then begin
@@ -1524,8 +1525,9 @@ begin
       if (arg^.num = 0) and arg^.by_value then
         if arg^.f18.loc <> ord(arg_loc$memory) then begin
           sym := arg^.sym;
-          if (sym^.kind = 110)
-             or ((sym^.kind = 109) and ((sym^.xl[8] & 16#12400041) <> 0)) then
+          if (sym^.kind = fortran_symbol)
+             or ((sym^.kind = var_name)
+                 and ((sym^.xl[8] & 16#12400041) <> 0)) then
             if arg^.f18.loc = ord(arg_loc$fp_reg_quad) then
               n := n + 4
             else if arg^.f18.loc = ord(arg_loc$fp_reg_pair) then
@@ -1549,8 +1551,9 @@ begin
       if (arg^.num = 0) and arg^.by_value then
         if arg^.f18.loc <> ord(arg_loc$memory) then begin
           sym := arg^.sym;
-          takes := (sym^.kind = 110)
-                   or ((sym^.kind = 109) and ((sym^.xl[8] & 16#12400041) <> 0));
+          takes := (sym^.kind = fortran_symbol)
+                   or ((sym^.kind = var_name)
+                       and ((sym^.xl[8] & 16#12400041) <> 0));
         end;
       if takes then begin
         case formal_local_transfer_setup(addr(lm_epilog_xfer), arg,

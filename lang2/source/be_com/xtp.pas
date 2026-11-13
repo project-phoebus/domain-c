@@ -40,7 +40,7 @@ type
   xtp_sym_ptr_t = ^xtp_sym_t;
   xtp_sym_t = record
     unused_0: integer;                  { +0 }
-    kind: integer;                      { +2 }
+    kind: il_$kind_t;                   { +2 }
     unused_4: array [4..23] of char;    { +4 }
     flags24: integer32;                 { +24 }
     unused_28: integer32;               { +28 }
@@ -225,7 +225,7 @@ begin
   while lr <> nil do begin
     if lr^.memory_home <> nil then begin
       sym := lr^.memory_home;
-      if sym^.kind = 109 then
+      if sym^.kind = var_name then
         flags := sym^.flags32
       else
         flags := sym^.flags24;

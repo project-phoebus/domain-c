@@ -318,56 +318,10 @@ type
     rlen_arith: array [0..25] of integer;   { +0x140 }
   end;
 
-  { The IL node kinds, tree and assignment operators, as the image
-    names them (isc_unrecognized_il_node writes them: the name tables
-    at 0x0DB7E6, 0x0DC290, 0x0DC7B0; isc_user_routines' an_kind_t,
-    ur_top_t and ur_aop_t). }
-  an_kind_t = (
-    end_ob, if_ob, then_ob, begin_ob, else_ob, do_ob, with_ob, in_ob, of_ob,
-    while_ob, case_ob, repeat_ob, until_ob, procedure_ob, var_ob, for_ob,
-    array_ob, record_ob, set_ob, to_ob, downto_ob, mod_ob, or_ob, and_ob,
-    not_ob, div_ob, const_ob, type_ob, function_ob, program_ob, packed_ob,
-    label_ob, goto_ob, file_ob, forward_ob, static_ob, external_ob,
-    define_ob, module_ob, val_param_ob, exit_ob, next_ob, internal_ob,
-    return_ob, otherwise_ob, cast_ob, univ_ob, implies_ob, out_ob, up_to_ob,
-    bus_ob, period_ob, becomes_ob, colon_ob, le_ob, ne_ob, lt_ob, eq_ob,
-    ge_ob, gt_ob, sub_ob, open_ob, close_ob, comma_ob, semicolon_ob, star_ob,
-    slash_ob, plus_ob, minus_ob, ampersand_ob, excl_ob, arrow_ob, eom_ob,
-    error_ob, tilde_ob, badchar_ob, id_ob, blogical_ob, slogical_ob,
-    llogical_ob, sinteger_ob, integer_ob, linteger_ob, usinteger_ob,
-    uinteger_ob, ulinteger_ob, ubinteger_ob, char_ob, real_ob, dpreal_ob,
-    complex_ob, varying_ob, char_string_ob, char32_string_ob, nil_ob,
-    starstar_ob, routine_option_ob, attribute_ob, begin_critical_ob,
-    end_critical_ob, library_ob, char16_ob, const_cob, volatile_cob,
-    signed_cob, program_blk, module_blk, procedure_blk, function_blk,
-    var_name, fortran_symbol, common_block_name, fdim_info, fdata_nlist,
-    fdata_clist, equiv_stmt, const_name, label_name, type_name, field_name,
-    pfield_name, param_name, integer_type, real_type, bool_type,
-    kind_char_type, char_string_con_type, char_array_type, subr_type,
-    enum_type, ptr_type, array_type, record_type, file_type, set_type,
-    univ_ptr_type, null_set_type, tree_node, gen_tree_node, eval_node,
-    assign_node, branch_node, cbranch_node, cmp_tree_node, label_node,
-    dindex_node, ptr_node, disp_node, block_entry_node, blk_end_node,
-    nlbranch_node, return_node, alloc_temp, sb_register, db_register,
-    display_register, set_con_ob, def_const_ob, std_func, lib_dsc, ref_list,
-    state_save, lnum_entry, addr_con, cs_node, cs_temp, fdata_do, entry_blk,
-    param_list, ftn_xref, ptr_hdr, cc_call, inner_blk, proc__type,
-    func__type, pf_call, rec_const_ob, offset_type, reg_assign_ob, actparam,
-    ext_state_save, dead_temp, procedure_section, data_section,
-    inline_constant, namelist_id_ob, lnref_ob, variant_ob, use_def_ob,
-    cse_use_ob, cse_parent_ob, reg_list_ob, transfer_vector, proc_reloc,
-    external_ref, reloc_absolute_addr_con, varying_type, parray_type,
-    dpcomplex_ob, m68k_unpacked, binteger_ob, routine_option_name,
-    attribute_name, physical_register_ob, argument_block_location_ob,
-    sym_disp_node, dynamic_array_type, dope_vector, at_lib_dsc,
-    blockdata_blk, kind_void_type, ap_register, namelist_constant_ob,
-    undefined_object, case_node_range_check, case_node_no_range_check,
-    defaulted_info, char16_type, char16_array_type, isc_fetch, isc_convert,
-    fdata_default_seq, exception_frame, exception_handler_entry,
-    raise_exception, release_dynamic_space, exception_register,
-    insert_bit_field, bit_field_assign, lb_register, virt_var_name,
-    spine_mark, isc_share, pa_mmu_bip, cc_func_returning_type,
-    indexed_reference, union_ob);
+  { The tree and assignment operators, as the image names them
+    (isc_unrecognized_il_node writes them and the IL node kinds,
+    il.ins.pas's il_$kind_t: the name tables at 0x0DB7E6, 0x0DC290,
+    0x0DC7B0; isc_user_routines' ur_top_t and ur_aop_t). }
   p1_top_t = (
     nop_top, add_top, sub_top, mul_top, div_top, divide_top, mod_top,
     neg_top, not_top, and_top, or_top, bit_test_top, compare_top, index_top,
@@ -494,14 +448,14 @@ begin
   write('*******************************************************');
   writeln;
   case isc_node_ptr_t(il)^.kind of
-    140:
+    assign_node:
       write('ISC: The unsupported IL node kind is: ', p1_aop_t(isc_node_ptr_t(il)^.as_op), '.');
-    143:
+    cmp_tree_node:
       write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
-    137:
+    tree_node:
       write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
     otherwise
-      write('ISC: The unsupported IL node kind is: ', an_kind_t(isc_node_ptr_t(il)^.kind), '.');
+      write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.kind, '.');
   end;
   writeln;
   write('*******************************************************');
@@ -955,7 +909,7 @@ begin
       writeln;
     end;
     n1 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n1)^.kind := 137;
+    isc_node_ptr_t(n1)^.kind := tree_node;
     isc_node_ptr_t(n1)^.rewritten := true;
     isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[17];
@@ -966,7 +920,7 @@ begin
     isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[26];
     p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[58].b6;
     n := mrh_$alloc(isc_preserve_heap, 80);
-    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.kind := assign_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n)^.xp[17] := n1;
@@ -1501,7 +1455,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 80);
-    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.kind := assign_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n)^.xp[17] := isc_node_ptr_t(il)^.xp[17];
@@ -1612,11 +1566,11 @@ begin
     writeln;
   end;
   n1 := mrh_$alloc(isc_preserve_heap, 12);
-  isc_node_ptr_t(n1)^.kind := 81;
+  isc_node_ptr_t(n1)^.kind := integer_ob;
   isc_node_ptr_t(n1)^.rewritten := true;
   isc_node_ptr_t(n1)^.xl[2] := 0;
   n5 := mrh_$alloc(isc_preserve_heap, 80);
-  isc_node_ptr_t(n5)^.kind := 140;
+  isc_node_ptr_t(n5)^.kind := assign_node;
   isc_node_ptr_t(n5)^.rewritten := true;
   isc_node_ptr_t(n5)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
   isc_node_ptr_t(n5)^.xp[17] := n1;
@@ -1805,7 +1759,7 @@ begin
       writeln;
     end;
     n1 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n1)^.kind := 137;
+    isc_node_ptr_t(n1)^.kind := tree_node;
     isc_node_ptr_t(n1)^.rewritten := true;
     isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[17];
@@ -1816,7 +1770,7 @@ begin
     isc_node_ptr_t(n1)^.xw[12] := isc_node_ptr_t(il)^.xw[26];
     p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[58].b6;
     n := mrh_$alloc(isc_preserve_heap, 80);
-    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.kind := assign_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n)^.xp[17] := n1;
@@ -2965,7 +2919,7 @@ begin
   n1 := make_new_addr_con(2, il, 0,
       il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
   n2 := mrh_$alloc(isc_preserve_heap, 32);
-  isc_node_ptr_t(n2)^.kind := 146;
+  isc_node_ptr_t(n2)^.kind := ptr_node;
   isc_node_ptr_t(n2)^.rewritten := true;
   isc_node_ptr_t(n2)^.xp[6] := n1;
   p1_node_chars_ptr_t(n2)^[23] := chr(0);
@@ -3183,7 +3137,7 @@ begin
   il_kind := ord(il_blk_end_node);
   number_of_children := 0;
   if p1_node_bytes_ptr_t(isc_node_ptr_t(il)^.xp[12])^[378].b1
-      and ((isc_node_ptr_t(isc_node_ptr_t(il)^.xp[12])^.kind = 108) or (isc_node_ptr_t(isc_node_ptr_t(il)^.xp[12])^.kind = 107)) then begin
+      and ((isc_node_ptr_t(isc_node_ptr_t(il)^.xp[12])^.kind = function_blk) or (isc_node_ptr_t(isc_node_ptr_t(il)^.xp[12])^.kind = procedure_blk)) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
       writeln;
@@ -3512,7 +3466,7 @@ begin
     n2 := get_proc_addr_con(12, il, isc_node_ptr_t(il_180)^.xl[47],
         il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]));
     n3 := mrh_$alloc(isc_preserve_heap, 32);
-    isc_node_ptr_t(n3)^.kind := 146;
+    isc_node_ptr_t(n3)^.kind := ptr_node;
     isc_node_ptr_t(n3)^.rewritten := true;
     isc_node_ptr_t(n3)^.xp[6] := n2;
     p1_node_chars_ptr_t(n3)^[23] := chr(0);
@@ -3820,7 +3774,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.kind := tree_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -4416,7 +4370,7 @@ begin
       n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 32);
-    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.kind := ptr_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[6] := n1;
     p1_node_chars_ptr_t(n2)^[23] := chr(0);
@@ -4546,7 +4500,7 @@ begin
       n1 := get_proc_addr_con(6, il_$node_ptr_t(assert_kind_is_label_node(isc_node_ptr_t(il)^.xp[12])),
           isc_node_ptr_t(il_180)^.xl[47], il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]));
       n2 := mrh_$alloc(isc_preserve_heap, 32);
-      isc_node_ptr_t(n2)^.kind := 146;
+      isc_node_ptr_t(n2)^.kind := ptr_node;
       isc_node_ptr_t(n2)^.rewritten := true;
       isc_node_ptr_t(n2)^.xp[6] := n1;
       p1_node_chars_ptr_t(n2)^[23] := chr(0);
@@ -4572,7 +4526,7 @@ begin
     end;
     n1 := make_new_addr_con(2, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
     n2 := mrh_$alloc(isc_preserve_heap, 32);
-    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.kind := ptr_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[6] := n1;
     p1_node_chars_ptr_t(n2)^[23] := chr(0);
@@ -4652,7 +4606,7 @@ begin
       n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 32);
-    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.kind := ptr_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[6] := n1;
     p1_node_chars_ptr_t(n2)^[23] := chr(0);
@@ -4857,7 +4811,7 @@ begin
   n1 := make_new_addr_con(2, il, 0,
       il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
   n2 := mrh_$alloc(isc_preserve_heap, 32);
-  isc_node_ptr_t(n2)^.kind := 146;
+  isc_node_ptr_t(n2)^.kind := ptr_node;
   isc_node_ptr_t(n2)^.rewritten := true;
   isc_node_ptr_t(n2)^.xp[6] := n1;
   p1_node_chars_ptr_t(n2)^[23] := chr(0);
@@ -4965,7 +4919,7 @@ begin
     n2 := get_proc_addr_con(12, il, isc_node_ptr_t(il_180)^.xl[47],
         il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]));
     n3 := mrh_$alloc(isc_preserve_heap, 32);
-    isc_node_ptr_t(n3)^.kind := 146;
+    isc_node_ptr_t(n3)^.kind := ptr_node;
     isc_node_ptr_t(n3)^.rewritten := true;
     isc_node_ptr_t(n3)^.xp[6] := n2;
     p1_node_chars_ptr_t(n3)^[23] := chr(0);
@@ -5158,7 +5112,7 @@ begin
       n1 := make_new_addr_con(6, il, 0, il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]), false);
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 32);
-    isc_node_ptr_t(n2)^.kind := 146;
+    isc_node_ptr_t(n2)^.kind := ptr_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[6] := n1;
     p1_node_chars_ptr_t(n2)^[23] := chr(0);
@@ -5360,7 +5314,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 80);
-    isc_node_ptr_t(n)^.kind := 140;
+    isc_node_ptr_t(n)^.kind := assign_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il_180)^.xp[24];
     isc_node_ptr_t(n)^.xp[17] := isc_node_ptr_t(il)^.xp[12];
@@ -5438,7 +5392,7 @@ begin
     n2 := get_proc_addr_con(12, il, isc_node_ptr_t(il_180)^.xl[47],
         il_$node_ptr_t(isc_node_ptr_t(il_180)^.xl[48]));
     n3 := mrh_$alloc(isc_preserve_heap, 32);
-    isc_node_ptr_t(n3)^.kind := 146;
+    isc_node_ptr_t(n3)^.kind := ptr_node;
     isc_node_ptr_t(n3)^.rewritten := true;
     isc_node_ptr_t(n3)^.xp[6] := n2;
     p1_node_chars_ptr_t(n3)^[23] := chr(0);
@@ -5658,7 +5612,7 @@ begin
       writeln;
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -5972,7 +5926,7 @@ begin
       writeln;
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -6515,7 +6469,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.kind := tree_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -6634,7 +6588,7 @@ begin
         writeln;
       end;
       n := mrh_$alloc(isc_preserve_heap, 48);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
@@ -6660,7 +6614,7 @@ begin
         writeln;
       end;
       n := mrh_$alloc(isc_preserve_heap, 48);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
@@ -6687,7 +6641,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 52);
-    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.kind := tree_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(lib);
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -6714,7 +6668,7 @@ begin
       writeln;
     end;
     n1 := mrh_$alloc(isc_preserve_heap, 44);
-    isc_node_ptr_t(n1)^.kind := 137;
+    isc_node_ptr_t(n1)^.kind := tree_node;
     isc_node_ptr_t(n1)^.rewritten := true;
     isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n1)^.xw[18] := 18;
@@ -6722,7 +6676,7 @@ begin
     isc_node_ptr_t(n1)^.xw[12] := 4;
     p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     n2 := mrh_$alloc(isc_preserve_heap, 44);
-    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xw[18] := 18;
@@ -6730,7 +6684,7 @@ begin
     isc_node_ptr_t(n2)^.xw[12] := 4;
     p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     n := mrh_$alloc(isc_preserve_heap, 52);
-    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.kind := tree_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(lib);
     isc_node_ptr_t(n)^.xp[11] := n1;
@@ -6781,7 +6735,7 @@ begin
       writeln;
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -7182,7 +7136,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.kind := tree_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(get_reciprocal(
@@ -8194,7 +8148,7 @@ begin
         writeln;
       end;
       n := mrh_$alloc(isc_preserve_heap, 52);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -8214,7 +8168,7 @@ begin
         writeln;
       end;
       n1 := mrh_$alloc(isc_preserve_heap, 44);
-      isc_node_ptr_t(n1)^.kind := 137;
+      isc_node_ptr_t(n1)^.kind := tree_node;
       isc_node_ptr_t(n1)^.rewritten := true;
       isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n1)^.xw[18] := 18;
@@ -8222,7 +8176,7 @@ begin
       isc_node_ptr_t(n1)^.xw[12] := 4;
       p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n2 := mrh_$alloc(isc_preserve_heap, 44);
-      isc_node_ptr_t(n2)^.kind := 137;
+      isc_node_ptr_t(n2)^.kind := tree_node;
       isc_node_ptr_t(n2)^.rewritten := true;
       isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
       isc_node_ptr_t(n2)^.xw[18] := 18;
@@ -8230,7 +8184,7 @@ begin
       isc_node_ptr_t(n2)^.xw[12] := 4;
       p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n := mrh_$alloc(isc_preserve_heap, 52);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
       isc_node_ptr_t(n)^.xp[11] := n1;
@@ -8388,7 +8342,7 @@ begin
     writeln;
   end;
   n1 := mrh_$alloc(isc_preserve_heap, 48);
-  isc_node_ptr_t(n1)^.kind := 137;
+  isc_node_ptr_t(n1)^.kind := tree_node;
   isc_node_ptr_t(n1)^.rewritten := true;
   isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
   isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
@@ -8437,7 +8391,7 @@ begin
     writeln;
   end;
   n1 := mrh_$alloc(isc_preserve_heap, 48);
-  isc_node_ptr_t(n1)^.kind := 137;
+  isc_node_ptr_t(n1)^.kind := tree_node;
   isc_node_ptr_t(n1)^.rewritten := true;
   isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
   isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
@@ -8580,7 +8534,7 @@ begin
       writeln;
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -8663,7 +8617,7 @@ begin
       writeln;
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -8781,7 +8735,7 @@ begin
         writeln;
       end;
       n := mrh_$alloc(isc_preserve_heap, 48);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
@@ -8807,7 +8761,7 @@ begin
         writeln;
       end;
       n := mrh_$alloc(isc_preserve_heap, 48);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
@@ -8848,7 +8802,7 @@ begin
         writeln;
       end;
       q := mrh_$alloc(isc_preserve_heap, 52);
-      isc_node_ptr_t(q)^.kind := 137;
+      isc_node_ptr_t(q)^.kind := tree_node;
       isc_node_ptr_t(q)^.rewritten := true;
       isc_node_ptr_t(q)^.xp[10] := isc_node_ptr_t(lib);
       isc_node_ptr_t(q)^.xp[11] := v1;
@@ -8859,7 +8813,7 @@ begin
       p1_node_chars_ptr_t(q)^[10] := chr(4);
       p1_node_chars_ptr_t(q)^[11] := chr(0);
       m := mrh_$alloc(isc_preserve_heap, 52);
-      isc_node_ptr_t(m)^.kind := 137;
+      isc_node_ptr_t(m)^.kind := tree_node;
       isc_node_ptr_t(m)^.rewritten := true;
       isc_node_ptr_t(m)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
       isc_node_ptr_t(m)^.xp[11] := q;
@@ -8870,7 +8824,7 @@ begin
       p1_node_chars_ptr_t(m)^[10] := chr(4);
       p1_node_chars_ptr_t(m)^[11] := chr(0);
       n := mrh_$alloc(isc_preserve_heap, 48);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := v1;
       isc_node_ptr_t(n)^.xp[11] := m;
@@ -8893,7 +8847,7 @@ begin
         writeln;
       end;
       n1 := mrh_$alloc(isc_preserve_heap, 44);
-      isc_node_ptr_t(n1)^.kind := 137;
+      isc_node_ptr_t(n1)^.kind := tree_node;
       isc_node_ptr_t(n1)^.rewritten := true;
       isc_node_ptr_t(n1)^.xp[10] := v1;
       isc_node_ptr_t(n1)^.xw[18] := 18;
@@ -8901,7 +8855,7 @@ begin
       isc_node_ptr_t(n1)^.xw[12] := 4;
       p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n2 := mrh_$alloc(isc_preserve_heap, 44);
-      isc_node_ptr_t(n2)^.kind := 137;
+      isc_node_ptr_t(n2)^.kind := tree_node;
       isc_node_ptr_t(n2)^.rewritten := true;
       isc_node_ptr_t(n2)^.xp[10] := v2;
       isc_node_ptr_t(n2)^.xw[18] := 18;
@@ -8909,7 +8863,7 @@ begin
       isc_node_ptr_t(n2)^.xw[12] := 4;
       p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       q := mrh_$alloc(isc_preserve_heap, 52);
-      isc_node_ptr_t(q)^.kind := 137;
+      isc_node_ptr_t(q)^.kind := tree_node;
       isc_node_ptr_t(q)^.rewritten := true;
       isc_node_ptr_t(q)^.xp[10] := isc_node_ptr_t(lib);
       isc_node_ptr_t(q)^.xp[11] := n1;
@@ -8919,7 +8873,7 @@ begin
       p1_node_chars_ptr_t(q)^[10] := chr(4);
       p1_node_chars_ptr_t(q)^[11] := chr(0);
       m := mrh_$alloc(isc_preserve_heap, 52);
-      isc_node_ptr_t(m)^.kind := 137;
+      isc_node_ptr_t(m)^.kind := tree_node;
       isc_node_ptr_t(m)^.rewritten := true;
       isc_node_ptr_t(m)^.xp[10] := isc_node_ptr_t(std_lib_rtns[1]);
       isc_node_ptr_t(m)^.xp[11] := q;
@@ -8929,7 +8883,7 @@ begin
       p1_node_chars_ptr_t(m)^[10] := chr(4);
       p1_node_chars_ptr_t(m)^[11] := chr(0);
       n := mrh_$alloc(isc_preserve_heap, 48);
-      isc_node_ptr_t(n)^.kind := 137;
+      isc_node_ptr_t(n)^.kind := tree_node;
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := n1;
       isc_node_ptr_t(n)^.xp[11] := m;
@@ -8992,7 +8946,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.kind := tree_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -9019,7 +8973,7 @@ begin
       writeln;
     end;
     n := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n)^.kind := 137;
+    isc_node_ptr_t(n)^.kind := tree_node;
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
@@ -9206,7 +9160,7 @@ begin
       writeln;
     end;
     n2 := mrh_$alloc(isc_preserve_heap, 48);
-    isc_node_ptr_t(n2)^.kind := 137;
+    isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n2)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
@@ -10760,7 +10714,7 @@ begin
     pass_1 := solution_list$new;
     return;
   end;
-  if isc_user_routines_9c[isc_node_ptr_t(node)^.kind] and
+  if isc_user_routines_9c[ord(isc_node_ptr_t(node)^.kind)] and
      ((isc_node_ptr_t(node)^.xl[1] & 16#400000) <> 0) and
      (isc_node_ptr_t(node)^.xp[3] <> nil) then begin
     s := isc_solution_ptr_t(isc_node_ptr_t(node)^.xp[3]);
@@ -10768,7 +10722,7 @@ begin
     solution_list$append(list, s);
   end
   else begin
-    p1_kind[isc_node_ptr_t(node)^.kind]^(node, inh, depth, permissible, il_kind,
+    p1_kind[ord(isc_node_ptr_t(node)^.kind)]^(node, inh, depth, permissible, il_kind,
         number_of_children, solutions, children, solutions_made, no_solutions);
     if solutions_made then
       list := solutions
@@ -10903,7 +10857,7 @@ begin
     pass_1 := solution_list$new;
   end
   else begin
-    if isc_user_routines_9c[isc_node_ptr_t(node)^.kind] and
+    if isc_user_routines_9c[ord(isc_node_ptr_t(node)^.kind)] and
        ((isc_node_ptr_t(node)^.xl[1] & 16#400000) <> 0) and
        (isc_node_ptr_t(node)^.xp[3] = nil) then begin
       s := choose_one_cse_solution(list);
