@@ -1296,3 +1296,9 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
        begin
          b := (k <= e31) and (k in [e1..e2, e14, e19..e24, e26]);
        end;
+
+    Fixed in dpc b9d77de (stable build, 2026-11-12): the element is
+    checked against 31 and tested in the longword mask (`cmpi.w
+    #0x1f; bhi; ...; move.l #0x5f84006,D2; btst D1,D2'), best effort
+    with a warning; refused when the element contains a call.  The ten
+    sites' rules are dropped; the six units pass the gate.
