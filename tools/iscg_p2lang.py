@@ -675,6 +675,18 @@ def il_names():
     return _IL_NAMES
 
 
+def unname(x):
+    """x with its named constants as the numbers they are (('cname', n,
+    v) -> ('num', v)): a printed body reads back as the lifted one."""
+    if isinstance(x, tuple):
+        if x and x[0] == 'cname':
+            return ('num', x[2])
+        return tuple(unname(y) for y in x)
+    if isinstance(x, list):
+        return [unname(y) for y in x]
+    return x
+
+
 def named_operand(x, other):
     """x, a number, by name when other is an IL node's named word."""
     if x[0] != 'num' or other[0] != 'path' or len(other[2]) < 2 or \

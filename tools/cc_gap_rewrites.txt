@@ -70,3 +70,5 @@ moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc_de
 # gap 32 (isc.pvt.pas and isc_types.ins.pas, translator GB): the sections isc_vars defines, named as their variables (renamed, for the check)
 moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/hd69fbe76.000/iscg_input/isc.pvt.pas	s/^var \((isc_tool_generated_readonly_tables)\)/var (${1}_s) { gap 32 }/
 lang2/source/isc/isc_types.ins.pas	s/^var \((isc_readonly_tables)\)/var (${1}_s) { gap 32 }/
+# gap 48 (list_tree): in on a longword constant set with an enumerated element (the operator tested as a word, for the check)
+lang/lang/source/list_tree.pas	s/\(t\^\.st_aop in \[add_to_aop\.\.sub_from_aop, neg_to_aop, f_add_to_aop\.\.div_by_aop, isc_mul_to_aop\]\)/(lt_word_t(t^.st_aop) in [1..2, 14, 19..24, 26]) { gap 48 }/

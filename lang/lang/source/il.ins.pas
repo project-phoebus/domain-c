@@ -521,6 +521,75 @@ type
     var_$withrecord);                 { 31 }
   il_$var_attrs_t = set of il_$var_attr_t;
 
+{ The condition codes (a comparison's descriptor's word at +8, emit's
+  conditional branch's x), as list_tree's print_relational names them:
+  the 68000's 'T', 'F', 'HI', 'LS', 'CC', 'CS', 'NE', 'EQ', 'VC', 'VS',
+  'PL', 'MI', 'GE', 'LT', 'GT', 'LE', 0..15 (reverse_cc pairs them,
+  n xor 1).  The math functions (an F_MATH tree's descriptor's word at
+  +6: cg_tree's tree_fn_inst and tree_fn_rtn index by it), as
+  print_math names them: 'ABS' .. 'FF_EXPON', 0..24.  The calling
+  conventions (bits 6..4 of a block node's byte at +377), as
+  print_routine_block names them: call_unk .. call_ada, 0..5.
+
+  Constants: the units keep these values in integer words and index
+  tables by them.  The calling conventions' names are the dump's; the
+  condition codes and math functions have cond_ and math_ before the
+  dump's names, chosen here (the bare names are single letters or
+  Pascal's own: abs, sin, max).
+
+  Not known from the original: the constants' names but the calling
+  conventions'. }
+const
+  cond_t = 0;
+  cond_f = 1;
+  cond_hi = 2;
+  cond_ls = 3;
+  cond_cc = 4;
+  cond_cs = 5;
+  cond_ne = 6;
+  cond_eq = 7;
+  cond_vc = 8;
+  cond_vs = 9;
+  cond_pl = 10;
+  cond_mi = 11;
+  cond_ge = 12;
+  cond_lt = 13;
+  cond_gt = 14;
+  cond_le = 15;
+
+  math_abs = 0;
+  math_sin = 1;
+  math_cos = 2;
+  math_tan = 3;
+  math_log = 4;
+  math_log10 = 5;
+  math_exp = 6;
+  math_atan = 7;
+  math_atan2 = 8;
+  math_sqrt = 9;
+  math_trunc = 10;
+  math_nint = 11;
+  math_max = 12;
+  math_min = 13;
+  math_conjg = 14;
+  math_aimag = 15;
+  math_asin = 16;
+  math_acos = 17;
+  math_sinh = 18;
+  math_cosh = 19;
+  math_tanh = 20;
+  math_round = 21;
+  math_ii_expon = 22;
+  math_fi_expon = 23;
+  math_ff_expon = 24;
+
+  call_unk = 0;
+  call_pas = 1;
+  call_ftn = 2;
+  call_c = 3;
+  call_c_std = 4;
+  call_ada = 5;
+
 { The compiler's nodes.  Every node begins with a word not yet
   identified and the node's kind at +2 (il.pas initialize_module 0x07D882
   sets +2 of each node it creates; idntk sets it in each identifier

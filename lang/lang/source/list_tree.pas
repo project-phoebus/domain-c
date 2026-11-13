@@ -67,21 +67,27 @@
   list_tree_$ routines and begins_inline_block) are internal; the
   sanity_check_ routines are nested in list_tree_$sanity_check.
 
-  The phase bits' names (prtphasebits): 0 ATM, 1 VOL, 2 VOLexpr,
-  3 DEVrd, 4 DEVwt, 5 vis, 6 cse, 7 algn_arg_lst, 8 indx_lng, 9 dly,
-  10 bnd, 11 wlkd, 12 sd_eff, 13 tgt_rt, 14 tgt_lft, 15 invar,
-  16 VOLdecl, 17 nvr_invld, 18 isc, 19 phys, 20 proc_reg, 21 enf_paren,
-  22 lcl_cse (add_node_$phase_t).  The register classes (print_rlen):
-  0 null, 1 byte, 2 word, 4 long, 5 addr, 6 r4, 7 r8, 8 c8, 9 cs,
-  10 vcs, 11 agg, 12 c16.  The tree operators (+36) are printed by name
-  in print_tree_exp: 0 NOP, 1 ADD, 2 SUB, 3 MUL, 4 DIV, 5 DIVIDE, 6 MOD,
-  7 NEG, 8 NOT, 9 AND, 10 OR, 11 BIT_TEST, 12 COMPARE, ... 89 ILLEGAL
-  (the whole list in that routine's header).  The node kinds are
-  numbers (docs/questions.md 78); this unit has no table of their names.
+  The enumerations and sets the dumps print by name are the shared
+  types' (docs/questions.md 92): the phase bits (prtphasebits;
+  add_node_$phase_bit_t, phase_atm .. phase_lcl_cse), the register classes
+  (print_rlen; il.ins.pas's rlen_null .. rlen_c16), the condition codes
+  (print_relational; cond_t .. cond_le), the math functions
+  (print_math; math_abs .. math_ff_expon), the tree operators
+  (print_tree_exp; il_$top_t, nop_top .. illegal_top: the dump prints
+  'NOP' .. 'ILLEGAL' and '<ORD(TOP)=' n '>' for another), a variable's
+  allocation and attributes (print_variable; il_$vat_t, il_$var_attr_t),
+  the calling conventions (print_routine_block; call_unk .. call_ada)
+  and the assignment operators (print_top_node; il_$aop_t, 'ORD(AOP)='
+  for another).  Not named here: a block's allocation (il_$bat_t: its
+  `case' is on a longword shift), the block's attributes, the label
+  classes and the statement's flags (bit fields read by mask).  The
+  node kinds are il.ins.pas's il_$kind_t; this unit has no table of
+  their names.
 
   dpc gaps (docs/dpc-gaps.md): 8 (`in' on the kind and operator
   sets, every one), 9 (sanity_check_walk_spine declared forward), 29
-  (print_top_node's variables used).
+  (print_top_node's variables used), 48 (print_top_node's `in' on an
+  assignment operator against a longword set).
 
   Not known from the original: every name but the routines'; the
   module's variables and the locals; the node views' field names.
@@ -266,7 +272,7 @@ type
           vr_x36: array [9..13] of integer32;       { +36 }
           vr_disp: integer32;           { +56 }
           vr_x60: array [15..17] of integer32;      { +60 }
-          vr_vat: integer;              { +72: its allocation }
+          vr_vat: il_$vat_t;            { +72: its allocation }
           vr_number: integer);          { +74 }
       { A Fortran symbol (110). }
       5: (fs_x4: integer32;             { +4 }
@@ -753,22 +759,22 @@ procedure print_relational(
     c: integer); internal; options(val_param);
 begin
   case c of
-    0: prtcats(s, 'T', 1);
-    1: prtcats(s, 'F', 1);
-    2: prtcats(s, 'HI', 2);
-    3: prtcats(s, 'LS', 2);
-    4: prtcats(s, 'CC', 2);
-    5: prtcats(s, 'CS', 2);
-    6: prtcats(s, 'NE', 2);
-    7: prtcats(s, 'EQ', 2);
-    8: prtcats(s, 'VC', 2);
-    9: prtcats(s, 'VS', 2);
-    10: prtcats(s, 'PL', 2);
-    11: prtcats(s, 'MI', 2);
-    12: prtcats(s, 'GE', 2);
-    13: prtcats(s, 'LT', 2);
-    14: prtcats(s, 'GT', 2);
-    15: prtcats(s, 'LE', 2);
+    cond_t: prtcats(s, 'T', 1);
+    cond_f: prtcats(s, 'F', 1);
+    cond_hi: prtcats(s, 'HI', 2);
+    cond_ls: prtcats(s, 'LS', 2);
+    cond_cc: prtcats(s, 'CC', 2);
+    cond_cs: prtcats(s, 'CS', 2);
+    cond_ne: prtcats(s, 'NE', 2);
+    cond_eq: prtcats(s, 'EQ', 2);
+    cond_vc: prtcats(s, 'VC', 2);
+    cond_vs: prtcats(s, 'VS', 2);
+    cond_pl: prtcats(s, 'PL', 2);
+    cond_mi: prtcats(s, 'MI', 2);
+    cond_ge: prtcats(s, 'GE', 2);
+    cond_lt: prtcats(s, 'LT', 2);
+    cond_gt: prtcats(s, 'GT', 2);
+    cond_le: prtcats(s, 'LE', 2);
     otherwise begin
       prtcats(s, '?? ', 3);
       prtint(s, c, 10, false);
@@ -786,31 +792,31 @@ procedure print_math(
     f: integer); internal; options(val_param);
 begin
   case f of
-    0: prtcats(s, 'ABS', 3);
-    1: prtcats(s, 'SIN', 3);
-    2: prtcats(s, 'COS', 3);
-    3: prtcats(s, 'TAN', 3);
-    4: prtcats(s, 'LOG', 3);
-    5: prtcats(s, 'LOG10', 5);
-    6: prtcats(s, 'EXP', 3);
-    7: prtcats(s, 'ATAN', 4);
-    8: prtcats(s, 'ATAN2', 5);
-    9: prtcats(s, 'SQRT', 4);
-    10: prtcats(s, 'TRUNC', 5);
-    11: prtcats(s, 'NINT', 4);
-    12: prtcats(s, 'MAX', 3);
-    13: prtcats(s, 'MIN', 3);
-    14: prtcats(s, 'CONJG', 5);
-    15: prtcats(s, 'AIMAG', 5);
-    16: prtcats(s, 'ASIN', 4);
-    17: prtcats(s, 'ACOS', 4);
-    18: prtcats(s, 'SINH', 4);
-    19: prtcats(s, 'COSH', 4);
-    20: prtcats(s, 'TANH', 4);
-    21: prtcats(s, 'ROUND', 5);
-    22: prtcats(s, 'II_EXPON', 8);
-    23: prtcats(s, 'FI_EXPON', 8);
-    24: prtcats(s, 'FF_EXPON', 8);
+    math_abs: prtcats(s, 'ABS', 3);
+    math_sin: prtcats(s, 'SIN', 3);
+    math_cos: prtcats(s, 'COS', 3);
+    math_tan: prtcats(s, 'TAN', 3);
+    math_log: prtcats(s, 'LOG', 3);
+    math_log10: prtcats(s, 'LOG10', 5);
+    math_exp: prtcats(s, 'EXP', 3);
+    math_atan: prtcats(s, 'ATAN', 4);
+    math_atan2: prtcats(s, 'ATAN2', 5);
+    math_sqrt: prtcats(s, 'SQRT', 4);
+    math_trunc: prtcats(s, 'TRUNC', 5);
+    math_nint: prtcats(s, 'NINT', 4);
+    math_max: prtcats(s, 'MAX', 3);
+    math_min: prtcats(s, 'MIN', 3);
+    math_conjg: prtcats(s, 'CONJG', 5);
+    math_aimag: prtcats(s, 'AIMAG', 5);
+    math_asin: prtcats(s, 'ASIN', 4);
+    math_acos: prtcats(s, 'ACOS', 4);
+    math_sinh: prtcats(s, 'SINH', 4);
+    math_cosh: prtcats(s, 'COSH', 4);
+    math_tanh: prtcats(s, 'TANH', 4);
+    math_round: prtcats(s, 'ROUND', 5);
+    math_ii_expon: prtcats(s, 'II_EXPON', 8);
+    math_fi_expon: prtcats(s, 'FI_EXPON', 8);
+    math_ff_expon: prtcats(s, 'FF_EXPON', 8);
     otherwise begin
       prtcats(s, '?? ', 3);
       prtint(s, f, 10, false);
@@ -1587,18 +1593,18 @@ begin
     bytes := te.size;
   end;
   case vn^.vr_vat of
-    0: print_string('local_vat    ', 13);
-    1: print_string('static_vat   ', 13);
-    2: print_string('dynm_vat     ', 13);
-    3: print_string('extern_vat   ', 13);
-    4: print_string('externdef_vat', 13);
-    5: print_string('param_vat    ', 13);
-    6: print_string('xdynm_vat    ', 13);
-    7: print_string('xstatic_vat  ', 13);
-    8: print_string('xextrndef_vat', 13);
-    9: print_string('based_vat    ', 13);
-    10: print_string('sect_vat     ', 13);
-    11: print_string('absolute_vat ', 13);
+    local_vat: print_string('local_vat    ', 13);
+    static_vat: print_string('static_vat   ', 13);
+    dynm_vat: print_string('dynm_vat     ', 13);
+    extern_vat: print_string('extern_vat   ', 13);
+    externdef_vat: print_string('externdef_vat', 13);
+    param_vat: print_string('param_vat    ', 13);
+    xdynm_vat: print_string('xdynm_vat    ', 13);
+    xstatic_vat: print_string('xstatic_vat  ', 13);
+    xextrndef_vat: print_string('xextrndef_vat', 13);
+    based_vat: print_string('based_vat    ', 13);
+    sect_vat: print_string('sect_vat     ', 13);
+    absolute_vat: print_string('absolute_vat ', 13);
     otherwise
   end;
   print_string(' Disp:', 6);
@@ -1904,12 +1910,12 @@ begin
     otherwise
   end;
   case rshft(ord(b^.xc[377]) & 16#70, 4) of
-    0: print_string('call_unk   ', 11);
-    1: print_string('call_pas   ', 11);
-    2: print_string('call_ftn   ', 11);
-    3: print_string('call_c     ', 11);
-    4: print_string('call_c_std ', 11);
-    5: print_string('call_ada   ', 11);
+    call_unk: print_string('call_unk   ', 11);
+    call_pas: print_string('call_pas   ', 11);
+    call_ftn: print_string('call_ftn   ', 11);
+    call_c: print_string('call_c     ', 11);
+    call_c_std: print_string('call_c_std ', 11);
+    call_ada: print_string('call_ada   ', 11);
     otherwise
   end;
   print_string('    blk_atts: ', 14);

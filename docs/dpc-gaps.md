@@ -1273,3 +1273,26 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
 
     Rev 8.89: b at +24; dpc: b at +18 (and an unpacked `array of 0..255'
     gets 2 bytes an element: gap 37).
+
+48. **`in' on a longword constant set with an enumerated element.**
+    list_tree's print_top_node tests an assignment's operator (the word
+    at +76, il.ins.pas's il_$aop_t of 38 values) against a set of 0..31
+    held as a longword (`move.l #0x05F84006,D1; btst' after a range
+    check against 31: cc.m68k print_top_node 0x083462, docs/questions.md
+    92).  dpc takes an enumeration of fewer than 256 values for a byte
+    element and refuses: "`in` on a constant set of a word or a
+    longword with a byte element (no site, codegen-patterns 5.1) is not
+    supported yet".  The same test on a 0..65535 word compiles.  The
+    rewrite tests the operator as a word (lt_word_t) against the
+    numbers.  Reproducer:
+
+       module g48;
+       type e_t = (e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
+                   e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23,
+                   e24, e25, e26, e27, e28, e29, e30, e31, e32, e33, e34,
+                   e35, e36, e37);
+       var k: e_t; b: boolean;
+       procedure p;
+       begin
+         b := (k <= e31) and (k in [e1..e2, e14, e19..e24, e26]);
+       end;
