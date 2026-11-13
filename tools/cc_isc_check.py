@@ -131,7 +131,8 @@ def check_file(f, coff, img, man, inc, rules, keep, verbose, diff):
         dpc_out = err.getvalue()
         warns = dpc_out.count('best effort')
         data_base = mod['a5'] if mod else cc.data_base(coff, unit)
-        linkmap = cc.CoffLinkMap(coff, mapaddr, data_base)
+        linkmap = cc.CoffLinkMap(coff, mapaddr, data_base,
+                                 mod['a5'] if mod else unit.get('a5'))
         res = pp.compare_object(obj, linkmap, cc.CoffImage(coff), mapaddr, next_after,
                                 local_routines=True)
         count, seen = {}, set()
