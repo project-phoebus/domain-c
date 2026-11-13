@@ -19,7 +19,10 @@ bytes for the same unit:
   without a section suffix) against the unit's data block in the image,
   from its A5 (the extern-address cells right below it are the
   loader's; a unit with no code, opinfo, from its .blocks data cell) to
-  the next unit's block;
+  the next unit's block.  dpc's .moddata starts with its header cells
+  when it has any (far constants' addresses, read below A5; the code
+  loads A5 as `lea (.Ldata).l,%a5', the section plus their size): they
+  are left out, and the section compared from .Ldata on;
 - each named section the unit defines (dpc's `.data.overlay.S': a `var
   (s)' block with an initializer) against the image's section S, from
   its start (a named section is an overlay: every unit that declares it
@@ -499,6 +502,58 @@ def unit_key(f):
     return os.path.splitext(f)[0]
 
 
+# the instructions that load A5 with the module's block (an absolute
+# address with a relocation): lea abs.l,%a5 and movea.l #abs,%a5
+A5_LOADS = (b'\x4b\xf9', b'\x2a\x7c')
+
+
+class _HeadlessSection:
+    """A .moddata section of dpc's seen from its .Ldata (A5) on: the
+    header cells before it dropped."""
+
+    def __init__(self, s, n):
+        self._s, self.head = s, n
+        self.size = s.size - n
+
+    def __getattr__(self, k):
+        return getattr(self._s, k)
+
+
+class _HeadlessElf:
+    """rfc_elf.Elf with the sections of `head' ({section: header size})
+    starting at their .Ldata."""
+
+    def __init__(self, elf, cut):
+        self._elf, self.cut = elf, cut
+        self.sections = [_HeadlessSection(s, cut[s.index]) if s.index in cut else s
+                         for s in elf.sections]
+
+    def contents(self, s):
+        n = self.cut.get(s.index, 0)
+        return self._elf.contents(getattr(s, '_s', s))[n:]
+
+    def __getattr__(self, k):
+        return getattr(self._elf, k)
+
+
+def strip_heads(elf, relocs, syms, head):
+    """(elf, relocs, syms) with each .moddata section in head (by name:
+    its header's size) seen from its .Ldata on: offsets in the section,
+    and addends against it, less the header's size; the header's own
+    relocations dropped (its cells are not compared)."""
+    cut = {s.index: head[s.name] for s in elf.sections if s.name in head}
+    if not cut:
+        return elf, relocs, syms
+    out = {}
+    for i, lst in relocs.items():
+        n = cut.get(i, 0)
+        out[i] = [(off - n, typ, name, addend - head.get(name, 0))
+                  for off, typ, name, addend in lst if off >= n]
+    syms = [(nm, v - cut.get(shndx, 0), sz, info, shndx) for nm, v, sz, info, shndx in syms
+            if v >= cut.get(shndx, 0)]
+    return _HeadlessElf(elf, cut), out, syms
+
+
 def check(f, binkey, img, obj, verbose=False):
     """[(kind, line)] for unit file f's object against img."""
     out = []
@@ -509,9 +564,23 @@ def check(f, binkey, img, obj, verbose=False):
         return None
     elf = rfc_elf.Elf(obj)
     syms = elf.symbols()
-    relocs = {}
+    relocs, head, code = {}, {}, {}
     for target, off, typ, name, addend in elf.relocations(section_names=True):
         relocs.setdefault(target.index, []).append((off, typ, name, addend))
+        if target.flags & 4 and typ == rfc_elf.R_68K_32 and MODDATA_RE.match(name) and off >= 2:
+            if target.index not in code:
+                code[target.index] = elf.contents(target)
+            if code[target.index][off - 2:off] in A5_LOADS:
+                head.setdefault(name, set()).add(addend)
+    # dpc's header cells: the addresses of far constants (a string past a
+    # 16-bit pc-relative reach), which the code reads at negative offsets
+    # from A5, lie at the start of dpc's .moddata, before .Ldata (A5);
+    # the code loads A5 as `lea (.Ldata).l,%a5', the section plus the
+    # header's size.  The image has no such cells (its cells below A5 are
+    # the loader's extern addresses: a module's pas_$output at -4): the
+    # header is left out of the comparison and the rest taken from A5.
+    head = {n: max(a) for n, a in head.items() if len(a) == 1 and max(a) > 0}
+    elf, relocs, syms = strip_heads(elf, relocs, syms, head)
     base_of = {}             # our data section index -> image address
     what = {}
     for s in elf.sections:
@@ -799,8 +868,10 @@ def check(f, binkey, img, obj, verbose=False):
         ndata += res[1]
         nlayout += res[2]
         ncompared += res[3]
-    sections = ', '.join('%s %d at 0x%X' % (elf.sections[i].name, elf.sections[i].size, b)
-                         for i, b in base_of.items())
+    sections = ', '.join('%s %d at 0x%X%s' % (
+        elf.sections[i].name, elf.sections[i].size, b,
+        ' (after %d bytes of header cells, not compared)' % elf.sections[i].head
+        if getattr(elf.sections[i], 'head', 0) else '') for i, b in base_of.items())
     out.append(('summary', '%-48s %-5s %s: %d data difference(s), %d layout, '
                 '%d byte(s) compared, %d unverified reloc(s)'
                 % (f, binkey, sections or 'no initialized data', ndata, nlayout,
