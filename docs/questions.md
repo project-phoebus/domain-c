@@ -3212,6 +3212,33 @@ answered by this policy and needs no reply.
    table and `desc.w8 = 8', delay's and reg_save's tests) were left to
    their owners; swap_cc's initializer could be written with cond_
    names.
+   **Done (RN8, 2026-11-12):** the classes are rlen_ names where the
+   operator's opmod is a class by list_tree's print_tree_exp: cg_tree's
+   F_EXTEND arm (`w6 = rlen_long', `rlen_r8 or rlen_r4', `rlen_c16 or
+   rlen_c8', `<= rlen_long', `w6 := rlen_r4' ...), f_compare_proc's
+   (`rlen_r8 or rlen_r4', `>= rlen_c8', `> rlen_r8', its -FRND sz),
+   compare_proc's size (`size = rlen_addr', `size := rlen_long', and the
+   classes peek, inquire and address take beside it), the index and
+   bit-test arms' `w6 = rlen_long', div_proc's `> rlen_word' and
+   `rlen_long', F_EXPON's `w8 <= rlen_long' (fpa1_expon_inquire,
+   needs_lib_support, generate: its opmod2 is a class, use 1),
+   cbranch_proc's `rlen_c16 or rlen_c8' (cg_top); needs_lib_support's
+   F_EXTEND and F_COMPARE `rlen_c16 or rlen_c8' and its `fn = rlen_long'
+   where the operator is F_EXTEND (`(fn = 7) or (fn = 6)' for any
+   operator stays numeric); max/min's `(m = call_pas) or (m = 6)', 6
+   commented as the convention the dump does not name.  Outside the
+   code generator: kfold's compare fold (`[cond_ne, cond_eq,
+   cond_ge..cond_le]', its case and the zero tests), F_COMPARE fold and
+   bit-test fold (cond_eq, cond_ne), its F_EXTEND `w6 = rlen_c16' and
+   F_MATH `w6 = math_aimag'; add_node's swap_cc initializer (cond_t ..
+   cond_ge), its compare and F_COMPARE folds and its F_MATH folds
+   (math_abs .. math_sqrt, the inverse pairs exp/log, tan/atan,
+   sqrt(x*x)); delay's compare (`[cond_pl..cond_le]', cond_eq,
+   cond_ne); reg_save's mul/div/compare classes and F_MATH's
+   `math_nint', `[math_atan2, math_max..math_aimag]'.  Left numbers:
+   kfold's F_MATH case (question 345) and the `desc.w8 = 8' of add_node
+   and delay, an unpack's field width (question 346).  dpc's code is
+   unchanged in all nine objects (question 347).
 334. Translator RN6: **two probable slips kept (named as conditions).**
    compare_proc maps the sign tests of a comparison with 0 (HI, LS, LT,
    GE to NE, EQ, MI, PL) on desc.w6, the operands' class, where the
@@ -3236,3 +3263,109 @@ answered by this policy and needs no reply.
    evaluation_order_function compares its n1 and n2 signed (`ble',
    0x2124C2) although the callers pass the unsigned maxima: retype the
    accessors' results?
+   **(a) done (RN8, 2026-11-12):** isc_routine_externs.ins.pas's
+   il_kind_function returns an il_$kind_t (isc_user_routines:
+   `il_kind_function := node^.kind'); iscg_pass1.kind_names names a
+   number compared with its result, so declarations.isc's nlbranch_node
+   reads `il_kind_function(il.p48) = label_name' and the generated pass
+   1 compares with label_name.  The image's compare is `cmpi.w #117,D0;
+   bne' (cc.a88k 0x0E4FBE), an equality: no signedness to it, and dpc's
+   code is unchanged (isc_user_routines and isc_pass_1_main identical).
+   **(b) done (RN8):** an assignment's class at +52 is named in
+   declarations.isc's assignment operators (`il.w52 = rlen_cs':
+   iscg_pass1.assign_names, the operators whose il is an _aop) and in
+   the actions whose pattern's subject is an assignment
+   (iscg_p2lang.opmod_uses: +52 is the class for every il_$aop_t, as
+   list_tree's print_known_aux reads an assignment's st_aux; 02, 23 and
+   24: rlen_byte, rlen_word, rlen_long, rlen_addr, rlen_r4, rlen_r8,
+   rlen_cs, rlen_agg), and isc_agg_aop's fixed rewrite sets rlen_agg.
+   bit_test's condition (+28, list_tree's use 7) is named in an
+   equality only (`<> cond_ne' under rshf_top, 18_shifts): 25_compares
+   tests a bit_test's condition `< 0' too (the negated form's sign, as
+   for a comparison), which stays a number; the comparisons' conditions
+   stay numbers.  The rule files of the actions keep their numbers;
+   declarations.isc carries the name, as it does for +24, +36, +76;
+   re-extraction reproduces both.  dpc's code is unchanged in all 61
+   ISC objects.
+   **(d) evidence (RN8), not retyped:** the image cannot tell the
+   accessors' result type.  Their bodies return the word as it is
+   (`move.w (70,A0),D0', or `clr.w D0' after the bug_check:
+   pass_1_cse_parent_ip_reg_max 0x0BADBC); their 68 call sites (in the
+   CSE actions, 0x11E636 .. 0x1200A6) all store D0 straight into the
+   solution (`move.w D0,(70,A2)' ip_reg_max, (72) ip_reg_result, (58)
+   .. (68) the floating maxima and results, 12, 12, 10 x 4 and 2 x 2
+   times); nothing compares, widens or indexes by a result; the two
+   _eval_order accessors are never called.  An integer and a 0..65535
+   result give the same code (word to word), so the headings stay
+   integer: retyping would rest on the fields' type alone, and the
+   generator's lifter sizes a heading's class (an `other:0..65535'
+   result or parameter is not a class it knows: iscg_p2lift.param_size).
+   evaluation_order_function's `cmp.w D1,D0; ble' (0x2124C0, n2 at
+   fp+12 against n1 at fp+10) is a signed compare of its parameters:
+   evidence that n1 and n2 were integers in the original, the callers
+   passing the unsigned maxima into them (a value that converts with no
+   code); dpc gives the same `ble' from the integer parameters.  Its
+   legal, though, is zero-extended for number_of_one_bits (`clr.l D5;
+   move.w D4,D5', 0x2124CC): question 348.
+345. Translator RN8 (2026-11-12), after 333: **kfold's F_MATH fold
+   left numeric.**  kfold_$general folds an F_MATH tree by desc.w6 with
+   bodies that disagree with print_math's names for four functions: 12
+   and 13 (MAX and MIN in print_math, and in cg_tree's F_MATH arm, which
+   compares for math_max) are folded as `abs(a) * b / abs(b)' and `a -
+   trunc(a / b) * b' (the unit's header: the FPP operations 0x0178 and
+   0x0180, written as Fortran's SIGN and MOD, a guess; dpc has no real
+   arithmetic, docs/dpc-gaps.md 6, 7, 19, so the check never compared
+   them); 16 and 17 (ASIN, ACOS) compute the arc sine for 17 and pi/2
+   less it for 16, and the set test before the case (`[0..7, 9..13]')
+   excludes both, so the arm is never reached.  The case's labels stay
+   numbers (the condition codes and math_aimag elsewhere in kfold are
+   named; add_node's F_MATH fold, whose bodies all agree with
+   print_math, is named).  Are 0x0178 and 0x0180 fpp_$'s maximum and
+   minimum?  If so 12 and 13 are math_max and math_min and their bodies
+   the translation's guess to correct; 16/17 then read as the image has
+   them (keep as found).
+346. Translator RN8: **add_node's and delay's `desc.w8 = 8' are a field
+   width.**  Question 333 listed add_node's `desc.w8 = 8' with the
+   conditions; both of add_node's (a bit test of an UNPACK operand and
+   another fold of one) and delay's two (compare_top's operands) test an
+   UNPACK tree's opmod2, its field width (list_tree's use 10, `fw='),
+   with its offset 0 or a multiple of 8: a byte at a byte boundary.  Left numbers, as
+   326 (d) leaves the field widths.
+347. Translator RN8: **the assembly comparison** (every unit touched
+   compiled as the gate compiles it, main f474514 against the branch,
+   dpc b9d77de stable, the .s compared but its first line, the source
+   path): all 70 objects identical: cg_tree, cg_top, reg_save (cc.m68k),
+   kfold, add_node, delay (both binaries), and the 61 ISC units
+   (lang2/source/isc's five, the six generated named units and the 50
+   generated action modules, cc.a88k).  The names are constants of the values they
+   replace, il_kind_function's word is the same word, tr_rlen is the
+   integer at +24 that xw[12] was.  The data check is clean
+   (add_node's swap_cc initializer written with cond_ names gives the
+   same 16 words).
+348. Translator RN8, after 335 (d): **evaluation_order_function's legal
+   is zero-extended in the image.**  number_of_one_bits gets legal as
+   `clr.l D5; move.w D4,D5' (cc.a88k 0x2124CC), Rev 8.89's widening of
+   a 0..65535 word (question 321 (b)); the translation's
+   `number_of_one_bits(legal & 16#FFFF)' gives dpc's `ext.l; andi.l
+   #0xFFFF'.  A legal: 0..65535 (and legal_evaluation_orders' result,
+   which every caller passes to it) would give the image's code.  Not
+   done: the heading is read by the generator, whose lifter sizes a
+   value parameter by its class (iscg_p2lift.param_size: words for
+   integer and the enumerations, a longword otherwise), so a 0..65535
+   parameter needs a class of its own there first, and re-extraction
+   checked.  Worth doing?
+349. Translator RN8, after 331: **the generated ISC's tree class is
+   tr_rlen.**  iscg_pass1.node_ref writes a node's word at +24 as
+   isc_node_t's tr_rlen (the 122 reads and writes of xw[12] in
+   isc_pass_1_main, all of trees: the tree operators' routines and the
+   rewrites' new tree nodes), and iscg_text's fixed routines read and
+   write tr_rlen; where it is compared it was named already (`=
+   rlen_r4', `= rlen_r8' in f_div_top's rewrite).  Left by offset: the
+   tree's opmods at +26 and +28 (xw[13], xw[14]; isc_node_t has
+   tr_opmod1 and tr_opmod2) and the assignment's descriptor at +48 .. +56
+   (xl[12], xw[26], xw[28]: isc_node_t's assignment variant names only
+   as_rhs and as_op, its +4 .. +67 an array), and the actions read every
+   node field through their own view (p2_node_t's w[12], w[13], w[14],
+   w[26]).  Name the assignment's descriptor in that variant (as_size,
+   as_rlen, as_opmod1, as_opmod2: a re-layout of as_x4) and have the
+   generator use those and the tree's opmods' names too?
