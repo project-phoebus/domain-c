@@ -106,12 +106,14 @@ attribute already_through_pass_2 +115.3 boolean;
   calls' sets listed, position: set).  `child K NODE solution KIND': the
   child's list is one solution of KIND made here (NODE nil: no inherited
   attributes).  `if COND; ... [else; ...] endif;': COND an and/or of
-  relations ((il.w52 = 9)), booleans (il.b30.7, a function's result) and
-  the globals target_properties.p_be, target_properties.l180 and
-  il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN, nK.bN.B
-  and nK.index (the statement index, 16 bits at bit 8 of +42); the
-  attributes' values may be rlen_arith(X), rlen_bits(X) (isc_readonly_
-  tables by rlen) and a compare (il.w36 = signed_div_top). }
+  relations ((il.w52 = rlen_cs): a number compared with a node's kind or
+  il_kind_function's, a tree's class or operator, an assignment's class
+  or operator is written by name), booleans (il.b30.7, a function's
+  result) and the globals target_properties.p_be, target_properties.l180
+  and il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN,
+  nK.bN.B and nK.index (the statement index, 16 bits at bit 8 of +42);
+  the attributes' values may be rlen_arith(X), rlen_bits(X)
+  (isc_readonly_tables by rlen) and a compare (il.w36 = signed_div_top). }
 operator isc_unrecognized_il_node image 16#0DB51C;
   fixed;
 end;
@@ -143,7 +145,7 @@ operator isc_assign_node_add_to_aop il add_to_aop children 2 image 16#0DCB40;
     permissible derived;
 end;
 operator isc_assign_node_agg_aop il agg_aop children 2 image 16#0DCD58;
-  if (il.w52 = 9) and (il.w56 <> 0);
+  if (il.w52 = rlen_cs) and (il.w56 <> 0);
     trace rewrite;
     let n2 <- rewrite_$agg_aop(il);
     child solutions n2 copy_all
@@ -298,7 +300,7 @@ operator isc_assign_node_f_sub_from_aop il f_sub_from_aop children 2 image 16#0D
     permissible derived;
 end;
 operator isc_assign_node_fp_aop il fp_aop children 2 image 16#0DE6E2;
-  if (il.w52 = 9) and (il.w56 <> 0);
+  if (il.w52 = rlen_cs) and (il.w56 <> 0);
     trace rewrite;
     let n2 <- rewrite_$agg_aop(il);
     child solutions n2 copy_all
@@ -492,7 +494,7 @@ operator isc_assign_node_rshft_to_aop il rshft_to_aop children 2 image 16#0E041A
     permissible derived;
 end;
 operator isc_assign_node_scalar_aop il scalar_aop children 2 image 16#0E0632;
-  if (il.w52 = 9) and (il.w56 <> 0);
+  if (il.w52 = rlen_cs) and (il.w56 <> 0);
     trace rewrite;
     let n2 <- rewrite_$agg_aop(il);
     child solutions n2 copy_all

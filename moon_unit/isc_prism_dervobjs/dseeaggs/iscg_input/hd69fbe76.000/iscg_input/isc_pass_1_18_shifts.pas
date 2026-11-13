@@ -1315,7 +1315,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 8) or (subject.children[2]^.literal_32_bits_value <> 7) or (p2_node_ptr_t(subject.children[1]^.il)^.w[14] <> 6) or (subject.children[1]^.children[2]^.inherited_attributes^.fetch_precision <> 16) or (subject.children[1]^.children[1]^.literal_32_bits_value < 8) or (subject.children[1]^.children[1]^.literal_32_bits_value > 15)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 8) or (subject.children[2]^.literal_32_bits_value <> 7) or (p2_node_ptr_t(subject.children[1]^.il)^.w[14] <> cond_ne) or (subject.children[1]^.children[2]^.inherited_attributes^.fetch_precision <> 16) or (subject.children[1]^.children[1]^.literal_32_bits_value < 8) or (subject.children[1]^.children[1]^.literal_32_bits_value > 15)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 365 matched the semantics.');
       writeln;
@@ -1374,7 +1374,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 8) or (subject.children[2]^.literal_32_bits_value <> 7) or (p2_node_ptr_t(subject.children[1]^.il)^.w[14] <> 6)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 8) or (subject.children[2]^.literal_32_bits_value <> 7) or (p2_node_ptr_t(subject.children[1]^.il)^.w[14] <> cond_ne)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 366 matched the semantics.');
       writeln;
@@ -1471,7 +1471,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 8) or (subject.children[2]^.literal_32_bits_value <> 7) or (p2_node_ptr_t(subject.children[1]^.il)^.w[14] <> 6)) then begin
+  if not ((subject.children[1]^.inherited_attributes^.fetch_precision <> 8) or (subject.children[2]^.literal_32_bits_value <> 7) or (p2_node_ptr_t(subject.children[1]^.il)^.w[14] <> cond_ne)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 367 matched the semantics.');
       writeln;

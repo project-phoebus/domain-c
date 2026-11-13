@@ -1180,7 +1180,8 @@ def format_operator(d, lifted, positions, unions, ils, kinds, op_name):
         ' children %d' % d['nchildren'] if d['nchildren'] is not None else '', d['start'])
     L = [head]
     if lifted is not None:
-        format_body(L, lifted['body'], '  ', unions, kinds, op_name)
+        format_body(L, lifted['body'], '  ', unions, kinds, op_name,
+                    bool(il and il.endswith('_aop')))
     else:
         calls = []
         for (mask, np), pos in zip(d['pass_1_calls'], positions):
@@ -1241,7 +1242,18 @@ def word_names(text, path=None):
     return _WORD_REL.sub(lambda m: '%s %s %s' % (m.group(1), m.group(3), word_name(m.group(2), m.group(4))), text)
 
 
-def format_body(L, body, ind, unions, kinds, op_name):
+# an assignment's register class (its descriptor's word at +52, as
+# list_tree's print_known_aux reads an assignment's st_aux) by name in the
+# relations of an assignment operator's routine (docs/questions.md 335 (b))
+_ASSIGN_REL = re.compile(r'(\bil\.w52) (=|<>|<|>|<=|>=) (\d+)\b')
+
+
+def assign_names(text):
+    return _ASSIGN_REL.sub(lambda m: '%s %s %s' % (m.group(1), m.group(2),
+                                                   word_name('w24', m.group(3))), text)
+
+
+def format_body(L, body, ind, unions, kinds, op_name, assign=False):
     for b in body:
         if b[0] == 'call':
             L.append('%scall %s;' % (ind, b[1]))
@@ -1256,11 +1268,12 @@ def format_body(L, body, ind, unions, kinds, op_name):
         elif b[0] == 'solution':
             L.append('%schild %d %s solution %s;' % (ind, b[1], b[2], kinds[b[3]]))
         elif b[0] == 'if':
-            L.append('%sif %s;' % (ind, word_names(kind_names(b[1]))))
-            format_body(L, b[2], ind + '  ', unions, kinds, op_name)
+            c = word_names(kind_names(b[1]))
+            L.append('%sif %s;' % (ind, assign_names(c) if assign else c))
+            format_body(L, b[2], ind + '  ', unions, kinds, op_name, assign)
             if b[3]:
                 L.append('%selse;' % ind)
-                format_body(L, b[3], ind + '  ', unions, kinds, op_name)
+                format_body(L, b[3], ind + '  ', unions, kinds, op_name, assign)
             L.append('%sendif;' % ind)
         else:
             _, kpos, node, copy_all, stmts, mask = b
@@ -1395,12 +1408,14 @@ OPERATORS_COMMENT = [
     "  calls' sets listed, position: set).  `child K NODE solution KIND': the",
     "  child's list is one solution of KIND made here (NODE nil: no inherited",
     "  attributes).  `if COND; ... [else; ...] endif;': COND an and/or of",
-    "  relations ((il.w52 = 9)), booleans (il.b30.7, a function's result) and",
-    "  the globals target_properties.p_be, target_properties.l180 and",
-    "  il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN, nK.bN.B",
-    "  and nK.index (the statement index, 16 bits at bit 8 of +42); the",
-    "  attributes' values may be rlen_arith(X), rlen_bits(X) (isc_readonly_",
-    "  tables by rlen) and a compare (il.w36 = signed_div_top). }",
+    "  relations ((il.w52 = rlen_cs): a number compared with a node's kind or",
+    "  il_kind_function's, a tree's class or operator, an assignment's class",
+    "  or operator is written by name), booleans (il.b30.7, a function's",
+    "  result) and the globals target_properties.p_be, target_properties.l180",
+    "  and il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN,",
+    "  nK.bN.B and nK.index (the statement index, 16 bits at bit 8 of +42);",
+    "  the attributes' values may be rlen_arith(X), rlen_bits(X)",
+    "  (isc_readonly_tables by rlen) and a compare (il.w36 = signed_div_top). }",
 ]
 
 TABLES = [  # (prefix, enumeration, A5 offset, entries)
@@ -1522,6 +1537,8 @@ def node_ref(path):
             e = '%s.x%s[%d]' % (base, m.group(1), off // 4)
         elif m.group(1) == 'w' and off == 2:
             e = '%s.kind' % base
+        elif m.group(1) == 'w' and off == 24:
+            e = '%s.tr_rlen' % base     # a tree's register class
         elif m.group(1) == 'w' and off == 36:
             e = '%s.tr_op' % base       # il_$top_t
         elif m.group(1) == 'w' and off == 76:

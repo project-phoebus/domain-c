@@ -712,6 +712,8 @@ def il_names():
             out[m.group(1)] = ('rlen', int(m.group(2)))
         for m in re.finditer(r'^  (math_\w+) = (\d+);', text, re.M):
             out[m.group(1)] = ('math', int(m.group(2)))
+        for m in re.finditer(r'^  (cond_\w+) = (\d+);', text, re.M):
+            out[m.group(1)] = ('cond', int(m.group(2)))
         _IL_NAMES = out
     return _IL_NAMES
 
@@ -739,8 +741,27 @@ OPMOD_USE = {
         'extend_top', 'bit_test_top', 'bit_set_top', 'index_top', 'unpack_top', 'isc_addr_top',
         'f_extend_top', 'set_bit_in_set_top', 'set_range_in_set_top')] +
                 [('f_math_top', 'math')]),
-    'w28': dict((o, 'rlen') for o in _SHIFT_MUL_DIV + ('f_math_top', 'f_expon_top')),
+    'w28': dict([(o, 'rlen') for o in _SHIFT_MUL_DIV + ('f_math_top', 'f_expon_top')] +
+                [('bit_test_top', 'cond')]),
 }
+# bit_test's opmod2 is its condition (list_tree's use 7), named: the rules
+# only test it for equality (`$1.il.w28 <> 6' under rshf_top), unlike a
+# comparison's, which the ISC treats as a signed number (above).  An
+# assignment's word at +52 is its register class (its descriptor at +48:
+# list_tree's print_known_aux of st_aux) for every assignment operator
+# (docs/questions.md 335 (b)).
+_ASSIGN_USE = None
+
+
+def opmod_uses(word):
+    """{operator: use} of an IL node's word (OPMOD_USE, and +52 of an
+    assignment)."""
+    global _ASSIGN_USE
+    if word == 'w52':
+        if _ASSIGN_USE is None:
+            _ASSIGN_USE = dict((n, 'rlen') for n, (w, _) in il_names().items() if w == 'aop')
+        return _ASSIGN_USE
+    return OPMOD_USE.get(word)
 _PATTERN_OPS = {}
 
 
@@ -766,10 +787,11 @@ def set_patterns(transforms):
         _PATTERN_OPS[r] = ops
 
 
-def opmod_operand(rule, x, other):
+def opmod_operand(rule, x, other, op=None):
     """x, a number, by name when other is an operand modifier whose use
-    the pattern of rule fixes (OPMOD_USE)."""
-    if x[0] != 'num' or other[0] != 'path' or not other[2] or other[2][-1] not in OPMOD_USE:
+    the pattern of rule fixes (OPMOD_USE); a condition only in an
+    equality (op: `< 0' tests the sign, the negated form's)."""
+    if x[0] != 'num' or other[0] != 'path' or not other[2] or not opmod_uses(other[2][-1]):
         return x
     sels = list(other[2][:-1])
     if other[1] == 'subject':
@@ -783,10 +805,12 @@ def opmod_operand(rule, x, other):
     ops = _PATTERN_OPS.get(rule, {}).get(tuple(int(s[1:]) for s in sels))
     if not ops:
         return x
-    uses = {OPMOD_USE[other[2][-1]].get(o) for o in ops}
+    uses = {opmod_uses(other[2][-1]).get(o) for o in ops}
     if len(uses) != 1 or None in uses:
         return x
     what = uses.pop()
+    if what == 'cond' and op not in ('=', '<>'):
+        return x
     for n, (w, v) in il_names().items():
         if w == what and v == x[1]:
             return ('cname', n, v)
@@ -984,7 +1008,7 @@ class Emitter:
         if k == 'cname':
             # a register class is an integer constant; an operator is
             # compared with the node's word as a number
-            if il_names()[e[1]][0] in ('rlen', 'math'):
+            if il_names()[e[1]][0] in ('rlen', 'math', 'cond'):
                 return e[1], 'num'
             return 'ord(%s)' % e[1], 'num'
         if k == 'path':
@@ -1026,7 +1050,8 @@ class Emitter:
             if p == 3:
                 # an operand modifier's register class or math function
                 # by name (opmod_operand)
-                a, b = opmod_operand(self.rule, e[2], e[3]), opmod_operand(self.rule, e[3], e[2])
+                a, b = (opmod_operand(self.rule, e[2], e[3], op),
+                        opmod_operand(self.rule, e[3], e[2], op))
                 if a is not e[2] or b is not e[3]:
                     e = ('bin', op, a, b)
             if op in ('and', 'or'):
