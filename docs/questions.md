@@ -2715,7 +2715,12 @@ answered by this policy and needs no reply.
    so its kind local is now an il_$kind_t (`kind <= id_ob', dpc's sls
    where it had sle): evidence that the original's kinds were the
    enumeration.  No other ordering compare of a kind was found
-   (cg_addr's `kind > 0' tests are of other records).
+   (cg_addr's `kind > 0' tests are of other records).  (Lead, at the
+   merge: two more, in regions a gap rewrite removed until dpc fixed
+   gaps 4, 7 and 25: kfold_$general's and add_tn's `if k2 > k1' are
+   `bls' in the image (cc.m68k 0x0ADF7A, 0x0A2B4A), and dpc now gives
+   `bls' from the il_$kind_t operands; more evidence for the same
+   answer.)
 316. Translator RN1: **ord() of a kind into a longword.**  dpc extends
    ord(e) of an il_$kind_t with ext.l; lang/common/source/token.pas
    token_$identifier passes the kind on as a longword after `clr.l'
