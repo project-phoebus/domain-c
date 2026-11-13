@@ -741,12 +741,12 @@ begin
             1, 3, 5, 6, 7, 8, 13:
               c^.op := c^.op + sz_case(size);
             18:
-              if xlow in [2..15] then
+              if xlow in [cond_hi..cond_le] then
                 c^.op := e^[i].op + xlow - 2
               else
                 goto 1;
             19, 23:
-              if xlow in [0..15] then
+              if xlow in [cond_t..cond_le] then
                 c^.op := e^[i].op + xlow
               else
                 goto 1;
@@ -767,9 +767,9 @@ begin
               c^.ads2.f6 := 0;
             39, 43: begin
               k := xlow;
-              if (k = 7) or (k = 6) then
+              if (k = cond_eq) or (k = cond_ne) then
                 c^.op := k + e^[i].op - 6
-              else if k in [12, 13, 15, 14] then
+              else if k in [cond_ge, cond_lt, cond_le, cond_gt] then
                 c^.op := k + e^[i].op - 10
               else
                 goto 1;

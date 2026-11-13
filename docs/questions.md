@@ -2948,6 +2948,38 @@ answered by this policy and needs no reply.
    function, by operator) as numbers.  (e) The condition codes and math
    functions are named only in list_tree; the code generator's uses
    (emit's x, reverse_cc, tree_fn_inst) are numbers.
+   **(d) done (RN6, 2026-11-12):** the generator names a number compared
+   with a tree's opmod1 or opmod2 (subject.il.w26, w28, or a child's
+   whose operator the pattern names) when list_tree's print_tree_exp
+   gives that opmod one use for every operator the pattern allows
+   there: a register class (rlen_byte .. rlen_c16: the extends, shifts,
+   multiplications and divisions, compares' opmod1, F_EXTEND, F_MATH's
+   opmod2) or F_MATH's function (math_nint .. math_aimag)
+   (iscg_p2lang.opmod_operand; the rule file keeps the numbers); the
+   fixed text names F_MATH's in-line functions and the rlen_long of the
+   div/mod/isc_mul rewrites.  Left numbers: a comparison's condition at
+   +28 (the ISC tests it `< 0' and indexes by `24 + abs(...)': a signed
+   number to the ISC), bit_test's (`$1.il.w28 <> 6' under rshf_top),
+   field widths (unpack, extract_bit_field), bytes, EXTEND's opmod2
+   (0, 1: no use in list_tree), and an assignment's class at +52.
+   **(e) done (RN6):** the code generator names the condition codes
+   (cond_t .. cond_le) where they are emit's x for the conditional
+   operations (19 scc, 20 bcc, 28 dbcc, 42 the 68881's fbcc, 48 its
+   fscc: opinfo's lists whose kinds 18, 19, 23, 39, 43 fnl_slct makes
+   exact by x), the cc and inst locals that feed them (cg_top's
+   cbranch_proc, cg_tree's bit_test_proc, f_compare_top, max/min,
+   F_MATH's max/min), the comparisons' desc.w8 tests, fnl_slct's ranges
+   and emit_compare's case (fpa); the math functions where desc.w6 is
+   an F_MATH tree's function (cg_tree_$needs_lib_support,
+   assert_is_f_math_op's callers, generate's F_MATH arm) and the
+   literal indices of tree_fn_rtn (14 math_conjg, 15 math_aimag);
+   tree_math, tree_fn_inst and tree_fn_rtn are indexed by
+   math_abs..math_round / math_fi_expon.  Constants, not an
+   enumeration: reverse_cc computes on the codes (odd, plus or minus
+   1), cbranch_proc and bit_test_proc negate them and take abs, emit's
+   x is a size or an operation for the other kinds, and the tables are
+   indexed by the word as it is.  dpc's code is unchanged.  See the new
+   question on what stays numeric.
 327. Translator RN4: **the assembly comparison** (every unit compiled as
    the gate compiles it, main 3679840 against the branch, dpc acea73f:
    274 of 277 objects identical).  opt_main's

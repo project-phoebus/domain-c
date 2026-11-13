@@ -734,21 +734,21 @@ begin
   get_register(nil, 2, fpa_dreg);
   address(smcontk(integer_ob, 2), 0, k);
   case cc of
-    6, 7: begin
+    cond_ne, cond_eq: begin
       if size = 6 then
         o := 484
       else
         o := 481;
       g := 73;
     end;
-    14, 15: begin
+    cond_gt, cond_le: begin
       if size = 6 then
         o := 486
       else
         o := 483;
       g := 75;
     end;
-    12, 13: begin
+    cond_ge, cond_lt: begin
       if size = 6 then
         o := 485
       else

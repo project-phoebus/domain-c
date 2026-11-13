@@ -195,8 +195,10 @@ begin
     templabel := cg_misc_label;
 end;
 
-{ reverse_cc - the opposite condition of cc (the conditions in pairs:
-  odd minus 1, even plus 1).
+{ reverse_cc - the opposite condition of cc (the conditions in pairs,
+  cond_t and cond_f .. cond_gt and cond_le: odd minus 1, even plus 1;
+  arithmetic on the codes, so they stay il.ins.pas's integer
+  constants).
 
   0x0F9BEE, 0x28 bytes. }
 
@@ -353,11 +355,11 @@ var
   t: codegen_$uads_t;
 begin
   if count <= 65535 then
-    emit(28, 2, lab, r, 1)
+    emit(28, 2, lab, r, cond_f)
   else begin
     address(smcontk(integer_ob, 1), 4, t);
     emit(2, 4, r, t, 0);
-    emit(20, 5, lab, cg_null_ads, 10);
+    emit(20, 5, lab, cg_null_ads, cond_pl);
     release(t);
   end;
   release(lab);
@@ -614,7 +616,7 @@ begin
     src.f1 := 8;
     dst.f1 := 8;
     emit(0, 1, dst, src, 0);
-    emit(20, 5, lab, cg_null_ads, 6);
+    emit(20, 5, lab, cg_null_ads, cond_ne);
     unlock(src);
     unlock(dst);
     kill_register(src.f2);
@@ -651,21 +653,21 @@ begin
   load_modifiable(n^.xp[15], 5, dst);
   load_modifiable(n^.xp[17], 4, count);
   emit(18, 4, count, cg_zero_ads, 0);
-  emit(20, 5, done, cg_null_ads, 15);
+  emit(20, 5, done, cg_null_ads, cond_le);
   emit(32, 5, loop, cg_null_ads, 0);
   src.f1 := 8;
   dst.f1 := 8;
   emit(0, 1, dst, src, 0);
-  emit(20, 5, pad, cg_null_ads, 7);
+  emit(20, 5, pad, cg_null_ads, cond_eq);
   anyconst(1, 4, one);
   emit(2, 4, count, one, 0);
   emit(18, 4, count, cg_zero_ads, 0);
-  emit(20, 5, loop, cg_null_ads, 6);
+  emit(20, 5, loop, cg_null_ads, cond_ne);
   emit(21, 5, done, cg_null_ads, 0);
   emit(32, 5, pad, cg_null_ads, 0);
   emit(2, 4, count, one, 0);
   emit(18, 4, count, cg_zero_ads, 0);
-  emit(20, 5, done, cg_null_ads, 7);
+  emit(20, 5, done, cg_null_ads, cond_eq);
   dst.f1 := 8;
   emit(0, 1, dst, cg_zero_ads, 0);
   emit(21, 5, pad, cg_null_ads, 0);
@@ -701,7 +703,7 @@ begin
   emit(32, 5, scan, cg_null_ads, 0);
   dst.f1 := 8;
   emit(18, 1, dst, cg_zero_ads, 0);
-  emit(20, 0, scan, cg_null_ads, 6);
+  emit(20, 0, scan, cg_null_ads, cond_ne);
   anyconst(1, 4, one);
   dst.f1 := 1;
   emit(2, 4, dst, one, 0);
@@ -709,7 +711,7 @@ begin
   src.f1 := 8;
   dst.f1 := 8;
   emit(0, 1, dst, src, 0);
-  emit(20, 0, copy, cg_null_ads, 6);
+  emit(20, 0, copy, cg_null_ads, cond_ne);
   unlock(src);
   unlock(dst);
   kill_register(src.f2);
@@ -742,20 +744,20 @@ begin
   emit(32, 5, scan, cg_null_ads, 0);
   dst.f1 := 8;
   emit(18, 1, dst, cg_zero_ads, 0);
-  emit(20, 0, scan, cg_null_ads, 6);
+  emit(20, 0, scan, cg_null_ads, cond_ne);
   anyconst(1, 4, one);
   dst.f1 := 1;
   emit(2, 4, dst, one, 0);
   load_modifiable(n^.xp[17], 4, count);
   emit(18, 4, count, cg_zero_ads, 0);
-  emit(20, 5, done, cg_null_ads, 15);
+  emit(20, 5, done, cg_null_ads, cond_le);
   emit(32, 5, copy, cg_null_ads, 0);
   src.f1 := 8;
   dst.f1 := 8;
   emit(0, 1, dst, src, 0);
-  emit(20, 0, done, cg_null_ads, 7);
+  emit(20, 0, done, cg_null_ads, cond_eq);
   emit(2, 4, count, one, 0);
-  emit(20, 5, copy, cg_null_ads, 6);
+  emit(20, 5, copy, cg_null_ads, cond_ne);
   emit(0, 1, dst, cg_zero_ads, 0);
   emit(32, 5, done, cg_null_ads, 0);
   unlock(src);
@@ -791,7 +793,7 @@ begin
   emit(1, 4, r, one, 0);
   s.f1 := 8;
   emit(18, 1, s, cg_zero_ads, 0);
-  emit(20, 5, lab, cg_null_ads, 6);
+  emit(20, 5, lab, cg_null_ads, cond_ne);
   unlock(s);
   unlock(r);
   kill_register(s.f2);
@@ -858,9 +860,9 @@ var
     s2.y := k;
     emit(0, 1, a, s1, 0);
     emit(0, 1, b, s2, 0);
-    emit(20, 5, ne, cg_null_ads, 7);
+    emit(20, 5, ne, cg_null_ads, cond_eq);
     emit(18, 1, a, b, 0);
-    emit(20, 5, ne, cg_null_ads, 6);
+    emit(20, 5, ne, cg_null_ads, cond_ne);
   end;
 
 begin
@@ -879,7 +881,7 @@ begin
   s2.f1 := 8;
   emit(0, 4, a, s1, 0);
   emit(18, 4, a, s2, 0);
-  emit(20, 5, bytes, cg_null_ads, 6);
+  emit(20, 5, bytes, cg_null_ads, cond_ne);
   get_register(nil, 4, t);
   emit(0, 4, t, a, 0);
   emit(2, 4, t, b, 0);
@@ -889,7 +891,7 @@ begin
   emit(3, 4, t, highs, 0);
   unlock(ones);
   unlock(highs);
-  emit(20, 5, loop, cg_null_ads, 7);
+  emit(20, 5, loop, cg_null_ads, cond_eq);
   anyconst(0, 4, zero);
   emit(0, 4, a, zero, 0);
   unlock(zero);
@@ -959,17 +961,17 @@ begin
     load_modifiable(cg_tree_ptr_t(n)^.opnd[1], 5, s1);
     load_modifiable(cg_tree_ptr_t(n)^.opnd[2], 5, s2);
     emit(18, 4, s2, s1, 0);
-    emit(20, 5, eq, cg_null_ads, 7);
+    emit(20, 5, eq, cg_null_ads, cond_eq);
     get_register(nil, 4, r);
     emit(32, 5, loop, cg_null_ads, 0);
     s1.f1 := 8;
     s2.f1 := 8;
     emit(18, 1, s2, s1, 0);
-    emit(20, 5, ne, cg_null_ads, 6);
+    emit(20, 5, ne, cg_null_ads, cond_ne);
     s2.f1 := 2;
     s2.y := -1;
     emit(18, 1, s2, cg_zero_ads, 0);
-    emit(20, 5, loop, cg_null_ads, 6);
+    emit(20, 5, loop, cg_null_ads, cond_ne);
     s2.y := 0;
     emit(32, 5, eq, cg_null_ads, 0);
     emit(0, 4, r, cg_zero_ads, 0);
@@ -1032,25 +1034,25 @@ begin
   load_modifiable(cg_tree_ptr_t(n)^.opnd[1], 5, s1);
   load_modifiable(cg_tree_ptr_t(n)^.opnd[2], 5, s2);
   emit(18, 4, s2, s1, 0);
-  emit(20, 5, eq, cg_null_ads, 7);
+  emit(20, 5, eq, cg_null_ads, cond_eq);
   get_register(nil, 4, r);
   load_modifiable(cg_tree_ptr_t(n)^.opnd[3], 4, count);
   emit(18, 4, count, cg_zero_ads, 0);
-  emit(20, 5, eq, cg_null_ads, 15);
+  emit(20, 5, eq, cg_null_ads, cond_le);
   emit(32, 5, loop, cg_null_ads, 0);
   s1.f1 := 8;
   s2.f1 := 8;
   emit(18, 1, s2, s1, 0);
-  emit(20, 5, ne, cg_null_ads, 6);
+  emit(20, 5, ne, cg_null_ads, cond_ne);
   s2.f1 := 2;
   s2.y := -1;
   emit(18, 1, s2, cg_zero_ads, 0);
-  emit(20, 5, eq, cg_null_ads, 7);
+  emit(20, 5, eq, cg_null_ads, cond_eq);
   s2.y := 0;
   anyconst(1, 4, one);
   emit(2, 4, count, one, 0);
   emit(18, 4, count, cg_zero_ads, 0);
-  emit(20, 5, loop, cg_null_ads, 6);
+  emit(20, 5, loop, cg_null_ads, cond_ne);
   emit(32, 5, eq, cg_null_ads, 0);
   emit(0, 4, r, cg_zero_ads, 0);
   emit(21, 5, done, cg_null_ads, 0);
