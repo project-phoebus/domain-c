@@ -714,6 +714,28 @@ answered by this policy and needs no reply.
    kinds?  Also: list_tree_$print_tree's second parameter is the
    routine the lines go to (univ_ptr in list_tree.ins.pas, since
    iosub's line type is not declared where the insert is opened).
+   **Owner (2026-11-12):** adopt Apollo's names everywhere.  **Done
+   (translator RN4):** the tree and assignment operators, a variable's
+   and a block's allocation have the run time's name tables in cc.a88k
+   (the ISC's printers write them as enumerated values:
+   tools/cc_enumnames.py, 0x0C69A4 .. 0x217BB4), so their names are the
+   identifiers, not the dump's display forms: il.ins.pas's il_$top_t (0
+   nop_top .. 89 illegal_top), il_$aop_t (0 scalar_aop .. 37
+   illegal_aop), il_$vat_t, il_$bat_t; the operator fields at +36 and +76
+   of every view and add_tn's and buildtreenode's operator are of the
+   types (the ISC units' local copies are gone).  The register classes
+   are il.ins.pas's constants rlen_null .. rlen_c16 (the gap at 3 kept),
+   the variable attributes il_$var_attr_t (var_$volatile ..
+   var_$withrecord) and set il_$var_attrs_t, the phase bits
+   add_node.ins.pas's add_node_$phase_bit_t (phase_atm .. phase_lcl_cse,
+   phase_23) with add_node_$phase_t a set of them, the condition codes,
+   math functions and calling conventions constants (cond_t .., math_abs
+   .., call_unk ..).  The ISC generator writes the classes and operators
+   by name.  Not done: the block's attributes, the label classes and a
+   statement's flags (bit fields the units read by mask: a re-layout of
+   the node views, not a renaming).  list_tree_$print_tree's emit stays
+   univ_ptr: token.low.pas still opens the insert without iosub.ins.pas.
+   Questions 319..324.
 
 93. Translator Y (2026-11-11), cg_addr: cg_reg_t's w8, w12 and w14 are
    named by offset though their use is known: w12 the stamp
@@ -2764,3 +2786,80 @@ answered by this policy and needs no reply.
    mem_$data$ are (AT_LIB_DSC is kind 208): every unit that opens
    at_lib_dsc.ins.pas now has the section as a .comm, as the other
    shared sections do.  Better names when the front end's are found?
+319. Translator RN4 (2026-11-12), the dumps' names (question 92):
+   **the identifiers are the run time's, not list_tree's strings, where
+   the image has a name table.**  cc.a88k's ISC printers write the tree
+   and assignment operators, a variable's and a block's allocation as
+   enumerated values (PAS_$WRITE), and the run time's tables give the
+   identifiers (tools/cc_enumnames.py: 90 names after isc_print_il_node
+   0x0C69A4, isc_unrecognized_il_node 0x0DC290, alignment_from_sr_info
+   0x20FD9A ...: nop_top .. illegal_top; 38 at 0x0BE472, 0x0DC7B0:
+   scalar_aop .. illegal_aop; 12 at 0x0C7A7C: local_vat ..; 4 at
+   0x0C8500: local_bat ..).  list_tree prints most operators without the
+   suffix ('ADD'), some in forms of its own ('LSHFT' for lshf_top,
+   'AGG_CMP' for agg_compare_top, 'p_C3EXPR' for cc_c3expr_ptop,
+   'ALLOC_DYNM' for allocate_dynamic_space_top); its fallbacks print
+   '<ORD(TOP)=' and 'ORD(AOP)=', the types' or fields' names perhaps
+   (TOP, AOP).  il.ins.pas names the types il_$top_t, il_$aop_t,
+   il_$vat_t, il_$bat_t (the names not known).  isc_print_il_node's
+   other tables (the Fortran symbol kinds and data classes, the address
+   constants' keys: isc_debug's pin_fsym_kind_t, pin_fdtype_t, pin_ac_t)
+   stay local: their names (none, routine, variable, common) would
+   clash in the prelude.
+320. Translator RN4: **names chosen where the dump's are display
+   forms.**  The register classes are constants rlen_null .. rlen_c16
+   (0, 1, 2, 4 .. 12; the dump's 'byte', 'word', 'long' would clash),
+   the condition codes cond_t .. cond_le ('T', 'HI', ...), the math
+   functions math_abs .. math_ff_expon ('ABS': Pascal's own names), the
+   phase bits phase_atm .. phase_lcl_cse (the bare cse is opt_cse's
+   routine; invar and phys are back-end locals).  The calling
+   conventions keep the dump's names (call_unk .. call_ada).  Constants,
+   not enumerations, where the units keep the value in integer words,
+   index tables by it or compare it as a number (rlen, the condition
+   codes, the math functions, the calling conventions); enumerations
+   where the code treats the value as one (the operators: `case', sets,
+   the ISC's enumerated writes) and sets of them (the variable
+   attributes, the phase bits: 32 and 24 elements, a longword as set of
+   0..31 is).  Better prefixes, or Apollo's, if a listing turns up?
+321. Translator RN4: **phase bit 23 has no name.**  The ISC's rewrite
+   (rewrite.pas) adds bit 23 to a node's phase; prtphasebits prints bits
+   0..22 only, and isc_user_routines' own printer (its display forms:
+   'atomic_address', 'voladdr', 'volexpr', 'devread', 'devwrite',
+   'visited', 'iscse', ..., 'local_cse') has none for it either.
+   add_node_$phase_bit_t ends with a placeholder phase_23.  Also: the
+   variable attributes were typed as phases in add_node (phasefromvatt's
+   parameter, its at_20 .. at_36) and delay (vattr): phasefromvatt maps
+   attributes to phases (var_$volatile to phase_vol and phase_voldecl,
+   var_$atomic to phase_atm, var_$physical to phase_phys, ...), so those
+   are il_$var_attrs_t now.
+322. Translator RN4: **dpc gap 48** (docs/dpc-gaps.md 48: `in' on a
+   longword constant set with an enumerated element; list_tree's
+   print_top_node, rewritten for the check): for the domain-pascal
+   session.
+323. Translator RN4: **what question 92 leaves.**  (a) A block's
+   attributes (+374..+379: local_name_only .. visited_set_local_call_
+   bits), the label classes (+72 bits 5..1) and a statement's flags
+   (+41..+42) are bit fields the units read by mask through the offset
+   views (xw, xc, xl): naming them needs record views of the block and
+   statement nodes, a re-layout rather than a renaming.  (b) The
+   operators, register classes and attributes read through the offset
+   views (xw[18], xw[12], xl[8] masks) are still numbers; il_utils'
+   tree_node_operand_is_spine call casts xw[18].  (c) opt_vector's tree
+   view keeps its phase at +4 as set of 0..31.  (d) The ISC's pass-1
+   actions read the operand modifiers (+26, +28: a class or a math
+   function, by operator) as numbers.  (e) The condition codes and math
+   functions are named only in list_tree; the code generator's uses
+   (emit's x, reverse_cc, tree_fn_inst) are numbers.
+324. Translator RN4: **the assembly comparison** (every unit compiled as
+   the gate compiles it, main 3679840 against the branch, dpc acea73f:
+   274 of 277 objects identical).  opt_main's
+   coalesce_adjacent_and_eliminate_dead_assignments tests `asg_op <=
+   isc_agg_aop' with sls where it had sle: the image's test is unsigned
+   (`moveq #31,D2; cmp.w D1,D2; bcs', cc.m68k 0x0DD0EA).  The generated
+   isc_pass_1_main's isc_unrecognized_il_node writes the operator fields
+   by address (`pea (76,A2)', `pea (36,A2)') as the image does (cc.a88k
+   0x0DB59A, 0x0DB5EE), and its arms share their tail.  list_tree's
+   fallback prints of an operator zero-extend it (`clr.l; move.w',
+   0x080572, 0x083F02): written as a transfer to a word (lt_word_t), as
+   ord() gives ext.l (question 316: more evidence that Rev 8.89's ord()
+   of an enumeration, if the original wrote one, zero-extends).
