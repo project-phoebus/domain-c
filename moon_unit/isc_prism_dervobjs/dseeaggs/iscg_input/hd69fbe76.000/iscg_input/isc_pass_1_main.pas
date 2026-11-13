@@ -6595,7 +6595,7 @@ begin
       solutions := pass_1(n, inh_1, depth, permissible);
     end;
   end
-  else if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+  else if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
     if isc_user_routines_356 or isc_user_routines_354 then begin
       write('*********************');
       writeln;
@@ -7263,11 +7263,12 @@ end;
 
 { isc_tree_node_f_math_top - the
   proper_subtree il_f_math_top, 2 children, when the function (opmod1,
-  +26) is one the ISC computes in line (11 .. 15, or the boolean of
-  isc_readonly_tables +424 by opmod1): child 1 (+40) and child 2 (+44)
-  when there are two operands (+38), else a void solution, each at the
-  precision of rlen_bits by opmod2 (+28); otherwise the node rewritten
-  as a call (rewrite_$routine_call) and that call's solutions.
+  +26) is one the ISC computes in line (math_nint .. math_aimag, 11 ..
+  15, or the boolean of isc_readonly_tables +424 by opmod1): child 1
+  (+40) and child 2 (+44) when there are two operands (+38), else a
+  void solution, each at the precision of rlen_bits by opmod2 (+28);
+  otherwise the node rewritten as a call (rewrite_$routine_call) and
+  that call's solutions.
 
   0x0E98E2, 0x34E bytes: D1 opmod1; the tests in the order 15, 14, 11,
   then `seq' of 12 or-ed with the table's byte (`bmi'), then 13 (Rev
@@ -7295,10 +7296,10 @@ begin
   no_solutions := false;
   il_kind := il_f_math_top;
   number_of_children := 2;
-  if (isc_node_ptr_t(il)^.xw[13] = 15) or (isc_node_ptr_t(il)^.xw[13] = 14)
-      or (isc_node_ptr_t(il)^.xw[13] = 11) or (isc_node_ptr_t(il)^.xw[13] = 12)
+  if (isc_node_ptr_t(il)^.xw[13] = math_aimag) or (isc_node_ptr_t(il)^.xw[13] = math_conjg)
+      or (isc_node_ptr_t(il)^.xw[13] = math_nint) or (isc_node_ptr_t(il)^.xw[13] = math_max)
       or p1_readonly_bytes_ptr_t(addr(isc_readonly_tables))^[424 + isc_node_ptr_t(il)^.xw[13]].b7
-      or (isc_node_ptr_t(il)^.xw[13] = 13) then begin
+      or (isc_node_ptr_t(il)^.xw[13] = math_min) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
     inh_1^.call_instruction_ptr := inh^.call_instruction_ptr;
     inh_1^.exception_frame := inh^.exception_frame;
@@ -8102,7 +8103,7 @@ begin
     end;
   end
   else begin
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('*********************');
         writeln;
@@ -8756,7 +8757,7 @@ begin
         isc_node_ptr_t(il)^.xw[13]);
     v2 := value_top_over(isc_node_ptr_t(il)^.xp[11], isc_node_ptr_t(il)^.xw[14],
         isc_node_ptr_t(il)^.xw[14]);
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       if isc_user_routines_356 or isc_user_routines_354 then begin
         write('*********************');
         writeln;

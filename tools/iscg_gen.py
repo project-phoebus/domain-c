@@ -389,6 +389,10 @@ class Gen:
         self.ils = il_names()
         self.kinds = rules.kinds
         self.il_index = {n: k for k, n in enumerate(self.ils)}
+        # the operators the patterns name, for the operand modifiers'
+        # names in the actions (iscg_p2lang.opmod_operand)
+        import iscg_p2lang
+        iscg_p2lang.set_patterns(rules.transforms)
 
     def is_kind(self, name):
         isil = ('il_' + name) in self.il_index

@@ -1108,11 +1108,12 @@ end;''')
 
 P1_ROUTINES['isc_tree_node_f_math_top'] = _p1('isc_tree_node_f_math_top', '''the
   proper_subtree il_f_math_top, 2 children, when the function (opmod1,
-  +26) is one the ISC computes in line (11 .. 15, or the boolean of
-  isc_readonly_tables +424 by opmod1): child 1 (+40) and child 2 (+44)
-  when there are two operands (+38), else a void solution, each at the
-  precision of rlen_bits by opmod2 (+28); otherwise the node rewritten
-  as a call (rewrite_$routine_call) and that call's solutions.
+  +26) is one the ISC computes in line (math_nint .. math_aimag, 11 ..
+  15, or the boolean of isc_readonly_tables +424 by opmod1): child 1
+  (+40) and child 2 (+44) when there are two operands (+38), else a
+  void solution, each at the precision of rlen_bits by opmod2 (+28);
+  otherwise the node rewritten as a call (rewrite_$routine_call) and
+  that call's solutions.
 
   0x0E98E2, 0x34E bytes: D1 opmod1; the tests in the order 15, 14, 11,
   then `seq' of 12 or-ed with the table's byte (`bmi'), then 13 (Rev
@@ -1128,10 +1129,10 @@ begin
   no_solutions := false;
   il_kind := il_f_math_top;
   number_of_children := 2;
-  if (isc_node_ptr_t(il)^.xw[13] = 15) or (isc_node_ptr_t(il)^.xw[13] = 14)
-      or (isc_node_ptr_t(il)^.xw[13] = 11) or (isc_node_ptr_t(il)^.xw[13] = 12)
+  if (isc_node_ptr_t(il)^.xw[13] = math_aimag) or (isc_node_ptr_t(il)^.xw[13] = math_conjg)
+      or (isc_node_ptr_t(il)^.xw[13] = math_nint) or (isc_node_ptr_t(il)^.xw[13] = math_max)
       or p1_readonly_bytes_ptr_t(addr(isc_readonly_tables))^[424 + isc_node_ptr_t(il)^.xw[13]].b7
-      or (isc_node_ptr_t(il)^.xw[13] = 13) then begin
+      or (isc_node_ptr_t(il)^.xw[13] = math_min) then begin
     inh_1 := new_inherited_attributes(isc_heap, isc_node_ptr_t(il)^.xp[10]);
     @COPY inh_1
     inh_1^.fetch_precision := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[14]];
@@ -1763,7 +1764,7 @@ begin
     end;
   end
   else begin
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       @TRACE
       n := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(n)^.kind := tree_node;
@@ -2068,7 +2069,7 @@ begin
 @TAIL6
     end;
   end
-  else if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+  else if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
     @TRACE
     n := mrh_$alloc(isc_preserve_heap, 52);
     isc_node_ptr_t(n)^.kind := tree_node;
@@ -2196,7 +2197,7 @@ begin
         isc_node_ptr_t(il)^.xw[13]);
     v2 := value_top_over(isc_node_ptr_t(il)^.xp[11], isc_node_ptr_t(il)^.xw[14],
         isc_node_ptr_t(il)^.xw[14]);
-    if (isc_node_ptr_t(il)^.xw[13] = 4) and (isc_node_ptr_t(il)^.xw[14] = 4) then begin
+    if (isc_node_ptr_t(il)^.xw[13] = rlen_long) and (isc_node_ptr_t(il)^.xw[14] = rlen_long) then begin
       @TRACE
       q := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(q)^.kind := tree_node;

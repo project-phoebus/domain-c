@@ -710,8 +710,87 @@ def il_names():
                 out[x.strip()] = (what, v)
         for m in re.finditer(r'^  (rlen_\w+) = (\d+);', text, re.M):
             out[m.group(1)] = ('rlen', int(m.group(2)))
+        for m in re.finditer(r'^  (math_\w+) = (\d+);', text, re.M):
+            out[m.group(1)] = ('math', int(m.group(2)))
         _IL_NAMES = out
     return _IL_NAMES
+
+
+# the operand modifiers (a tree node's words at +26 and +28, its
+# descriptor's opmod1 and opmod2; docs/questions.md 326 (d)): what each
+# holds depends on the operator, as list_tree's print_tree_exp gives it
+# (its u1 and u2, print_opmod_use): a register class (uses 1 opr1 .. 6
+# dst) or, in opmod1 of an F_MATH tree, the math function (use 11).  The
+# others stay numbers: a condition code (use 7, which the ISC also
+# treats as a signed number: `24 + abs(...)', `< 0'), bytes, bits, a
+# linkage register, an alignment, and the uses list_tree does not give
+# (EXTEND's opmod2).  A number compared with an opmod of the subject's
+# node or of a child's whose operator the rule's pattern names is
+# written by name when every operator the pattern allows there gives it
+# the same use (opmod_operand); the rule file keeps the number.
+_SHIFT_MUL_DIV = ('lshf_top', 'rshf_top', 'alshf_top', 'arshf_top', 'mul_top', 'isc_mul_top',
+                  'divide_top', 'div_top', 'signed_div_top', 'unsigned_div_top', 'mod_top',
+                  'signed_mod_top', 'unsigned_mod_top', 'isc_signed_mod_top',
+                  'isc_unsigned_mod_top', 'isc_signed_rem_top', 'isc_unsigned_rem_top')
+_COMPARES = ('bit_field_cmp_top', 'compare_top', 'f_compare_top', 'set_compare_top',
+             'agg_compare_top', 'isc_agg_cmp_top', 'isc_agg_lex_cmp_top')
+OPMOD_USE = {
+    'w26': dict([(o, 'rlen') for o in _SHIFT_MUL_DIV + _COMPARES + (
+        'extend_top', 'bit_test_top', 'bit_set_top', 'index_top', 'unpack_top', 'isc_addr_top',
+        'f_extend_top', 'set_bit_in_set_top', 'set_range_in_set_top')] +
+                [('f_math_top', 'math')]),
+    'w28': dict((o, 'rlen') for o in _SHIFT_MUL_DIV + ('f_math_top', 'f_expon_top')),
+}
+_PATTERN_OPS = {}
+
+
+def set_patterns(transforms):
+    """The operators each rule's pattern names, by position (() the
+    subject, (k,) its child k, (k, j) that child's child j ...), from the
+    rule file's transforms (iscg_gen.Rules: alts [(subject, children)];
+    a solution kind where the pattern names no operator)."""
+    _PATTERN_OPS.clear()
+    for r, t in transforms.items():
+        ops = {}
+
+        def walk(kids, at):
+            for k, spec in kids.items():
+                if spec[0] == 'op':
+                    ops.setdefault(at + (k,), set()).add(spec[1])
+                    walk(spec[2], at + (k,))
+                else:
+                    ops.setdefault(at + (k,), set()).add(None)
+        for subj, kids in t['alts']:
+            ops.setdefault((), set()).add(subj)
+            walk(kids, ())
+        _PATTERN_OPS[r] = ops
+
+
+def opmod_operand(rule, x, other):
+    """x, a number, by name when other is an operand modifier whose use
+    the pattern of rule fixes (OPMOD_USE)."""
+    if x[0] != 'num' or other[0] != 'path' or not other[2] or other[2][-1] not in OPMOD_USE:
+        return x
+    sels = list(other[2][:-1])
+    if other[1] == 'subject':
+        if not sels or sels[-1] != 'il':
+            return x
+        sels = sels[:-1]
+    elif other[1] != 'il' or sels:
+        return x
+    if not all(re.match(r'\$\d+$', s) for s in sels):
+        return x
+    ops = _PATTERN_OPS.get(rule, {}).get(tuple(int(s[1:]) for s in sels))
+    if not ops:
+        return x
+    uses = {OPMOD_USE[other[2][-1]].get(o) for o in ops}
+    if len(uses) != 1 or None in uses:
+        return x
+    what = uses.pop()
+    for n, (w, v) in il_names().items():
+        if w == what and v == x[1]:
+            return ('cname', n, v)
+    return x
 
 
 def unname(x):
@@ -905,7 +984,7 @@ class Emitter:
         if k == 'cname':
             # a register class is an integer constant; an operator is
             # compared with the node's word as a number
-            if il_names()[e[1]][0] == 'rlen':
+            if il_names()[e[1]][0] in ('rlen', 'math'):
                 return e[1], 'num'
             return 'ord(%s)' % e[1], 'num'
         if k == 'path':
@@ -944,6 +1023,12 @@ class Emitter:
         if k == 'bin':
             op = e[1]
             p = PREC[op]
+            if p == 3:
+                # an operand modifier's register class or math function
+                # by name (opmod_operand)
+                a, b = opmod_operand(self.rule, e[2], e[3]), opmod_operand(self.rule, e[3], e[2])
+                if a is not e[2] or b is not e[3]:
+                    e = ('bin', op, a, b)
             if op in ('and', 'or'):
                 return '%s %s %s' % (self.paren(e[2], p), op, self.paren(e[3], p + 1)), 'bool'
             lt, lc = self.expr1(e[2])

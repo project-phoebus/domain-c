@@ -1808,7 +1808,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value <> 0) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value <> 0) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 112 matched the semantics.');
       writeln;
@@ -2106,7 +2106,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
@@ -2362,7 +2362,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
@@ -2379,11 +2379,11 @@ begin
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
       end;
-      if p2_node_ptr_t(subject.il)^.w[13] = 1 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_byte then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution(arshft((lshft(subject.children[2]^.literal_32_bits_value,
             8) & 16#FFFF + 16#8000) & 16#FFFF - 16#8000, 8));
       end
-      else if p2_node_ptr_t(subject.il)^.w[13] = 2 then begin
+      else if p2_node_ptr_t(subject.il)^.w[13] = rlen_word then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution((subject.children[2]^.literal_32_bits_value & 16#FFFF + 16#8000) & 16#FFFF - 16#8000);
       end else begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := subject.children[2];
@@ -2597,7 +2597,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
@@ -2614,10 +2614,10 @@ begin
       end else begin
         p2_locals_ptr_t(addr(solution^))^.w[176] := p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[8 + t3];
       end;
-      if p2_node_ptr_t(subject.il)^.w[13] = 1 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_byte then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution(subject.children[2]^.literal_32_bits_value);
       end
-      else if p2_node_ptr_t(subject.il)^.w[13] = 2 then begin
+      else if p2_node_ptr_t(subject.il)^.w[13] = rlen_word then begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := find_well_known_literal_solution(subject.children[2]^.literal_32_bits_value);
       end else begin
         p2_locals_ptr_t(addr(solution^))^.p2[89] := subject.children[2];
@@ -2833,7 +2833,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((subject.children[2]^.literal_32_bits_value = 0) or (-subject.children[2]^.literal_32_bits_value < (-16#7FFF)) or (-subject.children[2]^.literal_32_bits_value > 16#7FFF) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 <> 7) and (t1 <> 6) then begin
       if isc_user_routines_354 then begin
@@ -3083,7 +3083,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 2) or (p2_node_ptr_t(subject.il)^.w[13] = 5) or (p2_node_ptr_t(subject.il)^.w[13] = 1) then begin
+  if (p2_node_ptr_t(subject.il)^.w[13] = rlen_long) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_word) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_addr) or (p2_node_ptr_t(subject.il)^.w[13] = rlen_byte) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if ((t1 = 7) or (t1 = 6)) and (subject.children[1]^.f76.field_precision = subject.children[2]^.f76.field_precision) then begin
       if isc_user_routines_354 then begin
@@ -3217,7 +3217,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if (t1 = 7) or (t1 = 6) then begin
       if isc_user_routines_354 then begin
@@ -3376,7 +3376,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> 5) and (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not (subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) and (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 119 matched the semantics.');
       writeln;
@@ -3677,7 +3677,7 @@ begin
       end;
     end else begin
       solution^.case_value[137] := 2;
-      if p2_node_ptr_t(subject.il)^.w[13] = 9 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_cs then begin
         solution^.case_value[145] := 1;
         if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
           solution^.case_value[146] := 1;
@@ -3951,7 +3951,7 @@ begin
       end;
     end else begin
       solution^.case_value[200] := 2;
-      if p2_node_ptr_t(subject.il)^.w[13] = 9 then begin
+      if p2_node_ptr_t(subject.il)^.w[13] = rlen_cs then begin
         solution^.case_value[209] := 1;
         if subject.children[2]^.inherited_attributes^.fetch_precision = 32 then begin
           solution^.case_value[210] := 1;
@@ -5989,7 +5989,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (subject.children[2]^.kind <> solution$fp_reg_pair) and not subject.children[2]^.f76.literal_64_bits_value_is_zero or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> rlen_r8) or (subject.children[2]^.kind <> solution$fp_reg_pair) and not subject.children[2]^.f76.literal_64_bits_value_is_zero or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 130 matched the semantics.');
       writeln;
@@ -6063,7 +6063,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[13] = 8 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = rlen_c8 then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if ((t1 = 7) or (t1 = 6)) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
       if isc_user_routines_354 then begin
@@ -6136,7 +6136,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[13] = 12 then begin
+  if p2_node_ptr_t(subject.il)^.w[13] = rlen_c16 then begin
     t1 := abs(p2_node_ptr_t(subject.il)^.w[14]);
     if ((t1 = 7) or (t1 = 6)) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
       if isc_user_routines_354 then begin
@@ -6217,7 +6217,7 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 133 matched the semantics.');
       writeln;
@@ -6436,7 +6436,7 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or not subject.children[4]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> 4) and (p2_node_ptr_t(subject.il)^.w[13] <> 1) and (p2_node_ptr_t(subject.il)^.w[13] <> 2)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode) or not subject.children[3]^.f76.is_destroyable or not subject.children[4]^.f76.is_destroyable or (p2_node_ptr_t(subject.il)^.w[13] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[13] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 134 matched the semantics.');
       writeln;
