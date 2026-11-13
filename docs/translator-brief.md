@@ -10,7 +10,9 @@ priority order.  Everything else is here.
   binaries) is git-ignored and absent from a worktree: first run
   `ln -s /Users/toshok/src/project-phoebus/domain-c/ctape ctape` at the
   worktree's top (never commit the link; it is ignored).
-- `export DPC=~/src/domainos-archeology/domain-pascal/target/debug/dpc`
+- `export DPC=~/src/domainos-archeology/domain-pascal/target/stable/bin/dpc`
+  (domain-pascal's `make stable`, built from its committed HEAD only;
+  target/debug changes under its uncommitted work)
   (cc_check.sh's default).  Never modify the domain-pascal or source
   repositories.  Never push.  Commit on your branch after each unit; end
   every commit message with the line

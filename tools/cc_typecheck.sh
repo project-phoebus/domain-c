@@ -13,7 +13,7 @@
 set -u
 here=$(cd "$(dirname "$0")/.." && pwd)
 cd "$here" || exit 1
-: "${DPC:=$HOME/src/domainos-archeology/domain-pascal/target/debug/dpc}"
+: "${DPC:=$HOME/src/domainos-archeology/domain-pascal/target/stable/bin/dpc}"
 root=$HOME/src/domainos-archeology/source/tmp/coff_compare/root
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT

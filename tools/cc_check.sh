@@ -17,7 +17,7 @@
 set -u
 here=$(cd "$(dirname "$0")/.." && pwd)
 cd "$here" || exit 1
-: "${DPC:=$HOME/src/domainos-archeology/domain-pascal/target/debug/dpc}"
+: "${DPC:=$HOME/src/domainos-archeology/domain-pascal/target/stable/bin/dpc}"
 export DPC
 m68k=ctape/install/ri.apollo.cc.v.6.9.m/cc.m68k
 a88k=ctape/install/ri.apollo.cc.v.6.9.mpx/cc.a88k
