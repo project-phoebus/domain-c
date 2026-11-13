@@ -450,6 +450,139 @@ type
     extern_bat,                       { 2 }
     param_bat);                       { 3 }
 
+{ A block's attributes (the 6 bytes at +374 of a block node: 105..108
+  program, module, procedure and function, 167 an entry, 172 an inner
+  block, 209 block data), as list_tree's print_routine_block names them
+  ('    blk_atts: ' and the names printed bit by bit), the allocation
+  (bat, +376 bit 0 and +377 bit 7: il_$bat_t) and the calling convention
+  (call, +377 bits 6..4: call_unk .. call_ada, and 6, which the dump
+  does not name).  Bit 7 first in each byte, as dpc packs a packed
+  record.  The dump prints 'D0_Ptr_Ret', 'NoSave_Regs', 'NoReturn',
+  'NLGoTo', 'Need_FP_FCW': the identifiers are those in lower case.
+  Six bits the dump does not print are named by position (b376_2,
+  b376_1, b378_2, b379_3; +377's are all named).  cg_top and cg_call
+  test the longword at +374 (use_db and save_db together, a0_ptr_ret
+  and d0_ptr_ret), which a field access cannot: they keep masks.
+
+  Not known from the original: the type's name, the field names of
+  bat and call. }
+  il_$blk_atts_t = packed record
+    assigned_goto: boolean;           { +374 .7 }
+    addr_fparam: boolean;             { .6 }
+    resident_proc: boolean;           { .5 }
+    no_fp: boolean;                   { .4 }
+    visible: boolean;                 { .3 }
+    inline_block: boolean;            { .2 }
+    inlined: boolean;                 { .1 }
+    expanded: boolean;                { .0 }
+    inlineable: boolean;              { +375 .7 }
+    noinline: boolean;                { .6 }
+    inline: boolean;                  { .5 }
+    a0_ptr_ret: boolean;              { .4 }
+    use_db: boolean;                  { .3 }
+    d0_ptr_ret: boolean;              { .2 }
+    noreturn: boolean;                { .1 }
+    nosave_regs: boolean;             { .0 }
+    need_fp_fcw: boolean;             { +376 .7 }
+    nlgoto: boolean;                  { .6 }
+    abnorm: boolean;                  { .5 }
+    save_db: boolean;                 { .4 }
+    local_name_only: boolean;         { .3 }
+    b376_2: boolean;                  { .2 }
+    b376_1: boolean;                  { .1 }
+    bat: il_$bat_t;                   { .0, +377 .7 }
+    call: 0..7;                       { +377 .6..4 }
+    func_assign: boolean;             { .3 }
+    variable_arg_list: boolean;       { .2 }
+    val_param_flag: boolean;          { .1 }
+    fasn: boolean;                    { .0 }
+    sb_display: boolean;              { +378 .7 }
+    pass_display: boolean;            { .6 }
+    save_static_link_in_frame: boolean;  { .5 }
+    must_have_own_frame: boolean;     { .4 }
+    sb_12_in_use: boolean;            { .3 }
+    b378_2: boolean;                  { .2 }
+    returns_dynamic_results: boolean; { .1 }
+    respect_storage_error: boolean;   { .0 }
+    local_call_same_db: boolean;      { +379 .7 }
+    local_call_different_db: boolean; { .6 }
+    calls_extern_non_lib_routine: boolean;  { .5 }
+    never_entered_recursively: boolean;     { .4 }
+    b379_3: boolean;                  { .3 }
+    coded: boolean;                   { .2 }
+    visited_depth_first: boolean;     { .1 }
+    visited_set_local_call_bits: boolean;   { .0 }
+  end;
+
+{ A label's class (a label node's, 144, +72 bits 5..1), as list_tree's
+  print_top_node names them: 'ELSE', 'ENDIF', 'WHILE START', ...,
+  'PAR_ONE_PROC' (22), 'ord(class)=' and the number for another (so
+  an enumeration in the original, the field class).  The identifiers
+  are the dump's names in lower case, blanks as underscores, with lbl_
+  before them, chosen here (the bare names are Pascal's words, and the
+  front end's routines are for_start_lab, for_next_lab).  The class's
+  byte (il_$label_atts_t): def (.7) and fwrd (.6), printed 'LABEL(def='
+  and ',fwrd='.
+
+  Not known from the original: the names but class, def and fwrd. }
+  il_$label_class_t = (
+    lbl_else,                         { 0 }
+    lbl_endif,                        { 1 }
+    lbl_while_start,                  { 2 }
+    lbl_while_next,                   { 3 }
+    lbl_while_exit,                   { 4 }
+    lbl_repeat_start,                 { 5 }
+    lbl_repeat_next,                  { 6 }
+    lbl_repeat_exit,                  { 7 }
+    lbl_for_start,                    { 8 }
+    lbl_for_next,                     { 9 }
+    lbl_for_exit,                     { 10 }
+    lbl_user,                         { 11 }
+    lbl_return,                       { 12 }
+    lbl_proc,                         { 13 }
+    lbl_temp,                         { 14 }
+    lbl_case_stmt,                    { 15 }
+    lbl_case_endte,                   { 16 }
+    lbl_factor,                       { 17 }
+    lbl_par_region,                   { 18 }
+    lbl_par_critical,                 { 19 }
+    lbl_par_ordered,                  { 20 }
+    lbl_par_one_proc);                { 21 }
+  il_$label_atts_t = packed record
+    def: boolean;                     { +72 .7 }
+    fwrd: boolean;                    { .6 }
+    class: il_$label_class_t;         { .5..1 }
+    b0: boolean;                      { .0 }
+  end;
+
+{ A statement's flags (a top-level node's +41 and +42), as list_tree's
+  print_top_node names them (printed in the order +42 .0, .1, .2, .3,
+  .5, .4, .7, then +41 .0 .. .5, .7, .6; +42 .6 not printed), in the
+  4 bytes from +40 (+40 and +43 belong to the words around them:
+  g_opt.ins.pas's statement header).
+
+  Not known from the original: the type's name and b42_6. }
+  il_$stmt_flags_t = packed record
+    b40: 0..255;                      { +40 }
+    inliner_generated_stmt: boolean;  { +41 .7 }
+    pascal_for_loop: boolean;         { .6 }
+    compiler_generated_stmt: boolean; { .5 }
+    contains_fp_expr: boolean;        { .4 }
+    loophascalls: boolean;            { .3 }
+    defsubtracted: boolean;           { .2 }
+    contains_cse: boolean;            { .1 }
+    stmt_eliminated: boolean;         { .0 }
+    constant_assign: boolean;         { +42 .7 }
+    b42_6: boolean;                   { .6 }
+    contains_call_w_simple_p: boolean;  { .5 }
+    contains_user_call: boolean;      { .4 }
+    ends_basic_block: boolean;        { .3 }
+    ends_proc: boolean;               { .2 }
+    begins_basic_block: boolean;      { .1 }
+    begins_proc: boolean;             { .0 }
+    b43: 0..255;                      { +43 }
+  end;
+
 { The register classes (a tree node's descriptor's word at +4,
   add_node_$desc_t's rlen, and the operand modifiers that name a class),
   as list_tree's print_rlen names them: 0 null (printed '??-null-??'),
@@ -684,6 +817,15 @@ type
         a variable's +32: il_utils_$is_strength_reduction_temp). }
       17: (fs_x4: array [1..5] of integer32;        { +4 }
            fs_attr: il_$var_attrs_t);               { +24 }
+      { A block (105..108, 167, 172, 209): its attributes (+374). }
+      18: (blk_x4: array [4..373] of char;          { +4 }
+           blk_atts: il_$blk_atts_t);               { +374 }
+      { A label (144 label_node): its class's byte (+72). }
+      19: (lab_x4: array [1..17] of integer32;      { +4 }
+           lab_atts: il_$label_atts_t);             { +72 }
+      { A top-level node (a statement): its flags (+41, +42). }
+      20: (st_x4: array [1..9] of integer32;        { +4 }
+           st_flags: il_$stmt_flags_t);             { +40 }
       9: (xp: array [1..94] of il_$node_ptr_t);     { +4 }
       10: (xp2_pad: integer;                        { +4 }
            xp2: array [1..93] of il_$node_ptr_t);   { +6 }
