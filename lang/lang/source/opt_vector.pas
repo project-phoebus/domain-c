@@ -118,7 +118,7 @@ type
   ov_tree_t = record
     unused_0: integer;                  { +0 }
     kind: il_$kind_t;                   { +2 }
-    flags: set of 0..31;                { +4 }
+    phase: add_node_$phase_t;           { +4 }
     unused_8: integer32;                { +8 }
     unused_12: integer32;               { +12 }
     uses: integer;                      { +16 }
@@ -242,7 +242,7 @@ begin
 end;
 
 { epilog - after the call was made in the loop's mark m: the call kept
-  (flag 12, its +24 cleared); the loop's statements unlinked (the
+  (phase_sd_eff, its +24 cleared); the loop's statements unlinked (the
   statement after the mark linked to the index's last assignment,
   before the closing branch, and that to what follows the loop), the
   index's assignment made a plain store of the trip count (start + 1,
@@ -272,8 +272,8 @@ var
 begin
   if m^.kind = eval_node then begin
     ov_tree_ptr_t(m^.eval_opnd[1])^.desc.rlen := rlen_null;
-    ov_tree_ptr_t(m^.eval_opnd[1])^.flags :=
-      ov_tree_ptr_t(m^.eval_opnd[1])^.flags + [12];
+    ov_tree_ptr_t(m^.eval_opnd[1])^.phase :=
+      ov_tree_ptr_t(m^.eval_opnd[1])^.phase + [phase_sd_eff];
   end;
   n := m^.next;
   n^.next := x^.prev^.prev;
