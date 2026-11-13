@@ -3502,6 +3502,10 @@ answered by this policy and needs no reply.
    domain-pascal-kqa2, -9js).  Something else changed, so the heading
    keeps integer; retype it (with that named type) once dpc tests a
    0..65535's bit in the word.
+   (Lead, 2026-11-13: dpc 359a91c fixed gap 51; legal is retyped to
+   isc_eval_orders_t, 0..65535, in isc_types.ins.pas, as RN9 tried.
+   evaluation_order_function moves to the image's form; its callers
+   are unchanged.  Done.)
 343. Translator RN8, after 331: **the generated ISC's tree class is
    tr_rlen.**  iscg_pass1.node_ref writes a node's word at +24 as
    isc_node_t's tr_rlen (the 122 reads and writes of xw[12] in

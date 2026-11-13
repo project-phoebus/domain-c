@@ -1440,7 +1440,8 @@ end;
   order.  None is reported under the traces.
 
   0x212450, 0xD6 bytes: op 8 (il$t), n1 10, n2 12, legal 14, words;
-  number_of_one_bits of the unsigned word. }
+  number_of_one_bits of the unsigned word (`clr.l D5; move.w D4,D5',
+  0x2124CC: legal an isc_eval_orders_t, 0..65535). }
 
 function evaluation_order_function;
 var
@@ -1460,7 +1461,7 @@ begin
     else
       r := 1;
   end
-  else if number_of_one_bits(legal & 16#FFFF) = 1 then
+  else if number_of_one_bits(legal) = 1 then
     r := legal
   else
     r := 0;

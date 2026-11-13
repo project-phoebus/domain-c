@@ -241,6 +241,13 @@ type
     type's and a variable's attributes; translator PD2). }
   isc_attr_set_t = set of 0..31;
 
+  { The evaluation orders two operands allow (bit 0 left to right, bit
+    1 right to left): evaluation_order_function's legal, an unsigned
+    word (Rev 8.89 widens it for number_of_one_bits with `clr.l D5;
+    move.w D4,D5', cc.a88k 0x2124CC; docs/questions.md 342).  Not known
+    from the original: the name. }
+  isc_eval_orders_t = 0..65535;
+
 { The section itself (docs/questions.md 261, settled by translator GB):
   isc_vars defines it, giving the variable its initial value (the
   image's bytes, by these views) with a `define' statement, the scheme

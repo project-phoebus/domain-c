@@ -833,12 +833,14 @@ function legal_evaluation_orders(
     s2: isc_solution_ptr_t): integer; options(val_param); extern;
 
 { EVALUATION_ORDER_FUNCTION - 0x212450: the order op's operands are
-  evaluated in (n1, n2 the operands' needs; legal the allowed orders). }
+  evaluated in (n1, n2 the operands' needs; legal the allowed orders,
+  an unsigned word: number_of_one_bits gets it `clr.l D5; move.w D4,D5',
+  0x2124CC). }
 function evaluation_order_function(
     op: il$t;
     n1: integer;
     n2: integer;
-    legal: integer): integer; options(val_param); extern;
+    legal: isc_eval_orders_t): integer; options(val_param); extern;
 
 { SIMILAR_SOLUTIONS, CLEARLY_DOMINATES - 0x21255A, 0x2126A2: two
   candidate solutions compared. }

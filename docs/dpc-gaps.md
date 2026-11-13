@@ -1402,3 +1402,9 @@ an_kind_t(...), '>')', PAS_$WRITE with the run time's name table).
     Rev 8.89 (by evaluation_order_function): `move.w (8,A6),D0; btst
     #1,D0'; dpc: `move.w (8,A6),D0; clr.l D1; move.w D0,D1; btst
     #1,D1' (an integer legal gives the image's form).
+
+    Fixed in dpc 359a91c (stable, 2026-11-13): the bit is tested in the
+    word.  legal is now an isc_eval_orders_t (0..65535):
+    evaluation_order_function's call gets the image's `clr.l; move.w'
+    (0x2124CC) and its three tests stay `btst' on the word; the seven
+    generated callers compile the same.
