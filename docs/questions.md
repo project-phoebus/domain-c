@@ -2726,7 +2726,14 @@ answered by this policy and needs no reply.
    isc_case_index_array_t moved to isc_solution_fields.ins.pas (a
    non-pointer type cannot be declared forward, and every unit that
    opens isc_routine_externs.ins.pas opens it first); its printer's
-   heading stays, with a comment pointing there.  The generator reads a
+   heading stays, with a comment pointing there.  The type is now a
+   packed array: dpc gives an element of an unpacked `array of 0..255'
+   a word, so the record grew to 640 bytes (the flags at +548).
+   isc_debug's ds_solution_t, which used the same type and an `array
+   [349..351] of char' (after which dpc puts the next field at +354),
+   had both slips of ours, unseen because gap 4's rule removes
+   dump_solution's writes; it now lays out as the image (x349 a char,
+   x350 a word, as isc_solution_t).  The generator reads a
    rule's byte local cN as case_value[N] (a byte number where it was a
    char: the chr() and ord() go) and cN for N in 342..348 as the flag
    of its name; pass 1's view p1_already_t is retired.  dpc's code is

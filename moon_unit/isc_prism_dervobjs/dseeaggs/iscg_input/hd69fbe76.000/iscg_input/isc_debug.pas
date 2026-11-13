@@ -1070,7 +1070,10 @@ type
     already_ip_reg: boolean;        { +346 }
     already_ip_reg_field: boolean;  { +347 }
     already_processor_reg: boolean; { +348 }
-    x349: array [349..351] of char; { +349 }
+    x349: char;                     { +349 }
+    x350: integer;                  { +350 (as `array [349..351] of
+                                      char' dpc put fields at +354:
+                                      docs/questions.md 313) }
     fields: array [0..19] of univ_ptr;          { +352: the rules'
                                           pointer locals }
   end;

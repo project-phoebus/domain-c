@@ -65,8 +65,10 @@ type
     isc_routine_externs.ins.pas: that insert is opened after this one
     in every unit that opens both, and isc_solution_t needs the type
     (Pascal has no forward declaration of a non-pointer type): the type
-    moved here, the printer's heading stayed (docs/questions.md 313). }
-  isc_case_index_array_t = array [136..341] of 0..255;
+    moved here, the printer's heading stayed (docs/questions.md 313).
+    Packed: a byte each (dpc gives an unpacked 0..255 element a word,
+    which put the flags at +548 and the record at 640 bytes). }
+  isc_case_index_array_t = packed array [136..341] of 0..255;
 
   { A solution as the ISC reads it (432 bytes; see above).  The
     fields carry the image's names (dump_solution prints each attribute
@@ -190,7 +192,9 @@ type
     already_ip_reg: boolean;            { +346 }
     already_ip_reg_field: boolean;      { +347 }
     already_processor_reg: boolean;     { +348 }
-    x349: array [349..351] of char;     { +349 }
+    x349: char;                         { +349 }
+    x350: integer;                      { +350 (as `array [349..351] of
+                                          char' dpc puts fields at +354) }
     fields: array [0..19] of isc_solution_ptr_t;   { +352: the
                                           rule's own fields, laid out
                                           per rule (preserve_solution
