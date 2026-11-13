@@ -512,13 +512,13 @@ begin
         bug_check('ISC: local_initialize_symbol: Unrecognized register candidate size.%$');
       sol^.object_with_name := sym;
       case sol^.kind of
-        11: lr := lir_$new_live_range_ip_reg;
-        9: if cls = 6 then
+        solution$ip_reg: lr := lir_$new_live_range_ip_reg;
+        solution$fp_reg_pair: if cls = 6 then
              lr := lir_$new_live_range_fp_reg
            else
              lr := lir_$new_live_range_fp_reg_pair;
-        8: lr := lir_$new_live_range_fp_reg;
-        10: lr := lir_$new_live_range_fp_reg_pair;
+        solution$fp_reg: lr := lir_$new_live_range_fp_reg;
+        solution$fp_reg_quad: lr := lir_$new_live_range_fp_reg_pair;
         otherwise bug_check('ISC: local_initialize_symbol: Unrecognized home^.kind.%$');
       end;
       lr^.node20 := sym;
@@ -527,8 +527,8 @@ begin
       sol^.live_range := lr;
       if (vat <> 5) and (cls in [6, 13]) then begin
         case sol^.kind of
-          9: lr2 := lir_$new_live_range_fp_reg;
-          10: lr2 := lir_$new_live_range_fp_reg_pair;
+          solution$fp_reg_pair: lr2 := lir_$new_live_range_fp_reg;
+          solution$fp_reg_quad: lr2 := lir_$new_live_range_fp_reg_pair;
           otherwise bug_check('ISC: local_initialize_symbol: Unrecognized home^.kind.%$');
         end;
         lr2^.node20 := sym;
@@ -545,7 +545,7 @@ begin
         write('====>>>> local_initialize_symbol(');
         write(il_node_to_string(sym));
         write('): home^.kind = ');
-        write(solution$t(sol^.kind):1);
+        write(sol^.kind:1);
         write('.');
         writeln;
         writeln;
@@ -1026,7 +1026,7 @@ end;
 
 function available_precision_function;
 begin
-  if sol^.kind = 12 then
+  if sol^.kind = solution$ip_reg_field then
     available_precision_function := sol^.f76.field_precision
   else
     available_precision_function := sol^.inherited_attributes^.fetch_precision;
@@ -1357,7 +1357,7 @@ function get_kind_of_home_solution;
 begin
   if isc_$is_a_register_candidate(sym) then
     get_kind_of_home_solution :=
-        isc_solution_ptr_t(isc_$get_home_solution(sym))^.kind
+        ord(isc_solution_ptr_t(isc_$get_home_solution(sym))^.kind)
   else
     get_kind_of_home_solution := 0;
 end;
@@ -1536,11 +1536,11 @@ begin
      and (a^.f76.uses_the_index_register = b^.f76.uses_the_index_register)
      and (a^.bits_trusted = b^.bits_trusted) then
     r := true;
-  if (a^.kind = 12) and r then
+  if (a^.kind = solution$ip_reg_field) and r then
     if (a^.f76.field_requires_sign_extend <> b^.f76.field_requires_sign_extend) or (a^.f76.bit_position_of_lsb <> b^.f76.bit_position_of_lsb)
        or (a^.f76.field_precision <> b^.f76.field_precision) then
       r := false;
-  if (a^.kind = 16) and r then
+  if (a^.kind = solution$processor_reg) and r then
     if ((a^.bits_trusted & 3) <> (b^.bits_trusted & 3))
        or ((a^.bits_known & 3) <> (b^.bits_known & 3)) then
       r := false;
@@ -1581,11 +1581,11 @@ begin
        or (a^.f76.physical_register <> b^.f76.physical_register)
        or (a^.f76.uses_the_displacement <> b^.f76.uses_the_displacement) then
       r := false;
-  if (a^.kind = 12) and r then
+  if (a^.kind = solution$ip_reg_field) and r then
     if (a^.f76.field_requires_sign_extend <> b^.f76.field_requires_sign_extend) or (a^.f76.bit_position_of_lsb <> b^.f76.bit_position_of_lsb)
        or (a^.f76.field_precision <> b^.f76.field_precision) then
       r := false;
-  if (a^.kind = 16) and r then
+  if (a^.kind = solution$processor_reg) and r then
     if ((a^.bits_trusted & 3) <> (b^.bits_trusted & 3))
        or ((a^.bits_known & 3) <> (b^.bits_known & 3)) then
       r := false;
@@ -1614,7 +1614,7 @@ begin
   c := list^.first;
   while c <> nil do begin
     s := c^.sol;
-    if (s^.kind <> 7) and (s^.kind <> 22) then begin
+    if (s^.kind <> solution$flow) and (s^.kind <> solution$proper_subtree) then begin
       cost := s^.code_bytes + s^.delay;
       if (best = nil) or (cost < best_cost)
          or ((cost = best_cost) and (s^.memory_references < best^.memory_references)) then begin
@@ -2197,7 +2197,7 @@ begin
       write('====>>>> isc_$is_a_register_candidate(');
       write(il_node_to_string(s));
       write('): home^.kind = ');
-      write(solution$t(home^.kind):1);
+      write(home^.kind:1);
     end
     else begin
       write('====>>>> isc_$is_a_register_candidate(');
@@ -2221,7 +2221,7 @@ begin
   if sol = nil then
     is_a_register_solution := false
   else
-    is_a_register_solution := solution$t(sol^.kind)
+    is_a_register_solution := sol^.kind
         in [solution$fp_reg, solution$fp_reg_pair, solution$fp_reg_quad,
             solution$ip_reg];
 end;
@@ -2237,7 +2237,7 @@ var
   d: isc_solution_ptr_t;
 begin
   d := duplicate_solution(isc_heap, sol);
-  d^.kind := 13;
+  d^.kind := solution$ip_reg_scaled;
   d^.f76.scale := shift;
   ip_reg_to_ip_reg_scaled := d;
 end;
@@ -2252,7 +2252,7 @@ var
   d: isc_solution_ptr_t;
 begin
   d := duplicate_solution(isc_heap, sol);
-  d^.kind := 11;
+  d^.kind := solution$ip_reg;
   d^.f76.scale := 0;
   ip_reg_scaled_to_ip_reg := d;
 end;
@@ -2273,7 +2273,7 @@ begin
     if sol^.live_range = nil then
       sol^.live_range := lir_$new_live_range_fp_reg_pair;
     d := duplicate_solution(isc_heap, sol);
-    d^.kind := 2;
+    d^.kind := solution$fp_reg_pair_high;
   end;
   high_half_of_fp_reg_pair := d;
 end;
@@ -2295,12 +2295,12 @@ begin
     if sol^.live_range = nil then
       sol^.live_range := lir_$new_live_range_fp_reg_pair;
     d := duplicate_solution(isc_heap, sol);
-    d^.kind := 3;
+    d^.kind := solution$fp_reg_pair_low;
     d^.live_range := sol^.live_range^.mate;
-    d^.f76.physical_register := d^.live_range^.f2.physical;
-    d^.f76.physical_register_is_no_modify := d^.live_range^.f2.no_modify;
-    d^.f76.physical_register_user_declared := d^.live_range^.f2.serialize;
-    d^.f76.physical_register_number := d^.live_range^.f2.reg;
+    d^.f76.physical_register := d^.live_range^.f2.physical_register;
+    d^.f76.physical_register_is_no_modify := d^.live_range^.f2.physical_register_is_no_modify;
+    d^.f76.physical_register_user_declared := d^.live_range^.f2.physical_register_user_declared;
+    d^.f76.physical_register_number := d^.live_range^.f2.physical_register_number;
   end;
   low_half_of_fp_reg_pair := d;
 end;
@@ -2318,7 +2318,7 @@ begin
     d := nil
   else begin
     d := duplicate_solution(isc_heap, sol);
-    d^.kind := 9;
+    d^.kind := solution$fp_reg_pair;
   end;
   high_half_of_fp_reg_quad := d;
 end;
@@ -2340,15 +2340,15 @@ begin
     d := nil
   else begin
     d := duplicate_solution(isc_user_routines_20c, sol);
-    d^.kind := 9;
+    d^.kind := solution$fp_reg_pair;
   end;
   if sol^.live_range_of_imaginary_part = nil then
     sol^.live_range_of_imaginary_part := lir_$new_live_range_fp_reg_pair;
   d^.live_range := sol^.live_range_of_imaginary_part;
-  d^.f76.physical_register := d^.live_range^.f2.physical;
-  d^.f76.physical_register_is_no_modify := d^.live_range^.f2.no_modify;
-  d^.f76.physical_register_user_declared := d^.live_range^.f2.serialize;
-  d^.f76.physical_register_number := d^.live_range^.f2.reg;
+  d^.f76.physical_register := d^.live_range^.f2.physical_register;
+  d^.f76.physical_register_is_no_modify := d^.live_range^.f2.physical_register_is_no_modify;
+  d^.f76.physical_register_user_declared := d^.live_range^.f2.physical_register_user_declared;
+  d^.f76.physical_register_number := d^.live_range^.f2.physical_register_number;
   low_half_of_fp_reg_quad := d;
 end;
 
@@ -2376,8 +2376,8 @@ begin
   s^.f76.uses_the_base_register := true;
   s^.f76.uses_the_displacement := true;
   s^.f76.uses_the_index_register := false;
-  s^.base_register := lr_ptr_t(isc_user_routines_340);
-  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.base_register := isc_solution_ptr_t(isc_user_routines_340);
+  s^.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   s^.object_with_name := sym;
   address_mode_for_expression_temporary := s;
 end;
@@ -2409,8 +2409,8 @@ begin
   s^.f76.uses_the_base_register := true;
   s^.f76.uses_the_displacement := true;
   s^.f76.uses_the_index_register := false;
-  s^.base_register := lr_ptr_t(literal_base_register);
-  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.base_register := isc_solution_ptr_t(literal_base_register);
+  s^.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   s^.object_with_name := c;
   address_mode_for_single_value := s;
 end;
@@ -2439,8 +2439,8 @@ begin
   s^.f76.uses_the_base_register := true;
   s^.f76.uses_the_displacement := true;
   s^.f76.uses_the_index_register := false;
-  s^.base_register := lr_ptr_t(literal_base_register);
-  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.base_register := isc_solution_ptr_t(literal_base_register);
+  s^.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   s^.object_with_name := c;
   address_mode_for_double_value := s;
 end;
@@ -2470,8 +2470,8 @@ begin
   s^.f76.uses_the_base_register := true;
   s^.f76.uses_the_displacement := true;
   s^.f76.uses_the_index_register := false;
-  s^.base_register := lr_ptr_t(literal_base_register);
-  s^.index_register := lr_ptr_t(isc_user_routines_31c);
+  s^.base_register := isc_solution_ptr_t(literal_base_register);
+  s^.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   s^.object_with_name := c;
   address_mode_for_integer32_value := s;
 end;
@@ -2568,10 +2568,10 @@ var
 begin
   s := new_solution(isc_heap, 8, 0, nil, nil, 0);
   s^.live_range := lir_3f90[r];
-  s^.f76.physical_register := s^.live_range^.f2.physical;
-  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.no_modify;
-  s^.f76.physical_register_user_declared := s^.live_range^.f2.serialize;
-  s^.f76.physical_register_number := s^.live_range^.f2.reg;
+  s^.f76.physical_register := s^.live_range^.f2.physical_register;
+  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.physical_register_is_no_modify;
+  s^.f76.physical_register_user_declared := s^.live_range^.f2.physical_register_user_declared;
+  s^.f76.physical_register_number := s^.live_range^.f2.physical_register_number;
   create_solution_for_fp_reg_physical := s;
 end;
 
@@ -2591,10 +2591,10 @@ var
 begin
   s := new_solution(isc_heap, 9, 0, nil, nil, 0);
   s^.live_range := lir_3f90[r];
-  s^.f76.physical_register := s^.live_range^.f2.physical;
-  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.no_modify;
-  s^.f76.physical_register_user_declared := s^.live_range^.f2.serialize;
-  s^.f76.physical_register_number := s^.live_range^.f2.reg;
+  s^.f76.physical_register := s^.live_range^.f2.physical_register;
+  s^.f76.physical_register_is_no_modify := s^.live_range^.f2.physical_register_is_no_modify;
+  s^.f76.physical_register_user_declared := s^.live_range^.f2.physical_register_user_declared;
+  s^.f76.physical_register_number := s^.live_range^.f2.physical_register_number;
   create_solution_for_fp_reg_pair_physical := s;
 end;
 
@@ -2760,9 +2760,9 @@ begin
         lr := h^.live_range;
         if lr = nil then begin
           case h^.kind of
-            11: lr := lir_$new_live_range_ip_reg;
-            8: lr := lir_$new_live_range_fp_reg;
-            9, 10: lr := lir_$new_live_range_fp_reg_pair;
+            solution$ip_reg: lr := lir_$new_live_range_ip_reg;
+            solution$fp_reg: lr := lir_$new_live_range_fp_reg;
+            solution$fp_reg_pair, solution$fp_reg_quad: lr := lir_$new_live_range_fp_reg_pair;
             otherwise
               bug_check('ISC: isc_$get_il_live_range: unknown home_solution^.kind.%$');
           end;
@@ -2814,7 +2814,7 @@ begin
   if lr = nil then
     get_live_range_assigned := false
   else
-    get_live_range_assigned := lr^.f2.physical;
+    get_live_range_assigned := lr^.f2.physical_register;
 end;
 
 function get_live_range_no_modify;
@@ -2822,7 +2822,7 @@ begin
   if lr = nil then
     get_live_range_no_modify := false
   else
-    get_live_range_no_modify := lr^.f2.no_modify;
+    get_live_range_no_modify := lr^.f2.physical_register_is_no_modify;
 end;
 
 function get_live_range_register;
@@ -2830,7 +2830,7 @@ begin
   if lr = nil then
     get_live_range_register := -1
   else
-    get_live_range_register := lr^.f2.reg;
+    get_live_range_register := lr^.f2.physical_register_number;
 end;
 
 function get_live_range_serialize;
@@ -2838,7 +2838,7 @@ begin
   if lr = nil then
     get_live_range_serialize := false
   else
-    get_live_range_serialize := lr^.f2.serialize;
+    get_live_range_serialize := lr^.f2.physical_register_user_declared;
 end;
 
 { get_live_range_of_imaginary_part - the second live range (+24) of the
@@ -2859,9 +2859,9 @@ begin
     lr := h^.live_range_of_imaginary_part;
     if lr = nil then begin
       case h^.kind of
-        11: lr := lir_$new_live_range_ip_reg;
-        8: lr := lir_$new_live_range_fp_reg;
-        9, 10: lr := lir_$new_live_range_fp_reg_pair;
+        solution$ip_reg: lr := lir_$new_live_range_ip_reg;
+        solution$fp_reg: lr := lir_$new_live_range_fp_reg;
+        solution$fp_reg_pair, solution$fp_reg_quad: lr := lir_$new_live_range_fp_reg_pair;
         otherwise
           bug_check('ISC: get_live_range_of_imaginary_part: unknown home_solution^.kind.%$');
       end;
@@ -3970,7 +3970,7 @@ begin
   if isc_$is_a_register_candidate(sym) then begin
     h := isc_solution_ptr_t(isc_$get_home_solution(sym));
     if h <> nil then
-      k := h^.kind;
+      k := ord(h^.kind);
   end;
   solution_kind_of_symbol := k;
 end;
@@ -4490,16 +4490,16 @@ begin
   end
   else if (solution_ptr_t(sol) = isc_user_routines_340)
           or ((sol^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_340)^.f76.physical_register_number)
-              and (sol^.kind = 11) and sol^.f76.physical_register) then begin
+              and (sol^.kind = solution$ip_reg) and sol^.f76.physical_register) then begin
     write('SF');
   end
   else
     case sol^.kind of
-      5: begin
+      solution$address_mode: begin
         write('<address_mode: ');
         if sol^.f76.uses_the_index_register then begin
           write('index_reg = ');
-          write(solution_to_string(isc_solution_ptr_t(sol^.index_register)));
+          write(solution_to_string(sol^.index_register));
         end
         else if sol^.f76.uses_the_displacement then begin
           write('literal_32_bits_value = ');
@@ -4512,8 +4512,8 @@ begin
         end;
         write('>');
       end;
-      7: write('<solution$flow>');
-      8: begin
+      solution$flow: write('<solution$flow>');
+      solution$fp_reg: begin
         r := -1;
         for i := 0 to 63 do
           if sol^.f76.physical_register and (sol^.f76.physical_register_number = i) then
@@ -4540,7 +4540,7 @@ begin
           write('>');
         end;
       end;
-      2, 3, 9: begin
+      solution$fp_reg_pair_high, solution$fp_reg_pair_low, solution$fp_reg_pair: begin
         r := -1;
         for i := 0 to 63 do
           if sol^.f76.physical_register and (sol^.f76.physical_register_number = i) then
@@ -4552,10 +4552,10 @@ begin
             write(' == ');
             write(il_node_to_string(sol^.object_with_name));
           end;
-          if sol^.kind = 2 then begin
+          if sol^.kind = solution$fp_reg_pair_high then begin
             write(' HIGH');
           end
-          else if sol^.kind = 3 then begin
+          else if sol^.kind = solution$fp_reg_pair_low then begin
             write(' LOW');
           end;
         end
@@ -4570,16 +4570,16 @@ begin
             write(', physical #');
             write(sol^.f76.physical_register_number:1);
           end;
-          if sol^.kind = 2 then begin
+          if sol^.kind = solution$fp_reg_pair_high then begin
             write(' HIGH');
           end
-          else if sol^.kind = 3 then begin
+          else if sol^.kind = solution$fp_reg_pair_low then begin
             write(' LOW');
           end;
           write('>');
         end;
       end;
-      11, 12, 13: begin
+      solution$ip_reg, solution$ip_reg_field, solution$ip_reg_scaled: begin
         r := -1;
         for i := 0 to 31 do
           if sol^.f76.physical_register and (sol^.f76.physical_register_number = i) then
@@ -4587,11 +4587,11 @@ begin
         if r <> -1 then begin
           write('R');
           write(r:1);
-          if sol^.kind = 12 then begin
+          if sol^.kind = solution$ip_reg_field then begin
             write(', bit_posn_of_lsb = ');
             write(sol^.f76.bit_position_of_lsb:1);
           end;
-          if sol^.kind = 13 then begin
+          if sol^.kind = solution$ip_reg_scaled then begin
             write(' << ');
             write(sol^.f76.scale:1);
           end;
@@ -4601,13 +4601,13 @@ begin
         end
         else begin
           write('<');
-          if sol^.kind = 11 then begin
+          if sol^.kind = solution$ip_reg then begin
             write('ip_reg: ');
           end
-          else if sol^.kind = 12 then begin
+          else if sol^.kind = solution$ip_reg_field then begin
             write('ip_reg_field: ');
           end
-          else if sol^.kind = 13 then begin
+          else if sol^.kind = solution$ip_reg_scaled then begin
             write('ip_reg_scaled: ');
           end;
           write(live_range_to_string(sol^.live_range));
@@ -4615,13 +4615,13 @@ begin
             write(' == ');
             write(il_node_to_string(sol^.object_with_name));
           end;
-          if sol^.kind = 12 then begin
+          if sol^.kind = solution$ip_reg_field then begin
             write(', ');
             write(sol^.f76.field_precision:1);
             write('@');
             write(sol^.f76.bit_position_of_lsb:1);
           end;
-          if sol^.kind = 13 then begin
+          if sol^.kind = solution$ip_reg_scaled then begin
             write(' << ');
             write(sol^.f76.scale:1);
           end;
@@ -4632,13 +4632,13 @@ begin
           write('>');
         end;
       end;
-      14: begin
+      solution$literal_32_bits: begin
         write('# ');
         write(sol^.literal_32_bits_value:1);
         write(' / ');
         write(sol^.literal_32_bits_value:1);
       end;
-      4: begin
+      solution$local_routine: begin
         write('<local_routine');
         if sol^.object_with_name <> nil then begin
           write(' == ');
@@ -4646,22 +4646,22 @@ begin
         end;
         write('>');
       end;
-      16: begin
+      solution$processor_reg: begin
         write('<processor_reg: ');
         write('literal_32_bits_value = ');
         write(sol^.literal_32_bits_value:1);
         write(', index = ');
-        write(solution_to_string(isc_solution_ptr_t(sol^.index_register)));
+        write(solution_to_string(sol^.index_register));
         write('>');
       end;
-      20: write('<solution$any_solution>');
-      1: write('<solution$case_jump_base>');
-      10: write('<solution$fp_reg_quad>');
-      21: write('<solution$irrelevant>');
-      15: write('<solution$literal_64_bits>');
-      0: write('<solution$none>');
-      22: write('<solution$proper_subtree>');
-      23: write('<solution$void>');
+      solution$any_solution: write('<solution$any_solution>');
+      solution$case_jump_base: write('<solution$case_jump_base>');
+      solution$fp_reg_quad: write('<solution$fp_reg_quad>');
+      solution$irrelevant: write('<solution$irrelevant>');
+      solution$literal_64_bits: write('<solution$literal_64_bits>');
+      solution$none: write('<solution$none>');
+      solution$proper_subtree: write('<solution$proper_subtree>');
+      solution$void: write('<solution$void>');
       otherwise write('<UNRECOGNIZED SOLUTION KIND>');
     end;
   solution_to_string := ' ';

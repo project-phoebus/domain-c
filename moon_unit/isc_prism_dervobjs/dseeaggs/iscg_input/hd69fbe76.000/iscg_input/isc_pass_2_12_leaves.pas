@@ -72,8 +72,8 @@ procedure transform_13_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_338);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_338);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -83,8 +83,8 @@ procedure transform_14_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_338);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_338);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -94,8 +94,8 @@ procedure transform_15_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_338);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_338);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -136,8 +136,8 @@ procedure transform_18_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_338);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_338);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -157,8 +157,8 @@ procedure transform_20_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_340);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_340);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -186,7 +186,7 @@ procedure transform_23_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  pattern_match_error(9, il$t(subject^.il_kind), 0,
+  pattern_match_error(9, subject^.il_kind, 0,
       subject^.inherited_attributes^.pos.source_line_number);
 end;
 
@@ -282,8 +282,8 @@ procedure transform_33_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+  if result.case_value[136] = 1 then begin
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   result.live_range := lr_ptr_t(result.fields[0]);

@@ -116,13 +116,15 @@ begin
   if s <> nil then
     if s^.live_range = nil then
       case s^.kind of
-        11, 12: s^.live_range := lir_$new_live_range_ip_reg;
-        8: s^.live_range := lir_$new_live_range_fp_reg;
-        9: s^.live_range := lir_$new_live_range_fp_reg_pair;
-        14, 17: ;
+        solution$ip_reg, solution$ip_reg_field:
+          s^.live_range := lir_$new_live_range_ip_reg;
+        solution$fp_reg: s^.live_range := lir_$new_live_range_fp_reg;
+        solution$fp_reg_pair:
+          s^.live_range := lir_$new_live_range_fp_reg_pair;
+        solution$literal_32_bits, solution$sc_reg: ;
         otherwise begin
           write('guarantee_has_live_range: unrecognized s^.kind "');
-          write(solution$t(s^.kind));
+          write(s^.kind);
           write('".');
           writeln;
         end;

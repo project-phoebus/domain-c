@@ -1382,7 +1382,7 @@ begin
               result := nil;
               goto 99;
             end;
-            if not src^.f2.physical then
+            if not src^.f2.physical_register then
               if (src^.rrp * [rrp$life_mark, rrp$unique_value]) <>
                  [rrp$life_mark, rrp$unique_value] then begin
                 ru_depth := ru_depth + 1;
@@ -1733,7 +1733,7 @@ begin
   else if rrp$fp_reg in lts^.rrp then begin
     b := false;
     if lts^.rrp * [rrp$fp_reg_even_only, rrp$fp_reg_odd_only] <> [] then
-      if (kind = operand$fp_reg_pair) or lts^.lr^.f2.physical then begin
+      if (kind = operand$fp_reg_pair) or lts^.lr^.f2.physical_register then begin
         v := node;
         if v^.kind = var_name then
           b := v^.l36 = 64
@@ -1991,7 +1991,7 @@ begin
     return;
   if rrp$modify in lr^.rrp then
     return;
-  if lr^.f2.physical then
+  if lr^.f2.physical_register then
     return;
   if lr^.home_lr <> nil then
     return;
@@ -2010,7 +2010,7 @@ begin
     m := lr^.mate;
     if ru_lr_ptr_t(m)^.defs = nil then
       return;
-    if m^.f2.physical then
+    if m^.f2.physical_register then
       return;
     md := ru_lr_ptr_t(m)^.defs;
     if ru_lts_ptr_t(md)^.next_def <> nil then
@@ -2386,7 +2386,7 @@ begin
     pos := pos^.next;
   if lir_main_da4 then
     goto 99;
-  if op^.lts^.lr^.f2.physical then
+  if op^.lts^.lr^.f2.physical_register then
     goto 99;
   k := utils_ins_$operands_instruction(op);
   while k^.prev <> nil do begin
@@ -2652,7 +2652,7 @@ begin
             goto 60;
           s := op^.lts;
           l := s^.lr;
-          if l^.f2.physical then
+          if l^.f2.physical_register then
             goto 60;
           if (op^.h.kind = operand$fp_reg_pair) and op^.h.fp_reg_odd_only then
             goto 60;
@@ -2667,9 +2667,9 @@ begin
             goto 60;
           if v = lr_ptr_t(rtn^.l112) then
             goto 60;
-          if l^.f2.serialize then
+          if l^.f2.physical_register_user_declared then
             bug_check('RA_UTILS_$ADD_SPILL_CODE -- spill victim is user declared register.%$')
-          else if l^.f2.no_modify then
+          else if l^.f2.physical_register_is_no_modify then
             bug_check('RA_UTILS_$ADD_SPILL_CODE -- spill victim is no_modify register.%$');
           complex := l^.id <> 0;
           remat := ra_utils_$rematerialize(rtn, v, false);
@@ -2714,14 +2714,14 @@ begin
               k2 := i^.opnds[2].h.kind;
               d7 := i^.opnds[2].lts;
               if k2 = operand$ip_reg_like then
-                if d7^.lr^.f2.physical then
-                  if d7^.lr^.f2.reg = 31 then
+                if d7^.lr^.f2.physical_register then
+                  if d7^.lr^.f2.physical_register_number = 31 then
                     goto 30;
               if i^.opnds[1].h.kind <> k2 then
                 goto 10;
               if not d7^.lr^.f2.b3_0 then
                 goto 30;
-              if d7^.lr^.f2.physical then
+              if d7^.lr^.f2.physical_register then
                 goto 30;
               fl.f.keep := true;
               goto 20;
@@ -2829,7 +2829,7 @@ begin
             else
               mlts := find_mate_lts(i, d7);
             op^.lts := d7;
-            if d7^.lr^.f2.physical or not fl.f.new_lr then begin
+            if d7^.lr^.f2.physical_register or not fl.f.new_lr then begin
               rlink := nil;
               mop := nil;
             end
@@ -2948,7 +2948,7 @@ begin
             d7 := get_new_spill_lts(get_new_spill_lr(lrv));
           end;
 50:
-          if d7^.lr^.f2.physical then begin
+          if d7^.lr^.f2.physical_register then begin
             rl := nil;
             ml := nil;
           end

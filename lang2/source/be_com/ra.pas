@@ -264,8 +264,10 @@ type
     l20: integer32;                     { +20 }
   end;
 
-  { lr_t (batch A's) as the allocator uses it.  +2 reg the register
-    assigned (+3 bit 7, batch A's physical, set once it is), +3 bit 0 a
+  { lr_t (batch A's) as the allocator uses it.  +2
+    physical_register_number the register assigned (+3 bit 7
+    physical_register, set once it is; lr_t's names, the original's:
+    docs/questions.md 311), +3 bit 0 a
     spill victim; +28 the spill cost and +44 the reload cost (single
     reals: what a reload folded into a byte or halfword load or a TST
     saves; added to the cost of a rematerializable live range), +44
@@ -278,12 +280,12 @@ type
   ra_lr_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      reg: 0..255;
-      assigned: boolean;                { +3 .7 }
-      no_modify: boolean;               { .6 }
-      serialize: boolean;               { .5 }
+      physical_register_number: 0..255;
+      physical_register: boolean;       { +3 .7 }
+      physical_register_is_no_modify: boolean;  { .6 }
+      physical_register_user_declared: boolean; { .5 }
       b3_4: boolean;
-      live: boolean;                    { .3: on the live list }
+      live: boolean;                   { .3: on the live list }
       b3_2, b3_1: boolean;
       spilled: boolean;                 { .0 }
       end;
@@ -689,7 +691,7 @@ var
 begin
   if lr <> nil then begin
     s := lr^.rrp - [rrp$modify .. rrp$true_write];
-    if lr^.f2.assigned or (simple and (lr^.id = 0)) then
+    if lr^.f2.physical_register or (simple and (lr^.id = 0)) then
       s := s + [rrp$life_mark];
     lr^.rrp := s;
     lr^.f2.live := false;
@@ -735,14 +737,14 @@ begin
   else
     case ra_class of
       ra_fp:
-        if lr^.f2.assigned then begin
+        if lr^.f2.physical_register then begin
           phys := univ_ptr(addr(lir_3f90));
-          get_lr_equivalence_class_parent := phys^[lr^.f2.reg];
+          get_lr_equivalence_class_parent := phys^[lr^.f2.physical_register_number];
         end
         else
           get_lr_equivalence_class_parent := lr;
       ra_pair:
-        if odd(lr^.f2.reg) or (rrp$fp_reg_odd_only in lr^.rrp) then begin
+        if odd(lr^.f2.physical_register_number) or (rrp$fp_reg_odd_only in lr^.rrp) then begin
           get_lr_equivalence_class_parent := lr^.mate;
           if lr^.mate = nil then
             bug_check('RA: GET_LR_EQUIVALENCE_CLASS_PARENT -- LR %wd has no mate%$',
@@ -782,7 +784,7 @@ begin
             not (op^.h.fp_reg_odd_only or op^.h.fp_reg_even_only) then begin
       lr := ra_lts_ptr_t(op^.lts)^.lr;
       if lr^.rrp * [rrp$fp_reg_even_only, rrp$fp_reg_odd_only] = [] then
-        ra_$process_operand_on_this_pass := lr^.f2.assigned;
+        ra_$process_operand_on_this_pass := lr^.f2.physical_register;
     end;
   end
   else
@@ -804,7 +806,7 @@ begin
   if op^.h.unconsumed and op^.h.write then begin
     lr := ra_lts_ptr_t(op^.lts)^.lr;
     if (lr^.id = 0) and (rrp$ip_reg in lr^.rrp) and
-       not lr^.f2.assigned and (target_properties.p_14[0] >= 0) then
+       not lr^.f2.physical_register and (target_properties.p_14[0] >= 0) then
       lr_safely_unconsumed := true;
   end;
 end;
@@ -1033,8 +1035,8 @@ begin
             lr := lts^.lr;
             if lr_safely_unconsumed(op) then begin
               op^.h.kind := operand$ip_reg_like;
-              lr^.f2.assigned := true;
-              lr^.f2.reg := ra_ip_zero;
+              lr^.f2.physical_register := true;
+              lr^.f2.physical_register_number := ra_ip_zero;
             end
             else begin
               reload.r := lr^.x44.r;
@@ -1087,7 +1089,7 @@ begin
           end;
         operand$ip_reg_like:
           ra_ip_like := ra_ip_like +
-              [ra_lts_ptr_t(op^.lts)^.lr^.f2.reg mod 32];
+              [ra_lts_ptr_t(op^.lts)^.lr^.f2.physical_register_number mod 32];
         operand$displacement_stack_frame:
           if ra_final then begin
             v := ra_var_ptr_t(op^.link);
@@ -1662,8 +1664,8 @@ begin
     goto 10;
   if a^.rrp * b^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then
     goto 10;
-  if a^.f2.assigned then begin
-    r := a^.f2.reg;
+  if a^.f2.physical_register then begin
+    r := a^.f2.physical_register_number;
     if rrp$ip_reg in a^.rrp then begin
       if (r mod 32) in ra_ip_reserved then
         goto 10;
@@ -1675,8 +1677,8 @@ begin
     else if (r mod 32) in ra_fp_reserved.hi then
       goto 10;
   end;
-  if b^.f2.assigned then begin
-    r := b^.f2.reg;
+  if b^.f2.physical_register then begin
+    r := b^.f2.physical_register_number;
     if rrp$ip_reg in b^.rrp then begin
       if (r mod 32) in ra_ip_reserved then
         goto 10;
@@ -1688,7 +1690,7 @@ begin
     else if (r mod 32) in ra_fp_reserved.hi then
       goto 10;
   end;
-  if a^.f2.assigned and b^.f2.assigned then
+  if a^.f2.physical_register and b^.f2.physical_register then
     goto 10;
   k := 0;
   if a^.id <> 0 then
@@ -1897,23 +1899,23 @@ var
   c: ra_conf_ptr_t;
 begin
   if not ra_$lrs_already_conflict(a, b, true, which) then begin
-    if a^.f2.assigned then
-      if a^.f2.reg <= 31 then
-        b^.avoid_lo := b^.avoid_lo + [a^.f2.reg mod 32]
+    if a^.f2.physical_register then
+      if a^.f2.physical_register_number <= 31 then
+        b^.avoid_lo := b^.avoid_lo + [a^.f2.physical_register_number mod 32]
       else
-        b^.avoid_hi := b^.avoid_hi + [a^.f2.reg mod 32];
+        b^.avoid_hi := b^.avoid_hi + [a^.f2.physical_register_number mod 32];
     a^.w56 := a^.w56 + 1;
     if a^.w56 > ra_max_conflicts then
       ra_max_conflicts := a^.w56;
-    if b^.f2.assigned then
-      if b^.f2.reg <= 31 then
-        a^.avoid_lo := a^.avoid_lo + [b^.f2.reg mod 32]
+    if b^.f2.physical_register then
+      if b^.f2.physical_register_number <= 31 then
+        a^.avoid_lo := a^.avoid_lo + [b^.f2.physical_register_number mod 32]
       else
-        a^.avoid_hi := a^.avoid_hi + [b^.f2.reg mod 32];
+        a^.avoid_hi := a^.avoid_hi + [b^.f2.physical_register_number mod 32];
     b^.w56 := b^.w56 + 1;
     if b^.w56 > ra_max_conflicts then
       ra_max_conflicts := b^.w56;
-    if not (a^.f2.assigned or b^.f2.assigned) then begin
+    if not (a^.f2.physical_register or b^.f2.physical_register) then begin
       c := mrh_$alloc_fixed(ra_conf_heaps[which]);
       c^.a := a;
       c^.next_a := a^.x44.conf;
@@ -1983,7 +1985,7 @@ var
 begin
   q := live^.x52.lr;
   while q <> live do begin
-    if not q^.f2.assigned then begin
+    if not q^.f2.physical_register then begin
       p := get_lr_equivalence_class_parent(q);
       for k := 0 to n - 1 do
         ra_$new_conflict(p, regs[k]);
@@ -2652,16 +2654,16 @@ begin
           lr^.f2.live := true;
           lr^.expires := num - 1;
         end
-        else if not lr^.f2.assigned then begin
-          lr^.f2.assigned := true;
+        else if not lr^.f2.physical_register then begin
+          lr^.f2.physical_register := true;
           if rrp$ip_reg in lr^.rrp then
-            lr^.f2.reg := ra_ip_zero
+            lr^.f2.physical_register_number := ra_ip_zero
           else if m <> nil then begin
-            m^.f2.assigned := true;
+            m^.f2.physical_register := true;
             if rrp$fp_reg_odd_only in m^.rrp then
-              m^.f2.reg := 1
+              m^.f2.physical_register_number := 1
             else
-              lr^.f2.reg := 1;
+              lr^.f2.physical_register_number := 1;
           end;
         end;
         goto 20;
@@ -2786,7 +2788,7 @@ begin
           else begin
             src := ra_lts_ptr_t(i^.opnds[1].lts)^.lr;
             mismatch := false;
-            if not (lr^.f2.assigned or src^.f2.assigned) then
+            if not (lr^.f2.physical_register or src^.f2.physical_register) then
               if (lr^.mate = nil) and (src^.mate <> nil) then
                 mismatch := true
               else if lr^.mate <> nil then
@@ -2811,11 +2813,11 @@ begin
         writes[nwrites].instr := i;
         writes[nwrites].src := src;
         nwrites := nwrites + 1;
-        if not count_only and lr^.f2.assigned then begin
-          reg := lr^.f2.reg;
+        if not count_only and lr^.f2.physical_register then begin
+          reg := lr^.f2.physical_register_number;
           bit := [reg mod 32];
           if rrp$fp_reg in lr^.rrp then begin
-            if lr^.f2.reg < 32 then begin
+            if lr^.f2.physical_register_number < 32 then begin
               if i^.opc = ord(opc$entry) then
                 ra_fp_used.lo := ra_fp_used.lo + bit
               else
@@ -3095,7 +3097,7 @@ var
   idx, key, d: integer32;
   old, prv: ra_lr_ptr_t;
 begin
-  if lr^.f2.assigned then
+  if lr^.f2.physical_register then
     return;
   if (lr^.serial = 0) or (lr^.w56 <= ra_unconstrained) then begin
     lr^.f8.b10_5 := false;
@@ -3150,7 +3152,7 @@ var
 begin
   nxt := lr^.x52.lr;
   prv := lr^.prev;
-  if not lr^.f2.assigned then
+  if not lr^.f2.physical_register then
     if prv <> nil then begin
       prv^.x52.lr := nxt;
       if nxt <> nil then
@@ -3298,7 +3300,7 @@ begin
           an := ap^.next_b;
         end;
         if other^.w56 > ra_unconstrained then
-          if not other^.f2.assigned then
+          if not other^.f2.physical_register then
             if not other^.f8.b10_5 then begin
               if best = nil then
                 best := lr
@@ -3466,7 +3468,7 @@ begin
   lr := ra_lrs;
   while lr <> nil do begin
     lr^.serial := 0;
-    if lr^.f2.assigned then begin
+    if lr^.f2.physical_register then begin
       lr^.x52.lr := flushed;
       flushed := lr;
     end
@@ -3479,13 +3481,13 @@ begin
           if instruction_attributes[i^.opc].b6_0 and
              (i^.opnds[1].h.count = 0) then begin
             p := ra_lts_ptr_t(i^.opnds[1].lts)^.lr;
-            if p^.f2.assigned and p^.f2.no_modify then
+            if p^.f2.physical_register and p^.f2.physical_register_is_no_modify then
               src := p;
           end;
         end;
       if src <> nil then begin
-        lr^.f2.assigned := true;
-        lr^.f2.reg := src^.f2.reg;
+        lr^.f2.physical_register := true;
+        lr^.f2.physical_register_number := src^.f2.physical_register_number;
         lr^.x52.lr := moved;
         moved := lr;
       end
@@ -3610,7 +3612,7 @@ begin
           for idx := top downto ra_work_low * 2 do begin
             p := work^[idx];
             while p <> nil do begin
-              if not (rrp$life_mark in p^.rrp) and not p^.f2.assigned then
+              if not (rrp$life_mark in p^.rrp) and not p^.f2.physical_register then
                 if p^.w56 <> 0 then begin
                   ratio.r := p^.cost.r / p^.w56;
                   if ratio.r < best.r then begin
@@ -4015,8 +4017,8 @@ var
   src: ra_lr_ptr_t;
   ok: boolean;
 begin
-  lr^.f2.assigned := true;
-  lr^.f2.reg := conv^.w20 & 255;
+  lr^.f2.physical_register := true;
+  lr^.f2.physical_register_number := conv^.w20 & 255;
   s := lr^.defs;
   while s <> nil do begin
     op := s^.refs;
@@ -4028,8 +4030,8 @@ begin
       if (i^.opnds[1].h.kind = operand$ip_reg) and
          (i^.opnds[1].h.count = 0) and not i^.h.sets_cc then begin
         src := ra_lts_ptr_t(i^.opnds[1].lts)^.lr;
-        if src^.f2.assigned then
-          if (src^.f2.reg = 1) or (src^.f2.reg = conv^.w20) then
+        if src^.f2.physical_register then
+          if (src^.f2.physical_register_number = 1) or (src^.f2.physical_register_number = conv^.w20) then
             ok := true;
       end;
       if not ok then
@@ -4119,13 +4121,13 @@ begin
     sf := ra_lr_ptr_t(rtn^.l112);
     if (chrom < nregs) or rtn^.f226.save_rpc or
        rtn^.f226.no_return_block or ((conv^.w14 & 31) in w_ip) then begin
-      sf^.f2.reg := ra_ip_zero;
+      sf^.f2.physical_register_number := ra_ip_zero;
       rtn^.f226.save_rpc := true;
       rtn^.f226.needs_frame := true;
     end
     else
-      sf^.f2.reg := conv^.w14 & 255;
-    sf^.f2.assigned := true;
+      sf^.f2.physical_register_number := conv^.w14 & 255;
+    sf^.f2.physical_register := true;
     bit := [conv^.w14 & 31];
     avail.lo := avail.lo + bit;
     used.lo := used.lo + bit;
@@ -4142,7 +4144,7 @@ begin
         exit;
       needed := needed - 1;
     end;
-    avail.lo := avail.lo - [sf^.f2.reg mod 32];
+    avail.lo := avail.lo - [sf^.f2.physical_register_number mod 32];
     rtn^.written_ip := integer32(ra_ip_clobbered);
   end;
   hi := avail.hi;
@@ -4181,7 +4183,7 @@ begin
     end;
     if ap^.pref > ap^.avoid then
       if ap^.closure = nil then
-        if not other^.f2.assigned then
+        if not other^.f2.physical_register then
           if (hi * other^.avoid_hi) + (lo * other^.avoid_lo) = [] then begin
             if last = nil then
               ap^.closure := ap
@@ -4234,13 +4236,13 @@ begin
   if lr^.f2.spilled then
     return;
   lr^.f2.spilled := true;
-  if not lr^.f2.assigned then
+  if not lr^.f2.physical_register then
     return;
   if rrp$life_mark in lr^.rrp then
     return;
-  lr^.f2.assigned := false;
-  r := lr^.f2.reg;
-  lr^.f2.reg := 0;
+  lr^.f2.physical_register := false;
+  r := lr^.f2.physical_register_number;
+  lr^.f2.physical_register_number := 0;
   c := lr^.x44.conf;
   while c <> nil do begin
     if c^.a = lr then begin
@@ -4251,7 +4253,7 @@ begin
       other := c^.a;
       cn := c^.f12.next_b;
     end;
-    if not other^.f2.assigned then begin
+    if not other^.f2.physical_register then begin
       q := other^.x44.conf;
       while q <> nil do begin
         if q^.a = other then begin
@@ -4262,8 +4264,8 @@ begin
           o2 := q^.a;
           qn := q^.f12.next_b;
         end;
-        if o2^.f2.assigned then
-          if o2^.f2.reg = r then
+        if o2^.f2.physical_register then
+          if o2^.f2.physical_register_number = r then
             goto 10;
         q := ra_conf_ptr_t(integer32(qn) & (~3));
       end;
@@ -4312,7 +4314,7 @@ begin
       if not other^.f2.spilled then
         if victim = nil then
           victim := other
-        else if other^.f2.assigned then
+        else if other^.f2.physical_register then
           if (rrp$spare_1 in other^.rrp) and
              not (rrp$spare_1 in victim^.rrp) then
             victim := other
@@ -4346,7 +4348,7 @@ begin
   t.hi := regs.hi;
   t.lo := regs.lo;
   if ra_final then begin
-    t.lo := t.lo + [lr_ptr_t(rtn^.l112)^.f2.reg];
+    t.lo := t.lo + [lr_ptr_t(rtn^.l112)^.f2.physical_register_number];
     if not ra_$open_another_ip_register(t, ra_rtn_ptr_t(rtn)^.conv, reg,
         paired) then begin
       ra_$try_opening_another_register := false;
@@ -4443,8 +4445,8 @@ begin
         vfmt_$write(' Spill victim.%.');
       goto 40;
     end;
-    if lr^.f2.assigned then begin
-      r := lr^.f2.reg;
+    if lr^.f2.physical_register then begin
+      r := lr^.f2.physical_register_number;
       goto 30;
     end;
     if get_lr_equivalence_class_parent(lr) <> lr then begin
@@ -4520,8 +4522,8 @@ begin
           i2 := instr_ptr_t(integer32(op) - 32 - 12 * op^.h.num);
           if i2^.opc = ord(opc$entry) then begin
             src := s^.lr;
-            if src^.f2.assigned then begin
-              r := src^.f2.reg;
+            if src^.f2.physical_register then begin
+              r := src^.f2.physical_register_number;
               if r <= 31 then begin
                 if (r mod 32) in c_lo then
                   goto 20;
@@ -4544,9 +4546,9 @@ begin
         an := ap^.next_b;
       end;
       if k <> 0 then begin
-        r := other^.f2.reg;
+        r := other^.f2.physical_register_number;
         if k > 0 then begin
-          if other^.f2.assigned then begin
+          if other^.f2.physical_register then begin
             if r <= 31 then begin
               if (r mod 32) in c_lo then
                 goto 20;
@@ -4575,7 +4577,7 @@ begin
         else begin
           s_hi := c_hi;
           s_lo := c_lo;
-          if other^.f2.assigned then begin
+          if other^.f2.physical_register then begin
             if r <= 31 then
               c_lo := c_lo - [r mod 32]
             else
@@ -4643,8 +4645,8 @@ begin
         if ord(i^.opnds[n].h.kind) = ra_class then
           if i^.opnds[n].h.write then begin
             other := ra_lts_ptr_t(i^.opnds[n].lts)^.lr;
-            if other^.f2.assigned then begin
-              r := other^.f2.reg;
+            if other^.f2.physical_register then begin
+              r := other^.f2.physical_register_number;
               if r <= 31 then begin
                 if (r mod 32) in c_lo then
                   goto 20;
@@ -4663,8 +4665,8 @@ begin
         if ord(i^.opnds[n].h.kind) = ra_class then
           if i^.opnds[n].h.read then begin
             other := ra_lts_ptr_t(i^.opnds[n].lts)^.lr;
-            if other^.f2.assigned then begin
-              r := other^.f2.reg;
+            if other^.f2.physical_register then begin
+              r := other^.f2.physical_register_number;
               if r <= 31 then begin
                 if (r mod 32) in c_lo then
                   goto 20;
@@ -4711,11 +4713,11 @@ begin
 20:
     if ra_class = ra_pair then
       r := (r & (~1)) ! ord(rrp$fp_reg_odd_only in lr^.rrp);
-    lr^.f2.reg := r;
-    lr^.f2.assigned := true;
+    lr^.f2.physical_register_number := r;
+    lr^.f2.physical_register := true;
     if lr^.mate <> nil then begin
-      lr^.mate^.f2.reg := xor(r, 1);
-      lr^.mate^.f2.assigned := true;
+      lr^.mate^.f2.physical_register_number := xor(r, 1);
+      lr^.mate^.f2.physical_register := true;
     end;
 30:
     if r <= 31 then begin
@@ -4860,15 +4862,15 @@ begin
               operand$fp_reg_pair_physical]) and
          (i^.opnds[1].h.count = 0) and not i^.h.sets_cc and
          not i^.h.fp_ccs then
-        if ra_lts_ptr_t(i^.opnds[1].lts)^.lr^.f2.reg =
-           ra_lts_ptr_t(i^.opnds[2].lts)^.lr^.f2.reg then
+        if ra_lts_ptr_t(i^.opnds[1].lts)^.lr^.f2.physical_register_number =
+           ra_lts_ptr_t(i^.opnds[2].lts)^.lr^.f2.physical_register_number then
           goto 10;
       if i^.opc <> ord(opc$entry) then
         for k := 1 to i^.h.nopnds do
           if (opnd_bytes_ptr_t(addr(i^.opnds[k]))^.rrp & 12) <> 0 then
             if i^.opnds[k].h.kind in [operand$ip_reg ..
                 operand$fp_reg_pair_physical] then begin
-              r := ra_lts_ptr_t(i^.opnds[k].lts)^.lr^.f2.reg;
+              r := ra_lts_ptr_t(i^.opnds[k].lts)^.lr^.f2.physical_register_number;
               bits := [r mod 32];
               if i^.opnds[k].h.kind = operand$fp_reg_pair then
                 bits := bits + [(xor(r, 1)) mod 32];
@@ -4906,7 +4908,7 @@ begin
   return;
   while lr <> nil do begin
     if lr^.id <> 0 then
-      if not lr^.f2.assigned and not (rrp$life_mark in lr^.rrp) and
+      if not lr^.f2.physical_register and not (rrp$life_mark in lr^.rrp) and
          not lr^.f2.spilled then
         if lr^.cost.r < 1.0e-4 then begin
           lr^.f2.spilled := true;
@@ -5040,7 +5042,7 @@ begin
         at_backend_switches.sw12);
     lr := flushed;
     while lr <> nil do begin
-      r := lr^.f2.reg;
+      r := lr^.f2.physical_register_number;
       if r <= 31 then begin
         b_hi := [];
         b_lo := [r mod 32];
@@ -5060,8 +5062,8 @@ begin
         at_backend_switches.sw13 and (ra_650 > 3), victim) then begin
       lr := order;
       while lr <> nil do begin
-        lr^.f2.assigned := false;
-        lr^.f2.reg := 0;
+        lr^.f2.physical_register := false;
+        lr^.f2.physical_register_number := 0;
         lr^.rrp := lr^.rrp - [rrp$ra_marked];
         s := lr^.ltss;
         while s <> nil do begin
@@ -5126,9 +5128,9 @@ begin
     end;
   end;
   lr := ra_lr_ptr_t(rtn^.l112);
-  if lr^.f2.reg = ra_ip_zero then
+  if lr^.f2.physical_register_number = ra_ip_zero then
     rtn^.f226.save_rpc := true;
-  lr^.f2.reg := conv^.w14 & 255;
+  lr^.f2.physical_register_number := conv^.w14 & 255;
   conv^.needs_db := rtn^.f226.needs_db;
   w := ra_longs_ptr_t(univ_ptr(integer32(rtn^.node) + 374))^[1];
   t := rshft(w, 11) & (~16#100);

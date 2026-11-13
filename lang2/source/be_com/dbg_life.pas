@@ -612,7 +612,7 @@ var
     fp_phys := univ_ptr(addr(lir_3f90));
     for i := 1 to rtn^.l192 do begin
       lr := rtn^.lr_map^[i];
-      r := lr^.f2.reg;
+      r := lr^.f2.physical_register_number;
       if rrp$ip_reg in lr^.rrp then begin
         if (ip_phys^[r] = lr) or (r > 29) then begin
           lr^.node20 := nil;
@@ -996,7 +996,7 @@ begin
     cur := dl_spills^[slot].current
   else begin
     if kind = 1 then
-      if lr^.f2.reg > 29 then
+      if lr^.f2.physical_register_number > 29 then
         return;
     cur := dbg_lr_ptr_t(lr)^.current;
   end;
@@ -1026,13 +1026,13 @@ begin
     dl_spills^[slot].f24.open := true
   else begin
     if kind = 1 then
-      openp := addr(dl_ip_open^[lr^.f2.reg])
+      openp := addr(dl_ip_open^[lr^.f2.physical_register_number])
     else
-      openp := addr(dl_fp_open^[lr^.f2.reg]);
+      openp := addr(dl_fp_open^[lr^.f2.physical_register_number]);
     if openp^ <> nil then
       if kind <> 3 then
         if (slot <> 0) or (lr^.mate = nil) then begin
-          reg := lr^.f2.reg;
+          reg := lr^.f2.physical_register_number;
           vfmt_$write('DBG_LIFE_$OPEN_PC_RANGE: Register %wd already open.%.',
               reg);
         end;
@@ -1106,12 +1106,12 @@ begin
     else begin
       nlr := gspace(88);
       dbg_lr_ptr_t(nlr)^.kind := chr(kind);
-      nlr^.f2.reg := lr_ptr_t(i^.opnds[kf].ptr)^.f2.reg;
+      nlr^.f2.physical_register_number := lr_ptr_t(i^.opnds[kf].ptr)^.f2.physical_register_number;
       nlr^.rrp := lr_ptr_t(i^.opnds[kf].ptr)^.rrp;
       nlr^.node20 := lr_ptr_t(i^.opnds[jf].ptr)^.node20;
       nlr^.mate := lr_ptr_t(i^.opnds[jf].ptr)^.mate;
       dbg_life_$open_pc_range(instr^.l28, instr^.l28, 0, nlr, kind);
-      dbg_life_$close_pc_range(i^.l28, kind, nlr^.f2.reg);
+      dbg_life_$close_pc_range(i^.l28, kind, nlr^.f2.physical_register_number);
     end;
 end;
 
@@ -1470,7 +1470,7 @@ begin
         lr^.node20, true);
     if r <> nil then begin
       r^.slot_sym := nil;
-      r^.f12.reg := lr^.f2.reg;
+      r^.f12.reg := lr^.f2.physical_register_number;
       if rrp$ip_reg in lr^.rrp then
         r^.f12.kind := 0
       else if lr^.mate = nil then

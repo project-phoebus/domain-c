@@ -898,25 +898,25 @@ end;
 procedure print_register_if_assigned(
     lr: lr_ptr_t); options(val_param, internal);
 begin
-  if lr^.f2.physical then begin
+  if lr^.f2.physical_register then begin
     if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then begin
-      if lr^.f2.reg = 30 then
+      if lr^.f2.physical_register_number = 30 then
         vfmt_$write(', IP CONDITION CODES%$')
-      else if lr^.f2.reg = 31 then
+      else if lr^.f2.physical_register_number = 31 then
         vfmt_$write(', FP CONDITION CODES%$')
       else
-        vfmt_$write(', lr^.register = %ld but no type bits%$', integer32(lr^.f2.reg));
+        vfmt_$write(', lr^.register = %ld but no type bits%$', integer32(lr^.f2.physical_register_number));
     end
     else begin
       vfmt_$write(', ASSIGNED TO %$');
       if rrp$ip_reg in lr^.rrp then
-        vfmt_$write('R%ld%$', integer32(lr^.f2.reg))
+        vfmt_$write('R%ld%$', integer32(lr^.f2.physical_register_number))
       else
-        vfmt_$write('F%ld%$', integer32(lr^.f2.reg));
+        vfmt_$write('F%ld%$', integer32(lr^.f2.physical_register_number));
     end;
-    if lr^.f2.no_modify then
+    if lr^.f2.physical_register_is_no_modify then
       vfmt_$write(', NO_MODIFY%$');
-    if lr^.f2.serialize then
+    if lr^.f2.physical_register_user_declared then
       vfmt_$write(', SERIALIZE%$');
   end
   else if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then
@@ -1210,12 +1210,12 @@ var
   len: integer;
   reg: integer32;
 begin
-  if lr^.f2.physical and (at_backend_phase < phase$ra) then begin
+  if lr^.f2.physical_register and (at_backend_phase < phase$ra) then begin
     if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] <> [] then
       goto 2;
-    if lr^.f2.reg = 30 then
+    if lr^.f2.physical_register_number = 30 then
       name.c[1] := 'i'
-    else if lr^.f2.reg = 31 then
+    else if lr^.f2.physical_register_number = 31 then
       name.c[1] := 'f'
     else
       goto 1;
@@ -1228,7 +1228,7 @@ begin
   vfmt_$encode('%3ZWD %$', name.c, 4, len, lr^.num);
   goto 9;
 2:
-  reg := lr^.f2.reg;
+  reg := lr^.f2.physical_register_number;
   if rrp$fp_reg in lr^.rrp then
     name.c[1] := 'f'
   else if reg = target_properties.p_14[1] then begin
@@ -2070,12 +2070,12 @@ begin
     while lr <> nil do begin
       vfmt_$write('%M4A%$', dmp_$three_char_lr_name_from_lr(lr));
       print_properties(lr^.rrp, lr^.f2.b3_4, lr^.f2.b3_1, 'U%$', false);
-      if lr^.f2.physical then begin
-        vfmt_$write(', LR#%3ZWD = %2ZLD%$', lr^.num, integer32(lr^.f2.reg));
-        if lr^.f2.physical then begin
-          if lr^.f2.no_modify then
+      if lr^.f2.physical_register then begin
+        vfmt_$write(', LR#%3ZWD = %2ZLD%$', lr^.num, integer32(lr^.f2.physical_register_number));
+        if lr^.f2.physical_register then begin
+          if lr^.f2.physical_register_is_no_modify then
             vfmt_$write(', NO_MODIFY%$');
-          if lr^.f2.serialize then
+          if lr^.f2.physical_register_user_declared then
             vfmt_$write(', SERIALIZE%$');
         end;
       end

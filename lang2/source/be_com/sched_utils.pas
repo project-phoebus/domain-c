@@ -492,7 +492,7 @@ end;
 function test_phys_lr(
     lr: lr_ptr_t): boolean; options(val_param); internal;
 begin
-  test_phys_lr := lr^.f2.physical and not lr^.f2.serialize;
+  test_phys_lr := lr^.f2.physical_register and not lr^.f2.physical_register_user_declared;
 end;
 
 { check_snuggle_writes - an instruction writing a physical register

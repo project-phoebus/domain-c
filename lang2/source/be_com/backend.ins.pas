@@ -614,25 +614,33 @@ type
     intend_to_modify); chained from the routine's lrs (+52) at +12; sym
     (+24) what it holds (an IL node: xtp reads its kind at +2 and a
     longword of flags at +24, at +32 for kind 109); ltss (+36) its
-    segments. }
+    segments.  The four fields at +2 and +3 bits 7, 6 and 5 carry the
+    original's names: lir_$build_operand's dump compares a solution's
+    physical_register_number, physical_register,
+    physical_register_is_no_modify and physical_register_user_declared
+    with its live range's under the heading `sol^.live_range^.'
+    (docs/questions.md 250, 311; batch A's reg, physical, no_modify and
+    serialize). }
   lr_t = record
     rrp: rrp$set_t;                     { +0 }
     f2: packed record                   { +2 }
-      reg: 0..255;                      { +2: its register, of a live
+      physical_register_number: 0..255; { +2: its register, of a live
                                           range of a physical register
                                           (asm; sanity excepts 30 and
                                           31; batch A (PA3): was b2) }
-      physical: boolean;                { .7: a physical register's live
-                                          range, reg its number (sanity,
-                                          asm; translator PC3's reading;
+      physical_register: boolean;       { .7: a physical register's live
+                                          range, physical_register_number
+                                          its number (sanity, asm;
+                                          translator PC3's reading;
                                           tr_utils: its uses depend on
-                                          every instruction; batch A
-                                          (PA3): was b3_7) }
-      no_modify: boolean;               { .6: dmp's NO_MODIFY (batch A,
-                                          PA4: was b3_6) }
-      serialize: boolean;               { .5: dmp's SERIALIZE (was b3_5);
-                                          a user-declared register
-                                          (ra_utils' message) }
+                                          every instruction; ra: set
+                                          once a register is assigned;
+                                          batch A (PA3): was b3_7) }
+      physical_register_is_no_modify: boolean;  { .6: dmp's NO_MODIFY
+                                          (batch A, PA4: was b3_6) }
+      physical_register_user_declared: boolean; { .5: dmp's SERIALIZE
+                                          (was b3_5); a user-declared
+                                          register (ra_utils' message) }
       b3_4: boolean;                    { .4 (set by make_entering_lts:
                                           translator PC3) }
       b3_3: boolean;

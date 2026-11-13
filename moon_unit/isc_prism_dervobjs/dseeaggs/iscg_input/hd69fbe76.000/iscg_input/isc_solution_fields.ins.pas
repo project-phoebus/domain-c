@@ -59,22 +59,37 @@ type
     kinds prints one). }
   solution$set_t = set of solution$t;
 
+  { The rules' own byte locals (+136 .. +341: case_value, which
+    dump_solution prints through case_index_array_to_string, passing
+    its address).  Declared here, not with its printer in
+    isc_routine_externs.ins.pas: that insert is opened after this one
+    in every unit that opens both, and isc_solution_t needs the type
+    (Pascal has no forward declaration of a non-pointer type): the type
+    moved here, the printer's heading stayed (docs/questions.md 313).
+    Packed: a byte each (dpc gives an unpacked 0..255 element a word,
+    which put the flags at +548 and the record at 640 bytes). }
+  isc_case_index_array_t = packed array [136..341] of 0..255;
+
   { A solution as the ISC reads it (432 bytes; see above).  The
     fields carry the image's names (dump_solution prints each attribute
     after its name, docs/questions.md 267; the generator's attribute
     declarations, rules/declarations.isc, use the same names); those
-    named by offset are fields dump_solution does not print. }
+    named by offset are fields dump_solution does not print.  The
+    types are the ones dump_solution prints by (docs/questions.md 312):
+    base_register and index_register solutions, false_label a label
+    (label_to_string's; the LIR's labels are univ_ptr), il_kind an il$t
+    and kind a solution$t. }
   isc_solution_ptr_t = ^isc_solution_t;
   isc_solution_t = record
     object_with_name: univ_ptr;         { +0: the object (node) }
-    base_register: lr_ptr_t;            { +4: new_solution sets it and
+    base_register: isc_solution_ptr_t;  { +4: new_solution sets it and
                                           index_register to
-                                          isc_user_routines_31c (a
-                                          solution: docs/questions.md
-                                          262) }
-    index_register: lr_ptr_t;           { +8 }
+                                          isc_user_routines_31c (every
+                                          writer stores a solution:
+                                          docs/questions.md 262) }
+    index_register: isc_solution_ptr_t; { +8 }
     l12: integer32;                     { +12 }
-    false_label: integer32;             { +16 }
+    false_label: univ_ptr;              { +16: a LIR label }
     live_range: lr_ptr_t;               { +20 }
     live_range_of_imaginary_part: lr_ptr_t;     { +24 }
     advancing_displacement: integer32;  { +28 }
@@ -144,12 +159,11 @@ type
     evaluation_order: integer;          { +96: 1 the children left to
                                           right, 2 right to left
                                           (pass_2); 1 when made }
-    il_kind: integer;                   { +98: il$t's ordinal
-                                          (new_solution's last
-                                          argument) }
+    il_kind: il$t;                      { +98: new_solution's last
+                                          argument }
     il: univ_ptr;                       { +100 }
     inherited_attributes: inherited_attributes_ptr_t;   { +104 }
-    kind: integer;                      { +108: solution$t's ordinal }
+    kind: solution$t;                   { +108 }
     memory_references: 0..65535;        { +110 (compared `bcc') }
     which_transform: integer;           { +112: the pattern's number
                                           (pass_2 calls the pass-2
@@ -165,12 +179,22 @@ type
       b2, b1, b0: boolean;
       end;
     children: array [1..5] of isc_solution_ptr_t;  { +116 }
-    space136: array [136..351] of char; { +136: the rules' own byte
-                                          locals (case_value +136,
-                                          already_address_mode ..
-                                          already_processor_reg +342
-                                          .. +348: isc_debug's
-                                          ds_solution_t) }
+    case_value: isc_case_index_array_t; { +136: the rules' own byte
+                                          locals (each rule's
+                                          alternatives' numbers:
+                                          docs/iscg-design.md 2.6) }
+    already_address_mode: boolean;      { +342: the chain rules' cycle
+                                          guard, one per register kind
+                                          (`Infinite cycle prevented') }
+    already_fp_reg: boolean;            { +343 }
+    already_fp_reg_pair: boolean;       { +344 }
+    already_fp_reg_quad: boolean;       { +345 }
+    already_ip_reg: boolean;            { +346 }
+    already_ip_reg_field: boolean;      { +347 }
+    already_processor_reg: boolean;     { +348 }
+    x349: char;                         { +349 }
+    x350: integer;                      { +350 (as `array [349..351] of
+                                          char' dpc puts fields at +354) }
     fields: array [0..19] of isc_solution_ptr_t;   { +352: the
                                           rule's own fields, laid out
                                           per rule (preserve_solution

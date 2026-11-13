@@ -343,7 +343,7 @@ begin
       else
         ok := false;
       lr := o^.lts^.lr;
-      if not ok and not lr^.f2.physical and not replace
+      if not ok and not lr^.f2.physical_register and not replace
           and not (rrp$intend_to_modify in m^.lts^.rrp)
           and not (rrp$intend_to_modify in lr^.rrp)
           and not lr^.f2.b3_4 and not m^.lts^.f2.final then begin
@@ -679,7 +679,7 @@ begin
     find_calls_snuggle_move := utils_ins_$operands_instruction(o);
     return;
   end;
-  if not o^.lts^.lr^.f2.physical or (o^.link^.link <> nil) then
+  if not o^.lts^.lr^.f2.physical_register or (o^.link^.link <> nil) then
     bug_check('COM_$find_calls_snuggle_move:  physical operand looks funny.%$');
   i := utils_ins_$operands_instruction(o^.link);
   if i^.h.preference then begin
@@ -753,7 +753,7 @@ begin
     if nm = nil then
       bug_check('COM_$replace_oprs_value: dst is reg_pair bug src is not.%$');
   snug := nil;
-  if old^.lts^.lr^.f2.physical then begin
+  if old^.lts^.lr^.f2.physical_register then begin
     i := utils_ins_$operands_instruction(old);
     if i^.opc = ord(opc$call) then begin
       snug := find_calls_snuggle_move(old);
@@ -771,7 +771,7 @@ begin
       end;
     end;
   end;
-  if new^.lts^.lr^.f2.physical then
+  if new^.lts^.lr^.f2.physical_register then
     if utils_ins_$operands_instruction(new)^.opc = ord(opc$call) then begin
       new := addr(find_calls_snuggle_move(new)^.opnds[2]);
       if nm <> nil then begin
@@ -1682,7 +1682,7 @@ var
 begin
   ok := true;
   lr := l^.lr;
-  simple := (lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = []) and not lr^.f2.physical;
+  simple := (lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = []) and not lr^.f2.physical_register;
   if l^.mark = m3 then
     goto 9;
   if simple then begin
@@ -1970,7 +1970,7 @@ begin
     if is_join_bp(l^.refs) then
       if lr^.rrp * [rrp$fp_reg, rrp$ip_reg] = [] then
         if lr^.l40 <> mark then
-          if not lr^.f2.physical then
+          if not lr^.f2.physical_register then
             if partition_memory(l, mark, l42, m2, invar, variant, lrs,
                                 marked) then begin
               c := invar;
@@ -2249,7 +2249,7 @@ begin
                                 operand$displacement_routine..operand$immediate]) then
             goto 8;
           if o^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then begin
-            if o^.lts^.lr^.f2.physical then
+            if o^.lts^.lr^.f2.physical_register then
               goto 8;
             if o^.h.read then
               r := lr_value_same_on_loop_exit(o^.lts, exits, mark)
@@ -2821,7 +2821,7 @@ begin
       goto 9;
     if (instruction_attributes[st^.opc].class = class$store)
         and (st^.opnds[1].h.kind in [operand$ip_reg..operand$well_behaved_memory]) then
-      phys := st^.opnds[1].lts^.lr^.f2.physical
+      phys := st^.opnds[1].lts^.lr^.f2.physical_register
     else
       phys := false;
     if ld^.h.sets_cc and ((instruction_attributes[ld^.opc].w18 & 7) < 2) then
@@ -3301,7 +3301,7 @@ begin
   if mv^.opnds[2].h.kind <> operand$ip_reg then
     return;
   lr := mv^.opnds[2].lts^.lr;
-  if (rrp$modify in lr^.rrp) or lr^.f2.physical then
+  if (rrp$modify in lr^.rrp) or lr^.f2.physical_register then
     return;
   if lr^.id <> 0 then
     if not lr^.f2.b3_1 then
@@ -3353,8 +3353,8 @@ begin
             move_is_zero(i)
           else if i^.opnds[1].h.kind = operand$ip_reg_like then begin
             lr := i^.opnds[1].lts^.lr;
-            if lr^.f2.physical then
-              if lr^.f2.reg = target_properties.p_14[0] then
+            if lr^.f2.physical_register then
+              if lr^.f2.physical_register_number = target_properties.p_14[0] then
                 move_is_zero(i);
           end;
       i := i^.next;
@@ -3507,7 +3507,7 @@ begin
         lr := o^.lts^.lr;
         if not lr^.f2.b3_1 then
           return;
-        if lr^.f2.physical then
+        if lr^.f2.physical_register then
           return;
         if not def_dominates_use(o^.lts) then
           anywrite := true;
@@ -4137,7 +4137,7 @@ begin
     end;
     if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical,
                      operand$argument_block_memory..operand$well_behaved_memory] then
-      if o^.lts^.lr^.f2.physical then begin
+      if o^.lts^.lr^.f2.physical_register then begin
         if com_level >= 4 then
           vfmt_$write('Warn: physical%.');
         phys := true;
@@ -4284,7 +4284,7 @@ begin
                 if kind in [operand$fp_reg, operand$fp_reg_physical,
                             operand$fp_reg_like] then
                   if a2^.lts^.lr^.mate <> nil then
-                    if not a2^.lts^.lr^.f2.physical then
+                    if not a2^.lts^.lr^.f2.physical_register then
                       goto 20;
                 if a2^.lts^.f2.final
                     or (rrp$intend_to_modify in a2^.lts^.rrp) then
@@ -4314,7 +4314,7 @@ begin
               if c^.opc = ord(opc$move) then
                 if c^.opnds[2].h.kind = operand$ip_reg then begin
                   lr := c^.opnds[2].lts^.lr;
-                  if (rrp$modify in lr^.rrp) or lr^.f2.physical then
+                  if (rrp$modify in lr^.rrp) or lr^.f2.physical_register then
                     ok := false
                   else if lr^.id <> 0 then
                     if not lr^.f2.b3_1 then

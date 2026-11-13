@@ -86,8 +86,8 @@ procedure transform_63_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(subject^.children[1]);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := subject^.children[1];
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := nil;
 end;
 
@@ -98,8 +98,8 @@ procedure transform_64_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(subject^.children[1]);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := subject^.children[1];
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := nil;
 end;
 
@@ -110,8 +110,8 @@ procedure transform_65_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(subject^.children[1]);
-  result.index_register := lr_ptr_t(subject^.children[2]);
+  result.base_register := subject^.children[1];
+  result.index_register := subject^.children[2];
   result.object_with_name := nil;
 end;
 
@@ -122,8 +122,8 @@ procedure transform_66_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(subject^.children[1]);
-  result.index_register := lr_ptr_t(subject^.children[2]);
+  result.base_register := subject^.children[1];
+  result.index_register := subject^.children[2];
   result.object_with_name := nil;
 end;
 
@@ -134,9 +134,9 @@ procedure transform_67_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(subject^.children[1]);
-  result.index_register := lr_ptr_t(ip_reg_to_ip_reg_scaled(subject^.children[2],
-      p2_node_ptr_t(subject^.il)^.w[20]));
+  result.base_register := subject^.children[1];
+  result.index_register := ip_reg_to_ip_reg_scaled(subject^.children[2],
+      p2_node_ptr_t(subject^.il)^.w[20]);
   result.object_with_name := nil;
 end;
 
@@ -154,8 +154,8 @@ begin
       subject^.children[2],
       find_well_known_literal_solution(p2_node_ptr_t(subject^.il)^.w[20]),
       t1);
-  result.base_register := lr_ptr_t(subject^.children[1]);
-  result.index_register := lr_ptr_t(t1);
+  result.base_register := subject^.children[1];
+  result.index_register := t1;
   result.object_with_name := nil;
 end;
 
@@ -183,7 +183,7 @@ procedure transform_70_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.base_register := subject^.children[1]^.base_register;
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
@@ -198,7 +198,7 @@ var
   t2: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
         0,
         find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[8])),
@@ -206,11 +206,11 @@ begin
   end else begin
     t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[8]));
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t2, isc_solution_ptr_t(t2^.base_register), t1, t2^.il, 0,
-        t2^.bits_known, t2^.bits_trusted);
+        0, t2, t2^.base_register, t1, t2^.il, 0, t2^.bits_known,
+        t2^.bits_trusted);
   end;
   result.base_register := subject^.children[1]^.base_register;
-  result.index_register := lr_ptr_t(t1);
+  result.index_register := t1;
   result.object_with_name := subject^.children[1]^.object_with_name;
 end;
 
@@ -396,8 +396,8 @@ procedure transform_84_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(subject^.children[1]);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := subject^.children[1];
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := nil;
 end;
 
@@ -426,6 +426,6 @@ procedure transform_86_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   result.base_register := subject^.children[1]^.base_register;
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := p2_node_ptr_t(subject^.il)^.p[8];
 end;

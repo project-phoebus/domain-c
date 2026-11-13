@@ -372,7 +372,7 @@ begin
   lr := rtn^.lrs;
   while lr <> nil do begin
     lts := lr^.ltss;
-    if lr^.f2.physical or (lr = rtn^.lr140) or (lr = rtn^.memory_lr)
+    if lr^.f2.physical_register or (lr = rtn^.lr140) or (lr = rtn^.memory_lr)
        or (lr = rtn^.db_lr) then
       complex := true
     else if lts = nil then
@@ -684,7 +684,7 @@ begin
       if k <> 0 then begin
         lr := rtn^.lr_map^[k];
         if ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-           and (lr <> lr_ptr_t(rtn^.l112)) and not lr^.f2.physical then begin
+           and (lr <> lr_ptr_t(rtn^.l112)) and not lr^.f2.physical_register then begin
           need_all_writes(lr);
           if lr^.mate <> nil then
             need_all_writes(lr^.mate);
@@ -734,7 +734,7 @@ begin
         if not rebuild_bb_exposed_and_final_lists(lr) then begin
           lr^.f2.b3_4 := false;
           if ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-             and not lr^.f2.physical and (lr <> rtn^.db_lr) then
+             and not lr^.f2.physical_register and (lr <> rtn^.db_lr) then
             lr^.id := 0;
         end;
       end
@@ -747,13 +747,13 @@ begin
         if not r1 then begin
           lr^.f2.b3_4 := false;
           if ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-             and not lr^.f2.physical and not r2 then
+             and not lr^.f2.physical_register and not r2 then
             lr^.id := 0;
         end;
         if not r2 then begin
           mate^.f2.b3_4 := false;
           if ((mate^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> [])
-             and not mate^.f2.physical and not r1 then
+             and not mate^.f2.physical_register and not r1 then
             mate^.id := 0;
         end;
       end;

@@ -969,10 +969,14 @@ type
   { A solution as dump_solution prints it: the generator's attribute
     declarations (docs/iscg-design.md 2.4).  The names are
     isc_solution_fields.ins.pas's isc_solution_t's (docs/questions.md
-    267); this view differs in the types it prints by (kind a
-    solution$t, il_kind an il$t, the solutions' pointers) and names the
-    rules' locals (case_value, the already_ flags) that isc_solution_t
-    leaves in space136. }
+    267) and, since questions 312 and 313, its types for kind, il_kind,
+    base_register, index_register and false_label and the rules' byte
+    locals (case_value, the already_ flags).  This view differs only in
+    the words it prints unsigned (bytes .. n_bytes_to_back_up,
+    evaluation_order, which_transform: 0..65535 where isc_solution_t has
+    integer), +86 as one word,
+    before_transform and children as its own pointers and the rules'
+    pointer locals as univ_ptr; so it stays (docs/questions.md 313). }
   ds_solution_ptr_t = ^ds_solution_t;
   ds_solution_t = record
     object_with_name: univ_ptr;     { +0 }
@@ -1066,7 +1070,10 @@ type
     already_ip_reg: boolean;        { +346 }
     already_ip_reg_field: boolean;  { +347 }
     already_processor_reg: boolean; { +348 }
-    x349: array [349..351] of char; { +349 }
+    x349: char;                     { +349 }
+    x350: integer;                  { +350 (as `array [349..351] of
+                                      char' dpc put fields at +354:
+                                      docs/questions.md 313) }
     fields: array [0..19] of univ_ptr;          { +352: the rules'
                                           pointer locals }
   end;

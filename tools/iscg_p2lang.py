@@ -73,11 +73,50 @@ def sol_path(name, off):
     return ('f76.' if 76 <= off < 88 else 'f114.' if off in (114, 115) else '') + name
 
 
+# the classes of the enumerated fields (the insert's types: il_kind an
+# il$t, kind a solution$t, docs/questions.md 312); a number the rule file
+# gives one is written as the element's name (enum_name)
+IL_T = 'other:il$t'
+SOLUTION_T = 'other:solution$t'
+ENUMS = (IL_T, SOLUTION_T)
+SOLUTION_KINDS = ['none', 'case_jump_base', 'fp_reg_pair_high', 'fp_reg_pair_low',
+                  'local_routine', 'address_mode', 'ctl_reg', 'flow', 'fp_reg', 'fp_reg_pair',
+                  'fp_reg_quad', 'ip_reg', 'ip_reg_field', 'ip_reg_scaled', 'literal_32_bits',
+                  'literal_64_bits', 'processor_reg', 'sc_reg', 'sr_reg', 'dummy',
+                  'any_solution', 'irrelevant', 'proper_subtree', 'void', 'k_max']
+_IL_T_NAMES = None
+
+
+def il_t_names():
+    """il$t's elements in order (isc_enumeration.ins.pas)."""
+    global _IL_T_NAMES
+    if _IL_T_NAMES is None:
+        p = os.path.join(ROOT, 'moon_unit/isc_prism_dervobjs/dseeaggs/iscg_input/'
+                         'hd69fbe76.000/iscg_input/isc_enumeration.ins.pas')
+        m = re.search(r'\bil\$t\s*=\s*\((.*?)\);', open(p, encoding='latin-1').read(), re.S)
+        _IL_T_NAMES = [x.strip() for x in re.sub(r'\{[^}]*\}', '', m.group(1)).split(',')]
+    return _IL_T_NAMES
+
+
+def enum_name(cls, v):
+    """The element of the enumerated class cls whose ordinal is v."""
+    if cls == SOLUTION_T:
+        return 'solution$' + SOLUTION_KINDS[v]
+    return il_t_names()[v]
+
+
+# the rules' locals the insert names (docs/questions.md 313): +136 ..
+# +341 the bytes of case_value, +342 .. +348 the chain rules' cycle
+# guard, one flag per register kind
+ALREADY = ['already_address_mode', 'already_fp_reg', 'already_fp_reg_pair',
+           'already_fp_reg_quad', 'already_ip_reg', 'already_ip_reg_field',
+           'already_processor_reg']
+
 # (offset, size) -> (insert path, class) for the whole longwords, words,
 # bytes
 SOL_FIELDS = {
-    (0, 4): ('object_with_name', 'up'), (4, 4): ('base_register', 'lr'),
-    (8, 4): ('index_register', 'lr'), (12, 4): ('l12', 'i32'), (16, 4): ('false_label', 'i32'),
+    (0, 4): ('object_with_name', 'up'), (4, 4): ('base_register', 'isp'),
+    (8, 4): ('index_register', 'isp'), (12, 4): ('l12', 'i32'), (16, 4): ('false_label', 'up'),
     (20, 4): ('live_range', 'lr'), (24, 4): ('live_range_of_imaginary_part', 'lr'),
     (28, 4): ('advancing_displacement', 'i32'), (32, 4): ('bits_known', 'i32'),
     (36, 4): ('bits_trusted', 'i32'), (40, 4): ('bits_known_of_fetched_value', 'i32'),
@@ -93,8 +132,8 @@ SOL_FIELDS = {
     (80, 1): ('f76.slevel_attribute', 'u8'), (85, 1): ('f76.b85', 'u8'),
     (86, 1): ('f76.b86', 'u8'), (87, 1): ('f76.b87', 'u8'),
     (88, 4): ('before_transform', 'isp'), (92, 2): ('code_bytes', 'u16'), (94, 2): ('delay', 'u16'),
-    (96, 2): ('evaluation_order', 'i16'), (98, 2): ('il_kind', 'i16'), (100, 4): ('il', 'up'),
-    (104, 4): ('inherited_attributes', 'inh'), (108, 2): ('kind', 'i16'),
+    (96, 2): ('evaluation_order', 'i16'), (98, 2): ('il_kind', IL_T), (100, 4): ('il', 'up'),
+    (104, 4): ('inherited_attributes', 'inh'), (108, 2): ('kind', SOLUTION_T),
     (110, 2): ('memory_references', 'u16'), (112, 2): ('which_transform', 'i16'),
     (114, 1): ('f114.number_of_children', 'u8'),
 }
@@ -707,8 +746,12 @@ class Emitter:
         m = re.match(r'([cwls])(\d+)$', s)
         if m and not s in ATTRS:
             kind, off = m.group(1), int(m.group(2))
-            if kind == 'c' and 136 <= off < 352:
-                return '%s.space136[%d]' % (r, off), 'char'
+            if kind == 'c' and 136 <= off < 342:
+                # the rules' byte locals: the insert's case_value
+                return '%s.case_value[%d]' % (r, off), 'u8'
+            if kind == 'c' and 342 <= off <= 348:
+                # the chain rules' cycle guard (docs/questions.md 313)
+                return '%s.%s' % (r, ALREADY[off - 342]), 'bool'
             if kind == 'l' and off >= 352 and off % 4 == 0:
                 return '%s.fields[%d]' % (r, (off - 352) // 4), 'isp'
             if kind == 's' and (off, 4) in SOL_FIELDS:
@@ -734,8 +777,6 @@ class Emitter:
         p, c = SOL_FIELDS[(off, size)]
         if s in ('il', 'object_with_name'):
             c = 'node'
-        if s == 'false_label':
-            c = 'i32'
         return '%s.%s' % (r, p), c
 
     # ---- expressions
@@ -750,6 +791,10 @@ class Emitter:
             return text
         if cls == 'node' and want == 'up' or want == 'node' and cls == 'up':
             return text
+        if want in ENUMS and cls == 'num' and re.match(r'\d+$', text):
+            return enum_name(want, int(text))
+        if cls in ENUMS and want in ('i16', 'u8', 'u16', 'i32'):
+            return 'ord(%s)' % text
         if want in POINTERS:
             if cls == 'num' and text == '0':
                 return 'nil'
@@ -813,8 +858,8 @@ class Emitter:
                 return 'p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[%d + %s]' % (
                     int(m.group(1)) // 2, self.paren(e[2], 4)), 'i16'
             if e[1].startswith('opcode_'):
-                return 'isc_tool_generated_readonly_tables.%s[il$t(%s)]' % (
-                    e[1], self.expr(e[2])), 'i16'
+                return 'isc_tool_generated_readonly_tables.%s[%s]' % (
+                    e[1], self.expr(e[2], IL_T)), 'i16'
             raise LangError('rule %d: no table %s' % (self.rule, e[1]))
         if k == 'call' and e[1] in BUILTINS:
             return '%s(%s)' % (e[1], ', '.join(self.expr(a, 'i32') for a in e[2])), BUILTINS[e[1]]
@@ -845,6 +890,11 @@ class Emitter:
                 lt, lc = 'ord(%s)' % lt, 'i16'
             if rc == 'char' and lc in numeric:
                 rt, rc = 'ord(%s)' % rt, 'i16'
+            # an enumerated field compared with a number: the element
+            if lc in ENUMS and rc == 'num' and re.match(r'\d+$', rt):
+                rt, rc = enum_name(lc, int(rt)), lc
+            if rc in ENUMS and lc == 'num' and re.match(r'\d+$', lt):
+                lt, lc = enum_name(rc, int(lt)), rc
             if lc in POINTERS and rc in POINTERS and lc != rc and 'up' not in (lc, rc):
                 rt = '%s(%s)' % (PASCAL_TYPE[lc], rt)
             lt = self.wrap(e[2], lt, p)

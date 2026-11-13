@@ -519,7 +519,7 @@ begin
     o := addr(instr^.opnds[k]);
     if (o^.h.kind in [operand$ip_reg_physical..operand$fp_reg_pair_physical])
        or ((o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical])
-           and o^.lts^.lr^.f2.physical) then begin
+           and o^.lts^.lr^.f2.physical_register) then begin
       while p <> stop do begin
         p^.l16 := mark;
         p := p^.next;
@@ -976,7 +976,7 @@ begin
     if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
       lts := o^.lts;
       lr := lts^.lr;
-      if lr^.f2.physical then
+      if lr^.f2.physical_register then
         return;
       if not lts^.f2.first_in_bb and (lr^.ltss <> lts) then begin
         if lr^.id = 0 then begin
@@ -1001,7 +1001,7 @@ begin
                 or (instr^.opnds[k - 1].lts^.lr^.id <> 0)) then begin
           o3 := addr(i^.opnds[o^.link^.h.num]);
           if o3^.h.kind in [operand$ip_reg..operand$well_behaved_memory] then
-            if o3^.lts^.lr^.f2.physical then
+            if o3^.lts^.lr^.f2.physical_register then
               return;
         end;
       end;
@@ -1083,10 +1083,10 @@ begin
     if (o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical])
        and o^.h.read then begin
       lts := o^.lts;
-      if lts^.lr^.f2.physical then
+      if lts^.lr^.f2.physical_register then
         return;
       nxt := instr^.opnds[k + 1].lts;
-      if nxt^.lr^.f2.physical then
+      if nxt^.lr^.f2.physical_register then
         return;
       if (lts^.rrp * [rrp$modify, rrp$intend_to_modify]) <> [] then
         return;
@@ -1179,7 +1179,7 @@ begin
     if o^.h.kind in [operand$ip_reg..operand$fp_reg_pair_physical] then begin
       lts := o^.lts;
       lr := lts^.lr;
-      if lr^.f2.physical then
+      if lr^.f2.physical_register then
         return;
       if not lr^.f2.b3_1 then
         return;

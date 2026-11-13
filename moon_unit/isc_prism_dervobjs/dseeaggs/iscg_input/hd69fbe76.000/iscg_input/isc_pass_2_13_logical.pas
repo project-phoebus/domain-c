@@ -68,8 +68,8 @@ procedure transform_324_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   debug_lir_$simple_instruction(result.inherited_attributes,
-      isc_tool_generated_readonly_tables.opcode_rr[il$t(subject^.il_kind)],
-      0, subject^.children[2], subject^.children[1], solution);
+      isc_tool_generated_readonly_tables.opcode_rr[subject^.il_kind], 0,
+      subject^.children[2], subject^.children[1], solution);
 end;
 
 { transform_325_pass_2 - rule 325: ip_reg <- and_top | eor_top | or_top ($1:
@@ -80,7 +80,7 @@ procedure transform_325_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   debug_lir_$simple_instruction(result.inherited_attributes,
-      isc_tool_generated_readonly_tables.opcode_rr_reversed[il$t(subject^.il_kind)],
+      isc_tool_generated_readonly_tables.opcode_rr_reversed[subject^.il_kind],
       0, subject^.children[1], subject^.children[2], solution);
 end;
 
@@ -92,8 +92,8 @@ procedure transform_326_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   debug_lir_$simple_instruction(result.inherited_attributes,
-      isc_tool_generated_readonly_tables.opcode_rr[il$t(subject^.il_kind)],
-      0, subject^.children[2], subject^.children[1], solution);
+      isc_tool_generated_readonly_tables.opcode_rr[subject^.il_kind], 0,
+      subject^.children[2], subject^.children[1], solution);
 end;
 
 { transform_327_pass_2 - rule 327: ip_reg_field <- and_top | eor_top |
@@ -107,8 +107,7 @@ var
 begin
   t1 := validate_shift_count(subject^.children[1]^.f76.bit_position_of_lsb);
   debug_lir_$simple_instruction(result.inherited_attributes,
-      isc_tool_generated_readonly_tables.opcode_rr[il$t(subject^.il_kind)],
-      0,
+      isc_tool_generated_readonly_tables.opcode_rr[subject^.il_kind], 0,
       find_well_known_literal_solution(lshft(subject^.children[2]^.literal_32_bits_value,
       t1)), subject^.children[1], solution);
 end;
@@ -133,15 +132,15 @@ begin
   end else begin
     t1 := subject^.children[1]^.f76.bit_position_of_lsb - subject^.children[2]^.f76.bit_position_of_lsb;
   end;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t7 := subject^.children[1];
   end else begin
-    if ord(result.space136[136]) = 2 then begin
+    if result.case_value[136] = 2 then begin
       t2 := ip_reg_to_ip_reg_scaled(subject^.children[1],
           subject^.children[2]^.f76.bit_position_of_lsb - subject^.children[1]^.f76.bit_position_of_lsb);
       t6 := t2;
     end else begin
-      if ord(result.space136[136]) = 3 then begin
+      if result.case_value[136] = 3 then begin
         t3 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$lsr), 0, subject^.children[1],
@@ -159,7 +158,7 @@ begin
     t7 := t6;
   end;
   debug_lir_$simple_instruction(result.inherited_attributes,
-      isc_tool_generated_readonly_tables.opcode_rr_reversed[il$t(subject^.il_kind)],
+      isc_tool_generated_readonly_tables.opcode_rr_reversed[subject^.il_kind],
       0, t7, subject^.children[2], solution);
 end;
 
@@ -183,13 +182,13 @@ begin
   end else begin
     t1 := subject^.children[1]^.f76.bit_position_of_lsb - subject^.children[2]^.f76.bit_position_of_lsb;
   end;
-  if ord(result.space136[136]) <> 1 then begin
-    if ord(result.space136[136]) = 2 then begin
+  if result.case_value[136] <> 1 then begin
+    if result.case_value[136] = 2 then begin
       t2 := ip_reg_to_ip_reg_scaled(subject^.children[2],
           subject^.children[1]^.f76.bit_position_of_lsb - subject^.children[2]^.f76.bit_position_of_lsb);
       t6 := t2;
     end else begin
-      if ord(result.space136[136]) = 3 then begin
+      if result.case_value[136] = 3 then begin
         t3 := create_solution_for_ip_reg;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$lsr), 0, subject^.children[2],
@@ -209,8 +208,8 @@ begin
     t7 := nil;
   end;
   debug_lir_$simple_instruction(result.inherited_attributes,
-      isc_tool_generated_readonly_tables.opcode_rr[il$t(subject^.il_kind)],
-      0, t7, subject^.children[1], solution);
+      isc_tool_generated_readonly_tables.opcode_rr[subject^.il_kind], 0, t7,
+      subject^.children[1], solution);
 end;
 
 { transform_330_pass_2 - rule 330: fp_reg <- and_top | eor_top | or_top ($1:
@@ -221,7 +220,7 @@ procedure transform_330_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   debug_lir_$simple_instruction(result.inherited_attributes,
-      isc_tool_generated_readonly_tables.opcode_immediate[il$t(subject^.il_kind)],
+      isc_tool_generated_readonly_tables.opcode_immediate[subject^.il_kind],
       0, subject^.children[2], subject^.children[1], solution);
 end;
 
@@ -265,19 +264,19 @@ var
   t3: isc_solution_ptr_t;
   t4: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t1 := find_well_known_literal_solution(0);
     t4 := t1;
   end else begin
     t2 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0, find_well_known_literal_solution(0), t2, nil);
     end else begin
       t3 := address_mode_for_integer32_value(0);
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t3, isc_solution_ptr_t(t3^.base_register), t2,
-          t3^.il, 0, t3^.bits_known, t3^.bits_trusted);
+          ord(opc$loadl), 0, t3, t3^.base_register, t2, t3^.il, 0,
+          t3^.bits_known, t3^.bits_trusted);
     end;
     t4 := t2;
   end;
@@ -304,7 +303,7 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[2]^.children[1], t1);
@@ -327,7 +326,7 @@ var
   t1: isc_solution_ptr_t;
 begin
   t1 := create_solution_for_ip_reg;
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[1]^.children[1], t1);
@@ -347,7 +346,7 @@ procedure transform_336_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[1], solution);
@@ -364,7 +363,7 @@ procedure transform_337_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$xor),
         0, isc_solution_ptr_t(isc_literal_solutions[-1]),
         subject^.children[1], solution);
@@ -398,19 +397,19 @@ var
   t4: isc_solution_ptr_t;
   t5: isc_solution_ptr_t;
 begin
-  if ord(result.space136[136]) = 1 then begin
+  if result.case_value[136] = 1 then begin
     t1 := find_well_known_literal_solution(-1);
     t4 := t1;
   end else begin
     t2 := create_solution_for_ip_reg;
-    if ord(result.space136[137]) = 1 then begin
+    if result.case_value[137] = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$move), 0, find_well_known_literal_solution(-1), t2, nil);
     end else begin
       t3 := address_mode_for_integer32_value(-1);
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t3, isc_solution_ptr_t(t3^.base_register), t2,
-          t3^.il, 0, t3^.bits_known, t3^.bits_trusted);
+          ord(opc$loadl), 0, t3, t3^.base_register, t2, t3^.il, 0,
+          t3^.bits_known, t3^.bits_trusted);
     end;
     t4 := t2;
   end;

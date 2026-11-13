@@ -122,8 +122,8 @@ procedure transform_92_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+  if result.case_value[136] = 1 then begin
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
@@ -139,8 +139,8 @@ procedure transform_93_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+  if result.case_value[136] = 1 then begin
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   pass_2_cse_parent_ob(isc_node_ptr_t(self.il),
@@ -214,8 +214,8 @@ procedure transform_99_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+  if result.case_value[136] = 1 then begin
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   pass_2_cse_use_ob(isc_node_ptr_t(self.il),
@@ -231,8 +231,8 @@ procedure transform_100_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+  if result.case_value[136] = 1 then begin
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   pass_2_cse_use_ob(isc_node_ptr_t(self.il),

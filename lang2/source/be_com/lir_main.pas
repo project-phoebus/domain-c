@@ -378,23 +378,23 @@ begin
       sol := nil;
       r := arg^.f22.reg;
       if arg^.f18.loc = ord(arg_loc$ip_reg) then begin
-        if lir_4090[r]^.f2.no_modify then
+        if lir_4090[r]^.f2.physical_register_is_no_modify then
           sol := lir_3e60[r];
       end
       else if arg^.f18.loc = ord(arg_loc$fp_reg) then begin
-        if lir_3f90[r]^.f2.no_modify then
+        if lir_3f90[r]^.f2.physical_register_is_no_modify then
           sol := lir_3d60[r];
       end
       else if arg^.f18.loc = ord(arg_loc$fp_reg_pair) then begin
-        if lir_3f90[r]^.f2.no_modify then
-          if lir_3f90[r ! 1 - (r & 1)]^.f2.no_modify then
+        if lir_3f90[r]^.f2.physical_register_is_no_modify then
+          if lir_3f90[r ! 1 - (r & 1)]^.f2.physical_register_is_no_modify then
             sol := lir_3d60[r & 16#FFFE];
       end
       else if xfer^.quad then begin
-        if lir_3f90[r]^.f2.no_modify then
-          if lir_3f90[r ! 1 - (r & 1)]^.f2.no_modify then
-            if lir_3f90[r + 2]^.f2.no_modify then
-              if lir_3f90[(r ! 1 - (r & 1)) + 2]^.f2.no_modify then
+        if lir_3f90[r]^.f2.physical_register_is_no_modify then
+          if lir_3f90[r ! 1 - (r & 1)]^.f2.physical_register_is_no_modify then
+            if lir_3f90[r + 2]^.f2.physical_register_is_no_modify then
+              if lir_3f90[(r ! 1 - (r & 1)) + 2]^.f2.physical_register_is_no_modify then
                 sol := lir_3d60[r & 16#FFFE];
       end;
       if sol <> nil then begin
@@ -553,10 +553,10 @@ begin
     sol^.f78.physical_register := false;
   end
   else begin
-    lr^.f2.physical := true;
-    lr^.f2.reg := reg;
-    lr^.f2.no_modify := false;
-    lr^.f2.serialize := false;
+    lr^.f2.physical_register := true;
+    lr^.f2.physical_register_number := reg;
+    lr^.f2.physical_register_is_no_modify := false;
+    lr^.f2.physical_register_user_declared := false;
     sol^.f78.physical_register := true;
     sol^.f78.physical_register_number := reg;
     sol^.f78.physical_register_is_no_modify := false;
@@ -584,8 +584,8 @@ begin
   lr^.rrp := [rrp$unique_value, rrp$safe_base_address, rrp$ip_reg];
   sol^.f78.physical_register := true;
   sol^.f78.physical_register_number := reg;
-  sol^.f78.physical_register_is_no_modify := lr^.f2.no_modify;
-  sol^.f78.physical_register_user_declared := lr^.f2.serialize;
+  sol^.f78.physical_register_is_no_modify := lr^.f2.physical_register_is_no_modify;
+  sol^.f78.physical_register_user_declared := lr^.f2.physical_register_user_declared;
   sol^.live_range := lr;
   lir_main_$add_ip_reg_physical_lr := lr;
 end;
@@ -663,7 +663,7 @@ begin
         regs := cv^.fp60[1];
     end;
     if not skip then begin
-      lr^.f2.no_modify := (k & 31) in bv_word_t(regs);
+      lr^.f2.physical_register_is_no_modify := (k & 31) in bv_word_t(regs);
       sol^.f78.physical_register_is_no_modify := (k & 31) in bv_word_t(regs);
     end;
   end;
@@ -970,7 +970,7 @@ begin
     lir_4216 := 1024;
     lir_$simple_instruction(inh, ord(opc$move), 16#2000000, lir_3e60[1],
                             isc_user_routines_33c, nil, nil);
-    if not rtn^.db_lr^.f2.no_modify then
+    if not rtn^.db_lr^.f2.physical_register_is_no_modify then
       lir_$simple_instruction(inh, ord(opc$move), 16#2000000,
                               lir_3e60[conv^.w16], isc_user_routines_338, nil, nil);
     if not conv^.b30 then
@@ -1182,10 +1182,10 @@ begin
     ins := lm_entry_instr;
     for k := 0 to 63 do begin
       if k <= 29 then
-        if not lir_4090[k]^.f2.serialize then
+        if not lir_4090[k]^.f2.physical_register_user_declared then
           if not (rrp$true_write in ins^.opnds[k + 3].lts^.lr^.rrp) then
             ins^.opnds[k + 3].h.kind := operand$none;
-      if not lir_3f90[k]^.f2.serialize then
+      if not lir_3f90[k]^.f2.physical_register_user_declared then
         if not (rrp$true_write in ins^.opnds[k + 33].lts^.lr^.rrp) then
           ins^.opnds[k + 33].h.kind := operand$none;
     end;
@@ -1271,7 +1271,7 @@ begin
   while lr <> nil do begin
     if lr^.memory_home <> nil then
       if not lr^.f2.b3_0 then
-        if not lr^.f2.physical then begin
+        if not lr^.f2.physical_register then begin
           lts := lr^.ltss;
           while lts <> nil do begin
             op := lts^.refs;
@@ -1513,7 +1513,7 @@ begin
   n := n + count_registers(conv^.fp_preserved[1]);
   n := n + count_registers(conv^.ip_preserved);
   if rtn^.f226.internal_db then
-    if not lir_4090[conv^.w16]^.f2.no_modify then begin
+    if not lir_4090[conv^.w16]^.f2.physical_register_is_no_modify then begin
       lir_$simple_instruction(addr(lir_3b80), ord(opc$move), 0,
                               isc_user_routines_338, lir_3e60[conv^.w16], nil, nil);
       n := n + 1;
@@ -1629,11 +1629,11 @@ begin
   lir_4216 := 0;
   for k := 0 to 29 do begin
     takes := true;
-    if lir_4090[k]^.f2.serialize then
+    if lir_4090[k]^.f2.physical_register_user_declared then
       f := lm_forms[3]
     else if (k & 31) in bv_word_t(conv^.ip_preserved) then begin
       if (conv^.w16 = k) and rtn^.f226.internal_db
-         and not lir_4090[conv^.w16]^.f2.no_modify then
+         and not lir_4090[conv^.w16]^.f2.physical_register_is_no_modify then
         f := lm_forms[3]
       else
         f := lm_forms[0];
@@ -1650,7 +1650,7 @@ begin
   end;
   for k := 0 to 63 do begin
     takes := true;
-    if lir_3f90[k]^.f2.serialize then
+    if lir_3f90[k]^.f2.physical_register_user_declared then
       f := lm_forms[5]
     else if k <= 31 then begin
       if (k & 31) in bv_word_t(conv^.fp_preserved[1]) then
@@ -1920,25 +1920,25 @@ begin
   lts := use^.lts;
   lr := lts^.lr;
   if rrp$ip_reg in lts^.rrp then begin
-    if lr^.f2.no_modify then begin
+    if lr^.f2.physical_register_is_no_modify then begin
       opnd_bytes_ptr_t(use)^.num := 0;
       opnd_bytes_ptr_t(use)^.rrp := 0;
       opnd_bytes_ptr_t(use)^.b2 := 0;
       opnd_bytes_ptr_t(use)^.b3 := 0;
-      lir_$build_operand(use, lir_3e60[lr^.f2.reg], lm_forms[3]);
-      lir_$build_operand(op, lir_3e60[lr^.f2.reg], lm_forms[0]);
+      lir_$build_operand(use, lir_3e60[lr^.f2.physical_register_number], lm_forms[3]);
+      lir_$build_operand(op, lir_3e60[lr^.f2.physical_register_number], lm_forms[0]);
       return;
     end;
     use^.h.kind := operand$ip_reg;
   end
   else begin
-    if lr^.f2.no_modify then begin
+    if lr^.f2.physical_register_is_no_modify then begin
       opnd_bytes_ptr_t(use)^.num := 0;
       opnd_bytes_ptr_t(use)^.rrp := 0;
       opnd_bytes_ptr_t(use)^.b2 := 0;
       opnd_bytes_ptr_t(use)^.b3 := 0;
-      lir_$build_operand(use, lir_3d60[lr^.f2.reg], lm_forms[3]);
-      lir_$build_operand(op, lir_3d60[lr^.f2.reg], lm_forms[0]);
+      lir_$build_operand(use, lir_3d60[lr^.f2.physical_register_number], lm_forms[3]);
+      lir_$build_operand(op, lir_3d60[lr^.f2.physical_register_number], lm_forms[0]);
       return;
     end;
     use^.h.kind := operand$fp_reg;

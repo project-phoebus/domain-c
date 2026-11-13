@@ -740,10 +740,10 @@ modules, isc_pass_1_main's operator routines.
 | isc_pass_2_main | 1 | errors=0; sim 0.00 (see below) | 2252 bytes, 563 relocations: no difference |
 | isc_vars | 0 | errors=0 (nothing to compare) | both sections, 6384 bytes: no difference |
 
-- pattern_matcher is `case solution$t(solution^.kind) of` with every
+- pattern_matcher is `case solution^.kind of` with every
   kind 1..23 a label (the kinds without chain rules share one empty
   arm: the image's in-range kinds without tries go to the case's end,
-  only 0 and 24 to the error) and `case il$t(solution^.il_kind) of` with a
+  only 0 and 24 to the error) and `case solution^.il_kind of` with a
   label per operator some pattern names (unlabelled ones go to the
   otherwise, as in the image).  A try is one `if` per test, nested, in
   pattern order: the image leaves at the first failing test, a child is
@@ -1138,10 +1138,10 @@ temps.
 **The modules**: the generator writes the skeleton around each clause
 (the trace as `write(...); writeln;', gap 4's rewrite line per module in
 cc_gap_rewrites.txt), the views the bodies need (p2's node, flags and
-locals views; p1_already_t for the guard's flags at +342..+348,
-p1_int_fields_t, p1_snode_t, p1_readonly_t), the tables, one routine
-per rule.  Similarity (cc.a88k, non-identical routines): 0.34 (21) ..
-0.51 (08), 0.53 .. 0.75 modulo registers.  Gap 25 (dpc runs out of
+locals views; p1_already_t for the guard's flags at +342..+348 until
+question 313 named them in the insert, p1_int_fields_t, p1_snode_t,
+p1_readonly_t), the tables, one routine per rule.  Similarity (cc.a88k,
+non-identical routines): 0.34 (21) .. 0.51 (08), 0.53 .. 0.75 modulo registers.  Gap 25 (dpc runs out of
 registers; the check compiles them empty): 02's 153, 157, 158, 169, 170;
 09's 445, 450, 474; 10's 423; 14's 384; 25's 120, 121.  tools/cc_typecheck.sh
 reports only gap 4's message.

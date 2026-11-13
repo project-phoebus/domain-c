@@ -639,7 +639,7 @@ class Emitter(L.Emitter):
         m = re.match(r'c(34[2-8])$', s)
         if m and cls in ('rec', 'isp', 'sp', 'up', 'lr'):
             r = self.deref(text, cls)
-            return 'p1_already_ptr_t(addr(%s))^.%s' % (r, ALREADY[int(m.group(1)) - 342]), 'bool'
+            return '%s.%s' % (r, ALREADY[int(m.group(1)) - 342]), 'bool'
         return super().select(text, cls, s)
 
     def expr1(self, e):

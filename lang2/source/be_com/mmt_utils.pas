@@ -285,7 +285,7 @@ end;
 function mmt_utils_$lr_is_for_memory(
     lr: lr_ptr_t): boolean;
 begin
-  if lr^.f2.physical or ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> []) then
+  if lr^.f2.physical_register or ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) <> []) then
     mmt_utils_$lr_is_for_memory := false
   else if lr^.ltss = nil then
     mmt_utils_$lr_is_for_memory := true
@@ -1821,7 +1821,7 @@ begin
       lr^.f2.b3_3 := true;
       if mmt_lr_v_ptr_t(lr)^.f8.kind = 28 then
         mmt_lr_v_ptr_t(lr)^.f8.kind := 27;
-      if not lr^.f2.physical and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then begin
+      if not lr^.f2.physical_register and ((lr^.rrp * [rrp$fp_reg, rrp$ip_reg]) = []) then begin
         l := lr^.ltss;
         if l <> nil then begin
           repeat

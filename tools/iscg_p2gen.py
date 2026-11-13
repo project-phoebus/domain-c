@@ -187,7 +187,7 @@ HEADING = '''procedure transform_%d_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);'''
 
 LOCALS_VIEW = '''  { A rule's own fields where the insert has none of their size: words
-    and longwords below +352 (the insert has bytes there, space136),
+    and longwords below +352 (the insert has bytes there, case_value),
     bytes and longwords at an offset 4k + 2 from +352 (the insert has
     pointers at 4k): a view of the whole solution by offset / 2, offset
     / 4 (and (offset - 2) / 4) and offset. }
