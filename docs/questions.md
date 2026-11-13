@@ -3032,3 +3032,41 @@ answered by this policy and needs no reply.
    0x080572, 0x083F02): written as a transfer to a word (lt_word_t), as
    ord() gives ext.l (question 316: more evidence that Rev 8.89's ord()
    of an enumeration, if the original wrote one, zero-extends).
+328. Translator RN6 (2026-11-12), after 326 (e): **what stays numeric
+   in the code generator.**  The operand modifiers that are register
+   classes (desc.w6, w8: f_extend's `w6 = 4', `= 7 or 6', cg_top's and
+   cg_tree's `w6 = 12 or 8' for the extended classes, compare_proc's
+   size from w6) are numbers still: rlen_ names there?  needs_lib_
+   support's fn holds desc.w6 for F_MATH (a function, named) and for
+   F_EXTEND (a class: `fn = 4', and `(fn = 7) or (fn = 6)' tested for
+   any operator, left numeric).  max/min's routine convention test
+   (`m = 1 or 6', +377 bits 6..4) is call_pas and a value with no name
+   (6).  The condition codes and math functions outside the code
+   generator (kfold's `desc.w8 in [6, 7, 12..15]', add_node's swap_cc
+   table and `desc.w8 = 8', delay's and reg_save's tests) were left to
+   their owners; swap_cc's initializer could be written with cond_
+   names.
+329. Translator RN6: **two probable slips kept (named as conditions).**
+   compare_proc maps the sign tests of a comparison with 0 (HI, LS, LT,
+   GE to NE, EQ, MI, PL) on desc.w6, the operands' class, where the
+   condition is w8 (`move.w (26,A2),D0', cc.m68k 0x103D84; harmless:
+   w6 is not read after); f_compare_proc's switch tests FPA1's EQ, GT,
+   LT in desc.w6 (0x103F02 .. 0x103F1E) where cbranch_proc and
+   generate test them in w8.  Both are written `desc.w6 = cond_...'.
+330. Translator RN6, after 319 and 321: **the ISC's remaining numbers
+   and views.**  (a) il_kind_function returns ord(node^.kind), an
+   il_$kind_t, as an integer (not an il$t: question 314), and pass 1
+   compares it with 117 (label_name): retype it to il_$kind_t?  (b) A
+   comparison's condition at +28 stays a number in the pass-1 actions
+   (the ISC tests it `< 0' and indexes by `24 + abs(...)'); so do an
+   assignment's class at +52 (`il.w52 = 9' in declarations.isc: rlen_cs)
+   and bit_test's condition under rshf_top (`$1.il.w28 <> 6').  (c)
+   which_transform is signed in pass_2 and preserve_solution and
+   unsigned in dump_solution: were there two declarations of the
+   solution in the original (the debug printer's own, as ds_solution_t
+   is here)?  (d) The CSE accessors pass_1_cse_{parent,use}_ip_reg_max
+   .. _fp_reg_quad_result and _eval_order return integer while the
+   fields are 0..65535 now (the result is a word in D0 either way), and
+   evaluation_order_function compares its n1 and n2 signed (`ble',
+   0x2124C2) although the callers pass the unsigned maxima: retype the
+   accessors' results?
