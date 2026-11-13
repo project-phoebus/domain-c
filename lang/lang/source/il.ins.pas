@@ -665,6 +665,25 @@ type
         and xl[k] the longword at +4k, xp2[k] and xl2[k] those at +4k+2,
         xw[k] the word at +2k, xc[k] the byte at +k.  Replace uses with
         named variants as the kinds are identified. }
+      { A tree node (137 tree_node, 143 gen_tree_node: an operator
+        and its operands; list_tree's lt_node_t, g_opt.ins.pas's
+        g_opt_tree_t): its descriptor's register class (+24, the rlen_
+        constants; add_node_$desc_t's rlen) and its operator (+36). }
+      15: (tr_x4: array [1..5] of integer32;        { +4: the phase,
+                                                      ..., the size }
+           tr_rlen: integer;                        { +24 }
+           tr_x26: array [13..17] of integer;       { +26 }
+           tr_op: il_$top_t;                        { +36 }
+           tr_count: integer;                       { +38 }
+           tr_opnd: array [1..64] of il_$node_ptr_t);  { +40 }
+      { A variable (109 var_name): its attributes (+32, list_tree's
+        vr_attr). }
+      16: (vr_x4: array [1..7] of integer32;        { +4 }
+           vr_attr: il_$var_attrs_t);               { +32 }
+      { A Fortran symbol (110 fortran_symbol): its attributes (+24, as
+        a variable's +32: il_utils_$is_strength_reduction_temp). }
+      17: (fs_x4: array [1..5] of integer32;        { +4 }
+           fs_attr: il_$var_attrs_t);               { +24 }
       9: (xp: array [1..94] of il_$node_ptr_t);     { +4 }
       10: (xp2_pad: integer;                        { +4 }
            xp2: array [1..93] of il_$node_ptr_t);   { +6 }
