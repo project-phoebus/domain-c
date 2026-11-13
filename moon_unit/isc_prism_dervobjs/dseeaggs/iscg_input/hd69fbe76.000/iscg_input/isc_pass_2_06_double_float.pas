@@ -142,11 +142,11 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if solution^.object_with_name <> nil then begin
@@ -207,11 +207,11 @@ begin
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if solution^.object_with_name <> nil then begin
@@ -543,11 +543,11 @@ begin
   t3 := create_solution_for_fp_reg;
   t4 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[138]) = 1 then begin
@@ -579,7 +579,7 @@ begin
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtis),
       0, t3, t1, nil);
   if ord(result.space136[141]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[142]) = 1 then begin
@@ -588,8 +588,8 @@ begin
   end else begin
     t9 := address_mode_for_integer32_value(0);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loads),
-        0, t9, isc_solution_ptr_t(t9^.base_register), t2, t9^.il, 0,
-        t9^.bits_known, t9^.bits_trusted);
+        0, t9, t9^.base_register, t2, t9^.il, 0, t9^.bits_known,
+        t9^.bits_trusted);
   end;
   result.live_range := t1^.live_range;
   result.live_range_of_imaginary_part := t2^.live_range;
@@ -611,7 +611,7 @@ begin
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copys),
       0, subject^.children[1], t1, nil);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
@@ -620,8 +620,8 @@ begin
   end else begin
     t3 := address_mode_for_integer32_value(0);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loads),
-        0, t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
-        t3^.bits_known, t3^.bits_trusted);
+        0, t3, t3^.base_register, t2, t3^.il, 0, t3^.bits_known,
+        t3^.bits_trusted);
   end;
   result.live_range := t1^.live_range;
   result.live_range_of_imaginary_part := t2^.live_range;
@@ -661,17 +661,17 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
       0, subject^.children[1], t1, nil);
   if ord(result.space136[138]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[139]) = 1 then begin
@@ -680,8 +680,8 @@ begin
   end else begin
     t3 := address_mode_for_integer32_value(0);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loads),
-        0, t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
-        t3^.bits_known, t3^.bits_trusted);
+        0, t3, t3^.base_register, t2, t3^.il, 0, t3^.bits_known,
+        t3^.bits_trusted);
   end;
   result.live_range := t1^.live_range;
   result.live_range_of_imaginary_part := t2^.live_range;
@@ -700,11 +700,11 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
@@ -737,11 +737,11 @@ begin
   t3 := create_solution_for_fp_reg;
   t4 := create_solution_for_ip_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[138]) = 1 then begin
@@ -774,8 +774,8 @@ begin
       0, t3, t1, nil);
   t9 := address_mode_for_double_value(0.0);
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadd), 0,
-      t9, isc_solution_ptr_t(t9^.base_register), t2, t9^.il, 0,
-      t9^.bits_known, t9^.bits_trusted);
+      t9, t9^.base_register, t2, t9^.il, 0, t9^.bits_known,
+      t9^.bits_trusted);
   result.live_range := t1^.live_range;
   result.live_range_of_imaginary_part := t2^.live_range;
 end;
@@ -794,19 +794,19 @@ begin
   t1 := high_half_of_fp_reg_quad(solution);
   t2 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
       0, subject^.children[1], t1, nil);
   t3 := address_mode_for_double_value(0.0);
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadd), 0,
-      t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
-      t3^.bits_known, t3^.bits_trusted);
+      t3, t3^.base_register, t2, t3^.il, 0, t3^.bits_known,
+      t3^.bits_trusted);
   result.live_range := t1^.live_range;
   result.live_range_of_imaginary_part := t2^.live_range;
 end;
@@ -824,11 +824,11 @@ begin
   t1 := high_half_of_fp_reg_quad(solution);
   t2 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
@@ -856,8 +856,8 @@ begin
       0, subject^.children[1], t1, nil);
   t3 := address_mode_for_double_value(0.0);
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadd), 0,
-      t3, isc_solution_ptr_t(t3^.base_register), t2, t3^.il, 0,
-      t3^.bits_known, t3^.bits_trusted);
+      t3, t3^.base_register, t2, t3^.il, 0, t3^.bits_known,
+      t3^.bits_trusted);
   result.live_range := t1^.live_range;
   result.live_range_of_imaginary_part := t2^.live_range;
 end;
@@ -899,11 +899,11 @@ begin
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
@@ -927,11 +927,11 @@ begin
   t1 := high_half_of_fp_reg_pair(subject^.children[1]);
   t2 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes,
@@ -962,11 +962,11 @@ var
 begin
   t1 := high_half_of_fp_reg_pair(subject^.children[1]);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtsd),
@@ -986,11 +986,11 @@ begin
   t1 := high_half_of_fp_reg_quad(subject^.children[1]);
   t2 := create_solution_for_fp_reg;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes,
@@ -1010,11 +1010,11 @@ var
 begin
   t1 := high_half_of_fp_reg_quad(subject^.children[1]);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
@@ -1049,11 +1049,11 @@ begin
   t3 := high_half_of_fp_reg_pair(solution);
   t4 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$cvtds),
@@ -1426,11 +1426,11 @@ begin
   t1 := high_half_of_fp_reg_pair(solution);
   t2 := low_half_of_fp_reg_pair(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
@@ -1455,11 +1455,11 @@ begin
   t3 := high_half_of_fp_reg_quad(solution);
   t4 := low_half_of_fp_reg_quad(solution);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$copyd),
@@ -1477,11 +1477,11 @@ procedure transform_531_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   pass_2_isc_call(isc_node_ptr_t(subject^.il),
@@ -1500,11 +1500,11 @@ procedure transform_532_pass_2(var self: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(5, il$t(subject^.il_kind), 0,
+    pattern_match_error(5, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   pass_2_isc_call(isc_node_ptr_t(subject^.il),

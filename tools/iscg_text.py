@@ -164,7 +164,7 @@ begin
           if add_this_to_parent^.f76.physical_register and
              not add_this_to_parent^.f76.physical_register_is_no_modify and
              not add_this_to_parent^.f76.physical_register_user_declared then begin
-            if (solution$t(add_this_to_parent^.kind) in
+            if (add_this_to_parent^.kind in
                 [solution$fp_reg_pair_high, solution$fp_reg_pair_low, solution$fp_reg,
                  solution$fp_reg_pair, solution$fp_reg_quad]) or
                ((add_this_to_parent^.f76.physical_register_number <>
@@ -187,7 +187,7 @@ begin
   end;
   if add_this_to_parent <> nil then begin
     wanted := true;
-    if add_this_to_parent^.kind = ord(solution$proper_subtree) then begin
+    if add_this_to_parent^.kind = solution$proper_subtree then begin
       if pm_proper_subtree_seen then
         wanted := false;
       pm_proper_subtree_seen := true;
@@ -250,8 +250,8 @@ begin
 done:
     appended := false;
     if wanted then begin
-      if (add_this_to_parent^.kind = ord(solution$proper_subtree)) or
-         (solution$t(add_this_to_parent^.kind) in permissible_solution_kinds) then begin
+      if (add_this_to_parent^.kind = solution$proper_subtree) or
+         (add_this_to_parent^.kind in permissible_solution_kinds) then begin
         appended := true;
         if isc_user_routines_354 then begin
           write('That solution was appended to the solutions_of_parent.');
@@ -275,7 +275,7 @@ done:
   end;
   if add_this_to_work_list <> nil then begin
     if appended or
-       (not (solution$t(add_this_to_parent^.kind) in permissible_solution_kinds) and wanted and
+       (not (add_this_to_parent^.kind in permissible_solution_kinds) and wanted and
         not add_this_to_parent^.f76.dead_end) then begin
       if isc_user_routines_354 then begin
         write('Adding the following solution to the work list:');
@@ -297,7 +297,7 @@ PATTERN_MATCHER = '''{ pattern_matcher - every rule whose pattern solution match
   lists after: `case solution^.kind of' (a chain rule's subject kind,
   every kind 1..23 a label; any other kind an error, a message under
   the traces, else bug_check) and, for a proper_subtree, `case
-  il$t(solution^.il_kind) of' (an operator no pattern names an error); in
+  solution^.il_kind of' (an operator no pattern names an error); in
   each arm the rules tried under it, in rule order, each when its
   pattern's tests hold (children's kinds, nested proper_subtrees'
   operators, in pattern order).  The case statements are the
@@ -488,7 +488,7 @@ begin
   if sol <> nil then
     if not sol^.f114.already_through_pass_2 then begin
       if sol^.before_transform <> nil then begin
-        if sol^.before_transform^.kind = ord(solution$proper_subtree) then
+        if sol^.before_transform^.kind = solution$proper_subtree then
           sol^.before_transform^.evaluation_order := sol^.evaluation_order;
         pass_2(sol^.before_transform, depth + 1);
       end
@@ -524,9 +524,9 @@ begin
           writeln;
         end;
       end;
-      sol^.base_register := lr_ptr_t(isc_user_routines_31c);
-      sol^.index_register := lr_ptr_t(isc_user_routines_31c);
-      sol^.false_label := 0;
+      sol^.base_register := isc_solution_ptr_t(isc_user_routines_31c);
+      sol^.index_register := isc_solution_ptr_t(isc_user_routines_31c);
+      sol^.false_label := nil;
       sol^.object_with_name := nil;
       sol^.live_range := nil;
       sol^.live_range_of_imaginary_part := nil;

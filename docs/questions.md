@@ -2689,6 +2689,29 @@ answered by this policy and needs no reply.
    (il$t's and solution$t's ordinals: question 250).  Retype them
    (isc_debug's ds_solution_t would then be the same record but for the
    rules' locals, and could go)?
+   **Done (RN2, 2026-11-12):** isc_solution_t's base_register and
+   index_register are isc_solution_ptr_t (and the four CSE accessors
+   pass_2_cse_{parent,use}_{base,index}_reg return one), false_label
+   univ_ptr (the LIR's labels have no type of their own: lir_$new_label
+   returns univ_ptr, label_to_string takes one), il_kind il$t
+   (isc_enumeration.ins.pas, opened before the insert in every unit;
+   il$t is not il_$kind_t: question 314) and kind solution$t.  The
+   generator (iscg_p2lang's field classes, iscg_gen's matcher,
+   iscg_text's fixed text) writes the elements' names where the rule file
+   has numbers and drops the casts; the rule file is unchanged and
+   re-extraction reproduces it.  The hand-written ISC units name the
+   kinds (case labels, compares) and keep new_solution's integer
+   parameters (cast there).  dpc's code is unchanged but for three
+   `write' of a kind (isc_to_lir's guarantee_has_live_range,
+   isc_user_routines' local_initialize_symbol and
+   isc_$is_a_register_candidate): without the cast dpc passes the
+   field's address as the image does (`pea (108,An)', cc.a88k
+   0x208944, 0x20E358, 0x2132F6) instead of a copy's.  solution_t
+   (backend.ins.pas: the LIR's view) keeps its integer kind and
+   registers (solution$t is not visible there).  ds_solution_t stays:
+   it still differs in the words it prints unsigned (bytes ..
+   n_bytes_to_back_up, evaluation_order, which_transform), +86, and
+   its pointer types (see its comment).
 313. Translator RN3: **the rules' locals in isc_solution_t.**
    dump_solution prints case_value (+136) and already_address_mode ..
    already_processor_reg (+342..+348) as attributes;

@@ -136,7 +136,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.p[8] <> nil) or ((subject.children[2]^.kind <> 14) or (subject.children[2]^.literal_32_bits_value <> 0)) and ((subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> 11))) then begin
+  if not ((p2_node_ptr_t(subject.il)^.p[8] <> nil) or ((subject.children[2]^.kind <> solution$literal_32_bits) or (subject.children[2]^.literal_32_bits_value <> 0)) and ((subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> solution$ip_reg))) then begin
     if isc_user_routines_354 then begin
       write('Pattern 63 matched the semantics.');
       writeln;
@@ -240,7 +240,7 @@ begin
       solution^.bits_known_of_fetched_value := 0;
       solution^.bits_trusted_of_fetched_value := 0;
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t4 := subject.children[1]^.ip_reg_max;
@@ -327,7 +327,7 @@ begin
       solution^.bits_known_of_fetched_value := 0;
       solution^.bits_trusted_of_fetched_value := 0;
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[1]^.ip_reg_max;
@@ -412,7 +412,7 @@ begin
       solution^.bits_known_of_fetched_value := 0;
       solution^.bits_trusted_of_fetched_value := 0;
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[1]^.ip_reg_max;
@@ -497,7 +497,7 @@ begin
       solution^.bits_known_of_fetched_value := 0;
       solution^.bits_trusted_of_fetched_value := 0;
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[1]^.ip_reg_max;
@@ -582,7 +582,7 @@ begin
       solution^.bits_known_of_fetched_value := 0;
       solution^.bits_trusted_of_fetched_value := 0;
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[1]^.ip_reg_max;
@@ -732,7 +732,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (not lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[8]), ord(opc$loadl), 1) or (subject.children[1]^.kind = 5) and (subject.children[1]^.f76.uses_the_displacement or not subject.children[1]^.f76.uses_the_base_register or subject.children[1]^.f76.uses_the_index_register)) then begin
+  if not (not lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[8]), ord(opc$loadl), 1) or (subject.children[1]^.kind = solution$address_mode) and (subject.children[1]^.f76.uses_the_displacement or not subject.children[1]^.f76.uses_the_base_register or subject.children[1]^.f76.uses_the_index_register)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 70 matched the semantics.');
       writeln;
@@ -837,7 +837,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[8]), ord(opc$loadl), 1) or (subject.children[1]^.kind = 5) and (subject.children[1]^.f76.uses_the_displacement or not subject.children[1]^.f76.uses_the_base_register or subject.children[1]^.f76.uses_the_index_register)) then begin
+  if not (lir_$can_encode_as_immediate_operand(integer32(p2_node_ptr_t(subject.il)^.p[8]), ord(opc$loadl), 1) or (subject.children[1]^.kind = solution$address_mode) and (subject.children[1]^.f76.uses_the_displacement or not subject.children[1]^.f76.uses_the_base_register or subject.children[1]^.f76.uses_the_index_register)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 71 matched the semantics.');
       writeln;
@@ -2073,7 +2073,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (subject.children[1]^.kind <> 5) or not subject.children[1]^.f76.uses_the_displacement and subject.children[1]^.f76.uses_the_base_register and not subject.children[1]^.f76.uses_the_index_register then begin
+  if (subject.children[1]^.kind <> solution$address_mode) or not subject.children[1]^.f76.uses_the_displacement and subject.children[1]^.f76.uses_the_base_register and not subject.children[1]^.f76.uses_the_index_register then begin
     if isc_user_routines_354 then begin
       write('Pattern 86 matched the semantics.');
       writeln;

@@ -563,7 +563,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -625,7 +625,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_quad_max,
           subject.children[2]^.fp_reg_quad_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -687,7 +687,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 44;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 30;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -749,7 +749,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 48;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 32;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -811,7 +811,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 44;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 36;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_quad_max,
           subject.children[2]^.fp_reg_quad_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -873,7 +873,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 52;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 40;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_quad_max,
           subject.children[2]^.fp_reg_quad_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -1069,7 +1069,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_max, subject.children[2]^.fp_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.fp_reg_max;
@@ -1202,7 +1202,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -1404,7 +1404,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_max, subject.children[2]^.fp_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.fp_reg_quad_max;
@@ -1511,7 +1511,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -2177,7 +2177,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 12;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -2239,7 +2239,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 28;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 14;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -2301,7 +2301,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 24;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 12;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_quad_max,
           subject.children[2]^.fp_reg_quad_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -2363,7 +2363,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 32;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 16;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_quad_max,
           subject.children[2]^.fp_reg_quad_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -2517,7 +2517,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_pair_max,
           subject.children[2]^.fp_reg_pair_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
@@ -2579,7 +2579,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 8;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.fp_reg_quad_max,
           subject.children[2]^.fp_reg_quad_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));

@@ -149,7 +149,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (subject.children[1]^.kind = 14) and (subject.children[1]^.literal_32_bits_value = 0) or (subject.children[1]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) and subject.children[1]^.f76.physical_register and (subject.children[1]^.kind = 11) then begin
+  if (subject.children[1]^.kind = solution$literal_32_bits) and (subject.children[1]^.literal_32_bits_value = 0) or (subject.children[1]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) and subject.children[1]^.f76.physical_register and (subject.children[1]^.kind = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 349 matched the semantics.');
       writeln;
@@ -186,7 +186,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (subject.children[2]^.kind = 14) and (subject.children[2]^.literal_32_bits_value = 0) or (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) and subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = 11) then begin
+  if (subject.children[2]^.kind = solution$literal_32_bits) and (subject.children[2]^.literal_32_bits_value = 0) or (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) and subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 350 matched the semantics.');
       writeln;
@@ -308,7 +308,7 @@ begin
       t4 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_trusted := lshft(subject.children[1]^.bits_trusted,
           t4) ! t2;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t5 := subject.children[1]^.ip_reg_max;
@@ -367,7 +367,7 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -543,7 +543,7 @@ begin
       solution^.bits_known := rshft(subject.children[1]^.bits_known, t2);
       t3 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_trusted := rshft(subject.children[1]^.bits_trusted, t3);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t4 := subject.children[1]^.ip_reg_max;
@@ -621,7 +621,7 @@ begin
       solution^.code_bytes := cost_355_2[ord(solution^.space136[137])] + cost_355_1[ord(solution^.space136[138])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -688,7 +688,7 @@ begin
       solution^.bits_known := rshft(subject.children[1]^.bits_known, t2);
       t3 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_trusted := rshft(subject.children[1]^.bits_trusted, t3);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t4 := subject.children[1]^.ip_reg_max;
@@ -748,7 +748,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -995,7 +995,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not (subject.children[1]^.f76.physical_register and (subject.children[1]^.kind = 11) and (subject.children[1]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (subject.children[2]^.literal_32_bits_value <= 0) or (subject.children[2]^.literal_32_bits_value > 3)) then begin
+  if not (subject.children[1]^.f76.physical_register and (subject.children[1]^.kind = solution$ip_reg) and (subject.children[1]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or (subject.children[2]^.literal_32_bits_value <= 0) or (subject.children[2]^.literal_32_bits_value > 3)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 361 matched the semantics.');
       writeln;
@@ -1122,7 +1122,7 @@ begin
       t4 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_trusted := lshft(subject.children[1]^.bits_trusted,
           t4) ! t2;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t5 := subject.children[1]^.ip_reg_max;
@@ -1181,7 +1181,7 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -1500,9 +1500,9 @@ begin
       solution := new_solution(isc_heap, ord(solution$ip_reg), 0, inh, il, 0);
       solution^.which_transform := 367;
       solution^.before_transform := addr(subject);
-      if subject.children[1]^.children[2]^.kind = 12 then begin
+      if subject.children[1]^.children[2]^.kind = solution$ip_reg_field then begin
         solution^.space136[136] := chr(1);
-        if subject.children[1]^.children[1]^.kind = 11 then begin
+        if subject.children[1]^.children[1]^.kind = solution$ip_reg then begin
           solution^.space136[137] := chr(1);
         end else begin
           solution^.space136[137] := chr(2);
@@ -1587,7 +1587,7 @@ begin
         solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
         solution^.bits_known := 0;
         solution^.bits_trusted := t4;
-        solution^.evaluation_order := evaluation_order_function(il$t(subject.children[1]^.il_kind),
+        solution^.evaluation_order := evaluation_order_function(subject.children[1]^.il_kind,
             subject.children[1]^.children[1]^.ip_reg_max,
             subject.children[1]^.children[2]^.ip_reg_max,
             legal_evaluation_orders(subject.children[1]^.children[1],
@@ -1792,7 +1792,7 @@ begin
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := subject.children[1]^.bits_known & ((-1) - t2);
       solution^.bits_trusted := subject.children[1]^.bits_trusted ! t2;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t4 := subject.children[1]^.ip_reg_max;
@@ -1860,7 +1860,7 @@ begin
       solution^.code_bytes := cost_372_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[2]^.ip_reg_max;
@@ -1927,7 +1927,7 @@ begin
       solution^.bits_known := rshft(subject.children[1]^.bits_known, t2);
       t3 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_trusted := rshft(subject.children[1]^.bits_trusted, t3);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t4 := subject.children[1]^.ip_reg_max;
@@ -1987,7 +1987,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;

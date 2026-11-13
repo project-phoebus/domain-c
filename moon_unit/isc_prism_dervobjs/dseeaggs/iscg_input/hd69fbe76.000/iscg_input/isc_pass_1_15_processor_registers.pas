@@ -815,7 +815,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value,
       ord(opc$insert), 1);
-  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited_attributes^.required_precision <> 32) or (subject.children[2]^.kind = 14)) and ((subject.children[1]^.inherited_attributes^.required_precision >= 32) or ((32 - subject.children[1]^.n_bytes_to_back_up * 8 - p2_node_ptr_t(subject.il)^.w[27] - p2_node_ptr_t(subject.il)^.w[28] <> subject.children[2]^.f76.bit_position_of_lsb) or (subject.children[2]^.kind <> 12)) and (not t1 and (subject.children[2]^.kind = 14) or (subject.children[2]^.kind = 12) and (subject.children[2]^.f76.bit_position_of_lsb <> 0))) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.il)^.w[28])) then begin
+  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited_attributes^.required_precision <> 32) or (subject.children[2]^.kind = solution$literal_32_bits)) and ((subject.children[1]^.inherited_attributes^.required_precision >= 32) or ((32 - subject.children[1]^.n_bytes_to_back_up * 8 - p2_node_ptr_t(subject.il)^.w[27] - p2_node_ptr_t(subject.il)^.w[28] <> subject.children[2]^.f76.bit_position_of_lsb) or (subject.children[2]^.kind <> solution$ip_reg_field)) and (not t1 and (subject.children[2]^.kind = solution$literal_32_bits) or (subject.children[2]^.kind = solution$ip_reg_field) and (subject.children[2]^.f76.bit_position_of_lsb <> 0))) or (available_precision_function(subject.children[2]) < p2_node_ptr_t(subject.il)^.w[28])) then begin
     if isc_user_routines_354 then begin
       write('Pattern 247 matched the semantics.');
       writeln;
@@ -836,7 +836,7 @@ begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
-        if subject.children[2]^.kind = 14 then begin
+        if subject.children[2]^.kind = solution$literal_32_bits then begin
           solution^.space136[138] := chr(1);
           if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$insert), 1) then begin
             solution^.space136[139] := chr(1);
@@ -856,7 +856,7 @@ begin
     solution^.code_bytes := cost_247_7[ord(solution^.space136[136])] + cost_247_6[ord(solution^.space136[137])] + cost_247_5[ord(solution^.space136[138])] + cost_247_4[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := cost_247_3[ord(solution^.space136[140])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := cost_247_2[ord(solution^.space136[136])] + cost_247_1[ord(solution^.space136[140])] + subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;
@@ -888,7 +888,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited_attributes^.required_precision <> 32) or (subject.children[2]^.kind = 14)) and ((subject.children[1]^.inherited_attributes^.required_precision >= 32) or ((32 - (subject.children[1]^.n_bytes_to_back_up * 8 + subject.children[1]^.inherited_attributes^.fetch_precision) <> subject.children[2]^.f76.bit_position_of_lsb) or (subject.children[2]^.kind <> 12)) and (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$insert), 1) and (subject.children[2]^.kind = 14) or (subject.children[2]^.kind = 12) and (subject.children[2]^.f76.bit_position_of_lsb <> 0)))) then begin
+  if not ((subject.children[1]^.bits_known & 3 <> 0) or ((subject.children[1]^.inherited_attributes^.required_precision <> 32) or (subject.children[2]^.kind = solution$literal_32_bits)) and ((subject.children[1]^.inherited_attributes^.required_precision >= 32) or ((32 - (subject.children[1]^.n_bytes_to_back_up * 8 + subject.children[1]^.inherited_attributes^.fetch_precision) <> subject.children[2]^.f76.bit_position_of_lsb) or (subject.children[2]^.kind <> solution$ip_reg_field)) and (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$insert), 1) and (subject.children[2]^.kind = solution$literal_32_bits) or (subject.children[2]^.kind = solution$ip_reg_field) and (subject.children[2]^.f76.bit_position_of_lsb <> 0)))) then begin
     if isc_user_routines_354 then begin
       write('Pattern 248 matched the semantics.');
       writeln;
@@ -909,7 +909,7 @@ begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
-        if subject.children[2]^.kind = 14 then begin
+        if subject.children[2]^.kind = solution$literal_32_bits then begin
           solution^.space136[138] := chr(1);
           if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$insert), 1) then begin
             solution^.space136[139] := chr(1);
@@ -929,7 +929,7 @@ begin
     solution^.code_bytes := cost_248_7[ord(solution^.space136[136])] + cost_248_6[ord(solution^.space136[137])] + cost_248_5[ord(solution^.space136[138])] + cost_248_4[ord(solution^.space136[140])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := cost_248_3[ord(solution^.space136[140])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := cost_248_2[ord(solution^.space136[136])] + cost_248_1[ord(solution^.space136[140])] + subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + subject.children[2]^.ip_reg_max;

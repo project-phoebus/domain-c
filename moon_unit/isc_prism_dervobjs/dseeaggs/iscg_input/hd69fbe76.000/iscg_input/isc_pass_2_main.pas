@@ -2060,7 +2060,7 @@ begin
   if sol <> nil then
     if not sol^.f114.already_through_pass_2 then begin
       if sol^.before_transform <> nil then begin
-        if sol^.before_transform^.kind = ord(solution$proper_subtree) then
+        if sol^.before_transform^.kind = solution$proper_subtree then
           sol^.before_transform^.evaluation_order := sol^.evaluation_order;
         pass_2(sol^.before_transform, depth + 1);
       end
@@ -2096,9 +2096,9 @@ begin
           writeln;
         end;
       end;
-      sol^.base_register := lr_ptr_t(isc_user_routines_31c);
-      sol^.index_register := lr_ptr_t(isc_user_routines_31c);
-      sol^.false_label := 0;
+      sol^.base_register := isc_solution_ptr_t(isc_user_routines_31c);
+      sol^.index_register := isc_solution_ptr_t(isc_user_routines_31c);
+      sol^.false_label := nil;
       sol^.object_with_name := nil;
       sol^.live_range := nil;
       sol^.live_range_of_imaginary_part := nil;

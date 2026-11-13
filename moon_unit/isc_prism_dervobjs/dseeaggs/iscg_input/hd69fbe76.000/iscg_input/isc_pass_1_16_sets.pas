@@ -288,13 +288,13 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -343,7 +343,7 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 534 matched the semantics.');
       writeln;
@@ -505,7 +505,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((integer32(p2_node_ptr_t(subject.il)^.p[5]) > 4) or subject.children[1]^.f76.physical_register and (subject.children[1]^.kind = 11) and (subject.children[1]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.is_destroyable) then begin
+  if not ((integer32(p2_node_ptr_t(subject.il)^.p[5]) > 4) or subject.children[1]^.f76.physical_register and (subject.children[1]^.kind = solution$ip_reg) and (subject.children[1]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.is_destroyable) then begin
     if isc_user_routines_354 then begin
       write('Pattern 536 matched the semantics.');
       writeln;
@@ -637,7 +637,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not (not subject.children[1]^.f76.is_set_temporary or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5)) then begin
+  if not (not subject.children[1]^.f76.is_set_temporary or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 537 matched the semantics.');
       writeln;
@@ -803,13 +803,13 @@ begin
       solution^.code_bytes := cost_538_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           2);
       t2 := subject.children[1]^.ip_reg_max;
@@ -858,7 +858,7 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 539 matched the semantics.');
       writeln;
@@ -921,7 +921,7 @@ begin
       solution^.bits_trusted := 3;
       solution^.bits_known_of_fetched_value := 0;
       solution^.bits_trusted_of_fetched_value := 0;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           2);
       solution^.f76.has_a_symbolic_displacement := true;
@@ -1279,7 +1279,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[13] >= integer32(p2_node_ptr_t(subject.il)^.p[5])) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] >= integer32(p2_node_ptr_t(subject.il)^.p[5])) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 543 matched the semantics.');
       writeln;
@@ -1455,7 +1455,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <= integer32(p2_node_ptr_t(subject.il)^.p[5])) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <= integer32(p2_node_ptr_t(subject.il)^.p[5])) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 545 matched the semantics.');
       writeln;
@@ -1551,13 +1551,13 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -1606,7 +1606,7 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 547 matched the semantics.');
       writeln;
@@ -1730,7 +1730,7 @@ begin
       solution^.code_bytes := cost_548_4[ord(solution^.space136[136])] + cost_548_3[ord(solution^.space136[137])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 60;
       solution^.memory_references := cost_548_2[ord(solution^.space136[137])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := cost_548_1[ord(solution^.space136[137])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
           legal_evaluation_orders(subject.children[2], subject.children[3]));
       t3 := subject.children[1]^.ip_reg_max;
@@ -1803,7 +1803,7 @@ begin
       solution^.code_bytes := cost_549_4[ord(solution^.space136[136])] + cost_549_3[ord(solution^.space136[137])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 64;
       solution^.memory_references := cost_549_2[ord(solution^.space136[137])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := cost_549_1[ord(solution^.space136[137])] + subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay + 4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
           legal_evaluation_orders(subject.children[2], subject.children[3]));
       t3 := subject.children[1]^.ip_reg_max;
@@ -1849,7 +1849,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not (not subject.children[1]^.f76.is_set_temporary or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5)) then begin
+  if not (not subject.children[1]^.f76.is_set_temporary or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 550 matched the semantics.');
       writeln;

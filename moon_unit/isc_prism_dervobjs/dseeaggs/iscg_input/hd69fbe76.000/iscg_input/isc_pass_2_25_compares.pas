@@ -219,8 +219,8 @@ begin
     end else begin
       t9 := address_mode_for_integer32_value(integer32(result.fields[0]));
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t9, isc_solution_ptr_t(t9^.base_register), t8,
-          t9^.il, 0, t9^.bits_known, t9^.bits_trusted);
+          ord(opc$loadl), 0, t9, t9^.base_register, t8, t9^.il, 0,
+          t9^.bits_known, t9^.bits_trusted);
     end;
     t10 := t8;
   end;
@@ -229,17 +229,16 @@ begin
       if t4^.object_with_name <> nil then begin
         t4^.object_with_name := t4^.object_with_name;
       end else begin
-        t4^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t4^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t4, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t4, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t4);
+          subject^.children[2]^.base_register, t4);
     end;
   end
   else if ord(result.space136[140]) = 1 then begin
@@ -250,8 +249,8 @@ begin
   end else begin
     t11 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t11, isc_solution_ptr_t(t11^.base_register), t4, t11^.il, 0,
-        t11^.bits_known, t11^.bits_trusted);
+        0, t11, t11^.base_register, t4, t11^.il, 0, t11^.bits_known,
+        t11^.bits_trusted);
   end;
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
       t1 + t3 + t2, t10, t4, t5, subject^.children[2]^.il,
@@ -304,8 +303,8 @@ begin
       end else begin
         t5 := address_mode_for_integer32_value(integer32(result.fields[0]));
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t5, isc_solution_ptr_t(t5^.base_register), t2,
-            t5^.il, 0, t5^.bits_known, t5^.bits_trusted);
+            ord(opc$loadl), 0, t5, t5^.base_register, t2, t5^.il, 0,
+            t5^.bits_known, t5^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t2, subject^.children[1], t2);
@@ -404,8 +403,8 @@ begin
     end else begin
       t10 := address_mode_for_integer32_value(integer32(result.fields[0]));
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t10, isc_solution_ptr_t(t10^.base_register), t5,
-          t10^.il, 0, t10^.bits_known, t10^.bits_trusted);
+          ord(opc$loadl), 0, t10, t10^.base_register, t5, t10^.il, 0,
+          t10^.bits_known, t10^.bits_trusted);
     end;
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t5, subject^.children[1], t5);
@@ -433,17 +432,16 @@ begin
       if t6^.object_with_name <> nil then begin
         t6^.object_with_name := t6^.object_with_name;
       end else begin
-        t6^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t6^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t6, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t6, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t6);
+          subject^.children[2]^.base_register, t6);
     end;
   end
   else if ord(result.space136[143]) = 1 then begin
@@ -454,8 +452,8 @@ begin
   end else begin
     t11 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t11, isc_solution_ptr_t(t11^.base_register), t6, t11^.il, 0,
-        t11^.bits_known, t11^.bits_trusted);
+        0, t11, t11^.base_register, t6, t11^.il, 0, t11^.bits_known,
+        t11^.bits_trusted);
   end;
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
       t4 + t2 + t3 + 16#1000000, t5, t6, t5, subject^.children[2]^.il, 0,
@@ -526,8 +524,7 @@ begin
   end;
   debug_lir_$branch_instruction(result.inherited_attributes, t1,
       ord(opc$jump), 0);
-  debug_lir_$label(result.inherited_attributes,
-      univ_ptr(subject^.false_label));
+  debug_lir_$label(result.inherited_attributes, subject^.false_label);
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
       0, isc_solution_ptr_t(isc_literal_solutions[0]), solution, nil);
   debug_lir_$label(result.inherited_attributes, t1);
@@ -680,7 +677,7 @@ begin
             univ_ptr(t4), ord(opc$jump), 0);
       end
       else if ord(result.space136[140]) <> 12 then begin
-        pattern_match_error(11, il$t(subject^.il_kind), 0,
+        pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end else begin
@@ -757,7 +754,7 @@ begin
             univ_ptr(t4), ord(opc$jump), 0);
       end
       else if ord(result.space136[142]) <> 12 then begin
-        pattern_match_error(11, il$t(subject^.il_kind), 0,
+        pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
@@ -837,7 +834,7 @@ begin
             univ_ptr(t4), ord(opc$jump), 0);
       end
       else if ord(result.space136[145]) <> 12 then begin
-        pattern_match_error(11, il$t(subject^.il_kind), 0,
+        pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end else begin
@@ -914,7 +911,7 @@ begin
             univ_ptr(t4), ord(opc$jump), 0);
       end
       else if ord(result.space136[147]) <> 12 then begin
-        pattern_match_error(11, il$t(subject^.il_kind), 0,
+        pattern_match_error(11, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
@@ -984,10 +981,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[148]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t4;
+  result.false_label := univ_ptr(t4);
 end;
 
 { transform_113_pass_2 - rule 113: flow <- compare_top | set_compare_top
@@ -1055,8 +1052,8 @@ begin
         end else begin
           t5 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t5, isc_solution_ptr_t(t5^.base_register),
-              t4, t5^.il, 0, t5^.bits_known, t5^.bits_trusted);
+              ord(opc$loadl), 0, t5, t5^.base_register, t4, t5^.il, 0,
+              t5^.bits_known, t5^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 8, subject^.children[1], t4,
@@ -1082,8 +1079,8 @@ begin
         end else begin
           t8 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t8, isc_solution_ptr_t(t8^.base_register),
-              t7, t8^.il, 0, t8^.bits_known, t8^.bits_trusted);
+              ord(opc$loadl), 0, t8, t8^.base_register, t7, t8^.il, 0,
+              t8^.bits_known, t8^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 8, subject^.children[1], t7,
@@ -1109,8 +1106,8 @@ begin
         end else begin
           t11 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t11, isc_solution_ptr_t(t11^.base_register),
-              t10, t11^.il, 0, t11^.bits_known, t11^.bits_trusted);
+              ord(opc$loadl), 0, t11, t11^.base_register, t10, t11^.il, 0,
+              t11^.bits_known, t11^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 4, subject^.children[1], t10,
@@ -1136,8 +1133,8 @@ begin
         end else begin
           t14 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t14, isc_solution_ptr_t(t14^.base_register),
-              t13, t14^.il, 0, t14^.bits_known, t14^.bits_trusted);
+              ord(opc$loadl), 0, t14, t14^.base_register, t13, t14^.il, 0,
+              t14^.bits_known, t14^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 4, subject^.children[1], t13,
@@ -1163,8 +1160,8 @@ begin
         end else begin
           t17 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t17, isc_solution_ptr_t(t17^.base_register),
-              t16, t17^.il, 0, t17^.bits_known, t17^.bits_trusted);
+              ord(opc$loadl), 0, t17, t17^.base_register, t16, t17^.il, 0,
+              t17^.bits_known, t17^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 4, subject^.children[1], t16,
@@ -1190,8 +1187,8 @@ begin
         end else begin
           t20 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t20, isc_solution_ptr_t(t20^.base_register),
-              t19, t20^.il, 0, t20^.bits_known, t20^.bits_trusted);
+              ord(opc$loadl), 0, t20, t20^.base_register, t19, t20^.il, 0,
+              t20^.bits_known, t20^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 4, subject^.children[1], t19,
@@ -1217,8 +1214,8 @@ begin
         end else begin
           t23 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t23, isc_solution_ptr_t(t23^.base_register),
-              t22, t23^.il, 0, t23^.bits_known, t23^.bits_trusted);
+              ord(opc$loadl), 0, t23, t23^.base_register, t22, t23^.il, 0,
+              t23^.bits_known, t23^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 2, subject^.children[1], t22,
@@ -1244,8 +1241,8 @@ begin
         end else begin
           t26 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t26, isc_solution_ptr_t(t26^.base_register),
-              t25, t26^.il, 0, t26^.bits_known, t26^.bits_trusted);
+              ord(opc$loadl), 0, t26, t26^.base_register, t25, t26^.il, 0,
+              t26^.bits_known, t26^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 2, subject^.children[1], t25,
@@ -1271,8 +1268,8 @@ begin
         end else begin
           t29 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t29, isc_solution_ptr_t(t29^.base_register),
-              t28, t29^.il, 0, t29^.bits_known, t29^.bits_trusted);
+              ord(opc$loadl), 0, t29, t29^.base_register, t28, t29^.il, 0,
+              t29^.bits_known, t29^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 2, subject^.children[1], t28,
@@ -1298,8 +1295,8 @@ begin
         end else begin
           t32 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t32, isc_solution_ptr_t(t32^.base_register),
-              t31, t32^.il, 0, t32^.bits_known, t32^.bits_trusted);
+              ord(opc$loadl), 0, t32, t32^.base_register, t31, t32^.il, 0,
+              t32^.bits_known, t32^.bits_trusted);
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$rsub), 2, subject^.children[1], t31,
@@ -1313,7 +1310,7 @@ begin
           univ_ptr(t2), ord(opc$jump), 0);
     end
     else if ord(result.space136[138]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
   end else begin
@@ -1388,11 +1385,11 @@ begin
           univ_ptr(t2), ord(opc$jump), 0);
     end
     else if ord(result.space136[159]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
   end;
-  result.false_label := t2;
+  result.false_label := univ_ptr(t2);
 end;
 
 { transform_114_pass_2 - rule 114: flow <- compare_top | set_compare_top
@@ -1488,8 +1485,8 @@ begin
       end else begin
         t10 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t10, isc_solution_ptr_t(t10^.base_register),
-            t9, t10^.il, 0, t10^.bits_known, t10^.bits_trusted);
+            ord(opc$loadl), 0, t10, t10^.base_register, t9, t10^.il, 0,
+            t10^.bits_known, t10^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t7, t9, create_solution_for_ip_reg);
@@ -1514,8 +1511,8 @@ begin
       end else begin
         t13 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t13, isc_solution_ptr_t(t13^.base_register),
-            t12, t13^.il, 0, t13^.bits_known, t13^.bits_trusted);
+            ord(opc$loadl), 0, t13, t13^.base_register, t12, t13^.il, 0,
+            t13^.bits_known, t13^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t7, t12, create_solution_for_ip_reg);
@@ -1540,8 +1537,8 @@ begin
       end else begin
         t16 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t16, isc_solution_ptr_t(t16^.base_register),
-            t15, t16^.il, 0, t16^.bits_known, t16^.bits_trusted);
+            ord(opc$loadl), 0, t16, t16^.base_register, t15, t16^.il, 0,
+            t16^.bits_known, t16^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t15, create_solution_for_ip_reg);
@@ -1566,8 +1563,8 @@ begin
       end else begin
         t19 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t19, isc_solution_ptr_t(t19^.base_register),
-            t18, t19^.il, 0, t19^.bits_known, t19^.bits_trusted);
+            ord(opc$loadl), 0, t19, t19^.base_register, t18, t19^.il, 0,
+            t19^.bits_known, t19^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t18, create_solution_for_ip_reg);
@@ -1592,8 +1589,8 @@ begin
       end else begin
         t22 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t22, isc_solution_ptr_t(t22^.base_register),
-            t21, t22^.il, 0, t22^.bits_known, t22^.bits_trusted);
+            ord(opc$loadl), 0, t22, t22^.base_register, t21, t22^.il, 0,
+            t22^.bits_known, t22^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t21, create_solution_for_ip_reg);
@@ -1618,8 +1615,8 @@ begin
       end else begin
         t25 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t25, isc_solution_ptr_t(t25^.base_register),
-            t24, t25^.il, 0, t25^.bits_known, t25^.bits_trusted);
+            ord(opc$loadl), 0, t25, t25^.base_register, t24, t25^.il, 0,
+            t25^.bits_known, t25^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t24, create_solution_for_ip_reg);
@@ -1644,8 +1641,8 @@ begin
       end else begin
         t28 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t28, isc_solution_ptr_t(t28^.base_register),
-            t27, t28^.il, 0, t28^.bits_known, t28^.bits_trusted);
+            ord(opc$loadl), 0, t28, t28^.base_register, t27, t28^.il, 0,
+            t28^.bits_known, t28^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t27, create_solution_for_ip_reg);
@@ -1670,8 +1667,8 @@ begin
       end else begin
         t31 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t31, isc_solution_ptr_t(t31^.base_register),
-            t30, t31^.il, 0, t31^.bits_known, t31^.bits_trusted);
+            ord(opc$loadl), 0, t31, t31^.base_register, t30, t31^.il, 0,
+            t31^.bits_known, t31^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t30, create_solution_for_ip_reg);
@@ -1696,8 +1693,8 @@ begin
       end else begin
         t34 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t34, isc_solution_ptr_t(t34^.base_register),
-            t33, t34^.il, 0, t34^.bits_known, t34^.bits_trusted);
+            ord(opc$loadl), 0, t34, t34^.base_register, t33, t34^.il, 0,
+            t34^.bits_known, t34^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t33, create_solution_for_ip_reg);
@@ -1722,8 +1719,8 @@ begin
       end else begin
         t37 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t37, isc_solution_ptr_t(t37^.base_register),
-            t36, t37^.il, 0, t37^.bits_known, t37^.bits_trusted);
+            ord(opc$loadl), 0, t37, t37^.base_register, t36, t37^.il, 0,
+            t37^.bits_known, t37^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t36, create_solution_for_ip_reg);
@@ -1736,10 +1733,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[140]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_115_pass_2 - rule 115: flow <- compare_top | set_compare_top
@@ -1837,8 +1834,8 @@ begin
       end else begin
         t10 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t10, isc_solution_ptr_t(t10^.base_register),
-            t9, t10^.il, 0, t10^.bits_known, t10^.bits_trusted);
+            ord(opc$loadl), 0, t10, t10^.base_register, t9, t10^.il, 0,
+            t10^.bits_known, t10^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t7, t9, create_solution_for_ip_reg);
@@ -1863,8 +1860,8 @@ begin
       end else begin
         t13 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t13, isc_solution_ptr_t(t13^.base_register),
-            t12, t13^.il, 0, t13^.bits_known, t13^.bits_trusted);
+            ord(opc$loadl), 0, t13, t13^.base_register, t12, t13^.il, 0,
+            t13^.bits_known, t13^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t7, t12, create_solution_for_ip_reg);
@@ -1889,8 +1886,8 @@ begin
       end else begin
         t16 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t16, isc_solution_ptr_t(t16^.base_register),
-            t15, t16^.il, 0, t16^.bits_known, t16^.bits_trusted);
+            ord(opc$loadl), 0, t16, t16^.base_register, t15, t16^.il, 0,
+            t16^.bits_known, t16^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t15, create_solution_for_ip_reg);
@@ -1915,8 +1912,8 @@ begin
       end else begin
         t19 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t19, isc_solution_ptr_t(t19^.base_register),
-            t18, t19^.il, 0, t19^.bits_known, t19^.bits_trusted);
+            ord(opc$loadl), 0, t19, t19^.base_register, t18, t19^.il, 0,
+            t19^.bits_known, t19^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t18, create_solution_for_ip_reg);
@@ -1941,8 +1938,8 @@ begin
       end else begin
         t22 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t22, isc_solution_ptr_t(t22^.base_register),
-            t21, t22^.il, 0, t22^.bits_known, t22^.bits_trusted);
+            ord(opc$loadl), 0, t22, t22^.base_register, t21, t22^.il, 0,
+            t22^.bits_known, t22^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t21, create_solution_for_ip_reg);
@@ -1967,8 +1964,8 @@ begin
       end else begin
         t25 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t25, isc_solution_ptr_t(t25^.base_register),
-            t24, t25^.il, 0, t25^.bits_known, t25^.bits_trusted);
+            ord(opc$loadl), 0, t25, t25^.base_register, t24, t25^.il, 0,
+            t25^.bits_known, t25^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t7, t24, create_solution_for_ip_reg);
@@ -1993,8 +1990,8 @@ begin
       end else begin
         t28 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t28, isc_solution_ptr_t(t28^.base_register),
-            t27, t28^.il, 0, t28^.bits_known, t28^.bits_trusted);
+            ord(opc$loadl), 0, t28, t28^.base_register, t27, t28^.il, 0,
+            t28^.bits_known, t28^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t27, create_solution_for_ip_reg);
@@ -2019,8 +2016,8 @@ begin
       end else begin
         t31 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t31, isc_solution_ptr_t(t31^.base_register),
-            t30, t31^.il, 0, t31^.bits_known, t31^.bits_trusted);
+            ord(opc$loadl), 0, t31, t31^.base_register, t30, t31^.il, 0,
+            t31^.bits_known, t31^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t30, create_solution_for_ip_reg);
@@ -2045,8 +2042,8 @@ begin
       end else begin
         t34 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t34, isc_solution_ptr_t(t34^.base_register),
-            t33, t34^.il, 0, t34^.bits_known, t34^.bits_trusted);
+            ord(opc$loadl), 0, t34, t34^.base_register, t33, t34^.il, 0,
+            t34^.bits_known, t34^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t33, create_solution_for_ip_reg);
@@ -2071,8 +2068,8 @@ begin
       end else begin
         t37 := address_mode_for_integer32_value(p2_locals_ptr_t(addr(result))^.p2[89]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t37, isc_solution_ptr_t(t37^.base_register),
-            t36, t37^.il, 0, t37^.bits_known, t37^.bits_trusted);
+            ord(opc$loadl), 0, t37, t37^.base_register, t36, t37^.il, 0,
+            t37^.bits_known, t37^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t7, t36, create_solution_for_ip_reg);
@@ -2085,10 +2082,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[140]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_116_pass_2 - rule 116: flow <- compare_top | set_compare_top
@@ -2220,8 +2217,8 @@ begin
       end else begin
         t15 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t15, isc_solution_ptr_t(t15^.base_register),
-            t14, t15^.il, 0, t15^.bits_known, t15^.bits_trusted);
+            ord(opc$loadl), 0, t15, t15^.base_register, t14, t15^.il, 0,
+            t15^.bits_known, t15^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t14, create_solution_for_ip_reg);
@@ -2246,8 +2243,8 @@ begin
       end else begin
         t18 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t18, isc_solution_ptr_t(t18^.base_register),
-            t17, t18^.il, 0, t18^.bits_known, t18^.bits_trusted);
+            ord(opc$loadl), 0, t18, t18^.base_register, t17, t18^.il, 0,
+            t18^.bits_known, t18^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 8, t12, t17, create_solution_for_ip_reg);
@@ -2272,8 +2269,8 @@ begin
       end else begin
         t21 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t21, isc_solution_ptr_t(t21^.base_register),
-            t20, t21^.il, 0, t21^.bits_known, t21^.bits_trusted);
+            ord(opc$loadl), 0, t21, t21^.base_register, t20, t21^.il, 0,
+            t21^.bits_known, t21^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t20, create_solution_for_ip_reg);
@@ -2298,8 +2295,8 @@ begin
       end else begin
         t24 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t24, isc_solution_ptr_t(t24^.base_register),
-            t23, t24^.il, 0, t24^.bits_known, t24^.bits_trusted);
+            ord(opc$loadl), 0, t24, t24^.base_register, t23, t24^.il, 0,
+            t24^.bits_known, t24^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t23, create_solution_for_ip_reg);
@@ -2324,8 +2321,8 @@ begin
       end else begin
         t27 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t27, isc_solution_ptr_t(t27^.base_register),
-            t26, t27^.il, 0, t27^.bits_known, t27^.bits_trusted);
+            ord(opc$loadl), 0, t27, t27^.base_register, t26, t27^.il, 0,
+            t27^.bits_known, t27^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t26, create_solution_for_ip_reg);
@@ -2350,8 +2347,8 @@ begin
       end else begin
         t30 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t30, isc_solution_ptr_t(t30^.base_register),
-            t29, t30^.il, 0, t30^.bits_known, t30^.bits_trusted);
+            ord(opc$loadl), 0, t30, t30^.base_register, t29, t30^.il, 0,
+            t30^.bits_known, t30^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t12, t29, create_solution_for_ip_reg);
@@ -2376,8 +2373,8 @@ begin
       end else begin
         t33 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t33, isc_solution_ptr_t(t33^.base_register),
-            t32, t33^.il, 0, t33^.bits_known, t33^.bits_trusted);
+            ord(opc$loadl), 0, t33, t33^.base_register, t32, t33^.il, 0,
+            t33^.bits_known, t33^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t32, create_solution_for_ip_reg);
@@ -2402,8 +2399,8 @@ begin
       end else begin
         t36 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t36, isc_solution_ptr_t(t36^.base_register),
-            t35, t36^.il, 0, t36^.bits_known, t36^.bits_trusted);
+            ord(opc$loadl), 0, t36, t36^.base_register, t35, t36^.il, 0,
+            t36^.bits_known, t36^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t35, create_solution_for_ip_reg);
@@ -2428,8 +2425,8 @@ begin
       end else begin
         t39 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t39, isc_solution_ptr_t(t39^.base_register),
-            t38, t39^.il, 0, t39^.bits_known, t39^.bits_trusted);
+            ord(opc$loadl), 0, t39, t39^.base_register, t38, t39^.il, 0,
+            t39^.bits_known, t39^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t38, create_solution_for_ip_reg);
@@ -2454,8 +2451,8 @@ begin
       end else begin
         t42 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t42, isc_solution_ptr_t(t42^.base_register),
-            t41, t42^.il, 0, t42^.bits_known, t42^.bits_trusted);
+            ord(opc$loadl), 0, t42, t42^.base_register, t41, t42^.il, 0,
+            t42^.bits_known, t42^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 2, t12, t41, create_solution_for_ip_reg);
@@ -2468,10 +2465,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[144]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_117_pass_2 - rule 117: flow <- compare_top | set_compare_top
@@ -2638,10 +2635,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[141]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t4;
+  result.false_label := univ_ptr(t4);
 end;
 
 { transform_118_pass_2 - rule 118: flow <- compare_top | set_compare_top
@@ -2737,7 +2734,7 @@ begin
           univ_ptr(t2), ord(opc$jump), 0);
     end
     else if ord(result.space136[138]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
   end else begin
@@ -2812,11 +2809,11 @@ begin
           univ_ptr(t2), ord(opc$jump), 0);
     end
     else if ord(result.space136[139]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
   end;
-  result.false_label := t2;
+  result.false_label := univ_ptr(t2);
 end;
 
 { transform_119_pass_2 - rule 119: flow <- compare_top | set_compare_top
@@ -3032,10 +3029,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[151]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t4;
+  result.false_label := univ_ptr(t4);
 end;
 
 { transform_120_pass_2 - rule 120: flow <- agg_compare_top ($1:
@@ -3296,30 +3293,26 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t27, subject^.children[1]^.il, 0,
-              subject^.children[1]^.bits_known,
+              0), subject^.children[1]^.base_register, t27,
+              subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t5 + t3 + t4,
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              1), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t28, subject^.children[1]^.il, 1,
-              subject^.children[1]^.bits_known,
+              1), subject^.children[1]^.base_register, t28,
+              subject^.children[1]^.il, 1, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t5 + t3 + t4,
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              2), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t29, subject^.children[1]^.il, 2,
-              subject^.children[1]^.bits_known,
+              2), subject^.children[1]^.base_register, t29,
+              subject^.children[1]^.il, 2, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t5 + t3 + t4,
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              3), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t30, subject^.children[1]^.il, 3,
-              subject^.children[1]^.bits_known,
+              3), subject^.children[1]^.base_register, t30,
+              subject^.children[1]^.il, 3, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end else begin
           t31 := create_solution_for_ip_reg;
@@ -3328,19 +3321,17 @@ begin
               if t31^.object_with_name <> nil then begin
                 t31^.object_with_name := t31^.object_with_name;
               end else begin
-                t31^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                t31^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t31, nil);
+                  ord(opc$move), 0, subject^.children[1]^.base_register, t31,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[1],
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t31);
+                  subject^.children[1]^.base_register, t31);
             end;
           end
           else if ord(result.space136[150]) = 1 then begin
@@ -3351,8 +3342,7 @@ begin
           end else begin
             t32 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t32,
-                isc_solution_ptr_t(t32^.base_register), t31, t32^.il, 0,
+                ord(opc$loadl), 0, t32, t32^.base_register, t31, t32^.il, 0,
                 t32^.bits_known, t32^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -3407,23 +3397,20 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t33, subject^.children[1]^.il, 0,
-              subject^.children[1]^.bits_known,
+              0), subject^.children[1]^.base_register, t33,
+              subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t5 + t3 + t4,
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              1), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t34, subject^.children[1]^.il, 1,
-              subject^.children[1]^.bits_known,
+              1), subject^.children[1]^.base_register, t34,
+              subject^.children[1]^.il, 1, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t5 + t3 + t4,
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              2), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t35, subject^.children[1]^.il, 2,
-              subject^.children[1]^.bits_known,
+              2), subject^.children[1]^.base_register, t35,
+              subject^.children[1]^.il, 2, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end else begin
           t36 := create_solution_for_ip_reg;
@@ -3432,19 +3419,17 @@ begin
               if t36^.object_with_name <> nil then begin
                 t36^.object_with_name := t36^.object_with_name;
               end else begin
-                t36^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                t36^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t36, nil);
+                  ord(opc$move), 0, subject^.children[1]^.base_register, t36,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[1],
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t36);
+                  subject^.children[1]^.base_register, t36);
             end;
           end
           else if ord(result.space136[155]) = 1 then begin
@@ -3455,8 +3440,7 @@ begin
           end else begin
             t37 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t37,
-                isc_solution_ptr_t(t37^.base_register), t36, t37^.il, 0,
+                ord(opc$loadl), 0, t37, t37^.base_register, t36, t37^.il, 0,
                 t37^.bits_known, t37^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -3502,16 +3486,14 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t38, subject^.children[1]^.il, 0,
-              subject^.children[1]^.bits_known,
+              0), subject^.children[1]^.base_register, t38,
+              subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t5 + t3 + t4,
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              1), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t39, subject^.children[1]^.il, 1,
-              subject^.children[1]^.bits_known,
+              1), subject^.children[1]^.base_register, t39,
+              subject^.children[1]^.il, 1, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end else begin
           t40 := create_solution_for_ip_reg;
@@ -3520,19 +3502,17 @@ begin
               if t40^.object_with_name <> nil then begin
                 t40^.object_with_name := t40^.object_with_name;
               end else begin
-                t40^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                t40^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t40, nil);
+                  ord(opc$move), 0, subject^.children[1]^.base_register, t40,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[1],
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t40);
+                  subject^.children[1]^.base_register, t40);
             end;
           end
           else if ord(result.space136[160]) = 1 then begin
@@ -3543,8 +3523,7 @@ begin
           end else begin
             t41 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t41,
-                isc_solution_ptr_t(t41^.base_register), t40, t41^.il, 0,
+                ord(opc$loadl), 0, t41, t41^.base_register, t40, t41^.il, 0,
                 t41^.bits_known, t41^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -3580,9 +3559,8 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + (t5 + t3 + t4),
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t26, subject^.children[1]^.il, 0,
-              subject^.children[1]^.bits_known,
+              0), subject^.children[1]^.base_register, t26,
+              subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end else begin
           t42 := create_solution_for_ip_reg;
@@ -3591,19 +3569,17 @@ begin
               if t42^.object_with_name <> nil then begin
                 t42^.object_with_name := t42^.object_with_name;
               end else begin
-                t42^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                t42^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t42, nil);
+                  ord(opc$move), 0, subject^.children[1]^.base_register, t42,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[1],
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t42);
+                  subject^.children[1]^.base_register, t42);
             end;
           end
           else if ord(result.space136[165]) = 1 then begin
@@ -3614,8 +3590,7 @@ begin
           end else begin
             t43 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t43,
-                isc_solution_ptr_t(t43^.base_register), t42, t43^.il, 0,
+                ord(opc$loadl), 0, t43, t43^.base_register, t42, t43^.il, 0,
                 t43^.bits_known, t43^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -3635,7 +3610,7 @@ begin
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$costly), 0, nil, nil, nil);
-        pattern_match_error(10, il$t(subject^.il_kind), 0,
+        pattern_match_error(10, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end else begin
@@ -3651,8 +3626,8 @@ begin
                 ord(opc$loadl),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
                 duplicate_address_mode_adding_byte_offset(subject^.children[1],
-                0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-                t26, subject^.children[1]^.il, 0,
+                0), subject^.children[1]^.base_register, t26,
+                subject^.children[1]^.il, 0,
                 subject^.children[1]^.bits_known,
                 subject^.children[1]^.bits_trusted);
           end else begin
@@ -3662,19 +3637,17 @@ begin
                 if t44^.object_with_name <> nil then begin
                   t44^.object_with_name := t44^.object_with_name;
                 end else begin
-                  t44^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                  t44^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
                 end;
                 debug_lir_$simple_instruction(result.inherited_attributes,
-                    ord(opc$move), 0,
-                    isc_solution_ptr_t(subject^.children[1]^.base_register),
+                    ord(opc$move), 0, subject^.children[1]^.base_register,
                     t44, nil);
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$adj_move), 0, nil, nil, nil);
               end else begin
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$add), 0, subject^.children[1],
-                    isc_solution_ptr_t(subject^.children[1]^.base_register),
-                    t44);
+                    subject^.children[1]^.base_register, t44);
               end;
             end
             else if ord(result.space136[172]) = 1 then begin
@@ -3685,9 +3658,8 @@ begin
             end else begin
               t45 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
               debug_lir_$load_instruction(result.inherited_attributes,
-                  ord(opc$loadl), 0, t45,
-                  isc_solution_ptr_t(t45^.base_register), t44, t45^.il, 0,
-                  t45^.bits_known, t45^.bits_trusted);
+                  ord(opc$loadl), 0, t45, t45^.base_register, t44, t45^.il,
+                  0, t45^.bits_known, t45^.bits_trusted);
             end;
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadl),
@@ -3713,15 +3685,15 @@ begin
                 ord(opc$loadwu),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
                 duplicate_address_mode_adding_byte_offset(subject^.children[1],
-                0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-                t46, subject^.children[1]^.il, 0,
+                0), subject^.children[1]^.base_register, t46,
+                subject^.children[1]^.il, 0,
                 subject^.children[1]^.bits_known,
                 subject^.children[1]^.bits_trusted);
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadwu), t8 + t6 + t7,
                 duplicate_address_mode_adding_byte_offset(subject^.children[1],
-                2), isc_solution_ptr_t(subject^.children[1]^.base_register),
-                t47, subject^.children[1]^.il, 2,
+                2), subject^.children[1]^.base_register, t47,
+                subject^.children[1]^.il, 2,
                 subject^.children[1]^.bits_known,
                 subject^.children[1]^.bits_trusted);
           end else begin
@@ -3731,19 +3703,17 @@ begin
                 if t48^.object_with_name <> nil then begin
                   t48^.object_with_name := t48^.object_with_name;
                 end else begin
-                  t48^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                  t48^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
                 end;
                 debug_lir_$simple_instruction(result.inherited_attributes,
-                    ord(opc$move), 0,
-                    isc_solution_ptr_t(subject^.children[1]^.base_register),
+                    ord(opc$move), 0, subject^.children[1]^.base_register,
                     t48, nil);
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$adj_move), 0, nil, nil, nil);
               end else begin
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$add), 0, subject^.children[1],
-                    isc_solution_ptr_t(subject^.children[1]^.base_register),
-                    t48);
+                    subject^.children[1]^.base_register, t48);
               end;
             end
             else if ord(result.space136[177]) = 1 then begin
@@ -3754,9 +3724,8 @@ begin
             end else begin
               t49 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
               debug_lir_$load_instruction(result.inherited_attributes,
-                  ord(opc$loadl), 0, t49,
-                  isc_solution_ptr_t(t49^.base_register), t48, t49^.il, 0,
-                  t49^.bits_known, t49^.bits_trusted);
+                  ord(opc$loadl), 0, t49, t49^.base_register, t48, t49^.il,
+                  0, t49^.bits_known, t49^.bits_trusted);
             end;
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadwu),
@@ -3785,7 +3754,7 @@ begin
         end;
         if ord(result.space136[179]) <> 1 then begin
           if ord(result.space136[180]) = 1 then begin
-            pattern_match_error(2, il$t(0), 0,
+            pattern_match_error(2, il_none, 0,
                 subject^.children[1]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -3801,9 +3770,8 @@ begin
               ord(opc$loadwu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t26, subject^.children[1]^.il, 0,
-              subject^.children[1]^.bits_known,
+              0), subject^.children[1]^.base_register, t26,
+              subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end else begin
           t50 := create_solution_for_ip_reg;
@@ -3812,19 +3780,17 @@ begin
               if t50^.object_with_name <> nil then begin
                 t50^.object_with_name := t50^.object_with_name;
               end else begin
-                t50^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                t50^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t50, nil);
+                  ord(opc$move), 0, subject^.children[1]^.base_register, t50,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[1],
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t50);
+                  subject^.children[1]^.base_register, t50);
             end;
           end
           else if ord(result.space136[185]) = 1 then begin
@@ -3835,8 +3801,7 @@ begin
           end else begin
             t51 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t51,
-                isc_solution_ptr_t(t51^.base_register), t50, t51^.il, 0,
+                ord(opc$loadl), 0, t51, t51^.base_register, t50, t51^.il, 0,
                 t51^.bits_known, t51^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -3855,7 +3820,7 @@ begin
         end;
         if ord(result.space136[187]) <> 1 then begin
           if ord(result.space136[188]) = 1 then begin
-            pattern_match_error(3, il$t(0), 0,
+            pattern_match_error(3, il_none, 0,
                 subject^.children[1]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -3871,9 +3836,8 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[90]) + (t8 + t6 + t7),
               duplicate_address_mode_adding_byte_offset(subject^.children[1],
-              0), isc_solution_ptr_t(subject^.children[1]^.base_register),
-              t26, subject^.children[1]^.il, 0,
-              subject^.children[1]^.bits_known,
+              0), subject^.children[1]^.base_register, t26,
+              subject^.children[1]^.il, 0, subject^.children[1]^.bits_known,
               subject^.children[1]^.bits_trusted);
         end else begin
           t52 := create_solution_for_ip_reg;
@@ -3882,19 +3846,17 @@ begin
               if t52^.object_with_name <> nil then begin
                 t52^.object_with_name := t52^.object_with_name;
               end else begin
-                t52^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+                t52^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t52, nil);
+                  ord(opc$move), 0, subject^.children[1]^.base_register, t52,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[1],
-                  isc_solution_ptr_t(subject^.children[1]^.base_register),
-                  t52);
+                  subject^.children[1]^.base_register, t52);
             end;
           end
           else if ord(result.space136[193]) = 1 then begin
@@ -3905,8 +3867,7 @@ begin
           end else begin
             t53 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t53,
-                isc_solution_ptr_t(t53^.base_register), t52, t53^.il, 0,
+                ord(opc$loadl), 0, t53, t53^.base_register, t52, t53^.il, 0,
                 t53^.bits_known, t53^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -3926,7 +3887,7 @@ begin
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$costly), 0, nil, nil, nil);
-        pattern_match_error(10, il$t(subject^.il_kind), 0,
+        pattern_match_error(10, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
@@ -4057,30 +4018,26 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t73, subject^.children[2]^.il, 0,
-              subject^.children[2]^.bits_known,
+              0), subject^.children[2]^.base_register, t73,
+              subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t9 + t11 + t10,
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              1), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t74, subject^.children[2]^.il, 1,
-              subject^.children[2]^.bits_known,
+              1), subject^.children[2]^.base_register, t74,
+              subject^.children[2]^.il, 1, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t9 + t11 + t10,
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              2), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t75, subject^.children[2]^.il, 2,
-              subject^.children[2]^.bits_known,
+              2), subject^.children[2]^.base_register, t75,
+              subject^.children[2]^.il, 2, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t9 + t11 + t10,
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              3), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t76, subject^.children[2]^.il, 3,
-              subject^.children[2]^.bits_known,
+              3), subject^.children[2]^.base_register, t76,
+              subject^.children[2]^.il, 3, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end else begin
           t77 := create_solution_for_ip_reg;
@@ -4089,19 +4046,17 @@ begin
               if t77^.object_with_name <> nil then begin
                 t77^.object_with_name := t77^.object_with_name;
               end else begin
-                t77^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                t77^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t77, nil);
+                  ord(opc$move), 0, subject^.children[2]^.base_register, t77,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[2],
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t77);
+                  subject^.children[2]^.base_register, t77);
             end;
           end
           else if ord(result.space136[214]) = 1 then begin
@@ -4112,8 +4067,7 @@ begin
           end else begin
             t78 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t78,
-                isc_solution_ptr_t(t78^.base_register), t77, t78^.il, 0,
+                ord(opc$loadl), 0, t78, t78^.base_register, t77, t78^.il, 0,
                 t78^.bits_known, t78^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -4168,23 +4122,20 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t79, subject^.children[2]^.il, 0,
-              subject^.children[2]^.bits_known,
+              0), subject^.children[2]^.base_register, t79,
+              subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t9 + t11 + t10,
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              1), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t80, subject^.children[2]^.il, 1,
-              subject^.children[2]^.bits_known,
+              1), subject^.children[2]^.base_register, t80,
+              subject^.children[2]^.il, 1, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t9 + t11 + t10,
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              2), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t81, subject^.children[2]^.il, 2,
-              subject^.children[2]^.bits_known,
+              2), subject^.children[2]^.base_register, t81,
+              subject^.children[2]^.il, 2, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end else begin
           t82 := create_solution_for_ip_reg;
@@ -4193,19 +4144,17 @@ begin
               if t82^.object_with_name <> nil then begin
                 t82^.object_with_name := t82^.object_with_name;
               end else begin
-                t82^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                t82^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t82, nil);
+                  ord(opc$move), 0, subject^.children[2]^.base_register, t82,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[2],
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t82);
+                  subject^.children[2]^.base_register, t82);
             end;
           end
           else if ord(result.space136[219]) = 1 then begin
@@ -4216,8 +4165,7 @@ begin
           end else begin
             t83 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t83,
-                isc_solution_ptr_t(t83^.base_register), t82, t83^.il, 0,
+                ord(opc$loadl), 0, t83, t83^.base_register, t82, t83^.il, 0,
                 t83^.bits_known, t83^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -4263,16 +4211,14 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t84, subject^.children[2]^.il, 0,
-              subject^.children[2]^.bits_known,
+              0), subject^.children[2]^.base_register, t84,
+              subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
           debug_lir_$load_instruction(result.inherited_attributes,
               ord(opc$loadbu), t9 + t11 + t10,
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              1), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t85, subject^.children[2]^.il, 1,
-              subject^.children[2]^.bits_known,
+              1), subject^.children[2]^.base_register, t85,
+              subject^.children[2]^.il, 1, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end else begin
           t86 := create_solution_for_ip_reg;
@@ -4281,19 +4227,17 @@ begin
               if t86^.object_with_name <> nil then begin
                 t86^.object_with_name := t86^.object_with_name;
               end else begin
-                t86^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                t86^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t86, nil);
+                  ord(opc$move), 0, subject^.children[2]^.base_register, t86,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[2],
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t86);
+                  subject^.children[2]^.base_register, t86);
             end;
           end
           else if ord(result.space136[224]) = 1 then begin
@@ -4304,8 +4248,7 @@ begin
           end else begin
             t87 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t87,
-                isc_solution_ptr_t(t87^.base_register), t86, t87^.il, 0,
+                ord(opc$loadl), 0, t87, t87^.base_register, t86, t87^.il, 0,
                 t87^.bits_known, t87^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -4341,9 +4284,8 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[91]) + (t9 + t11 + t10),
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t72, subject^.children[2]^.il, 0,
-              subject^.children[2]^.bits_known,
+              0), subject^.children[2]^.base_register, t72,
+              subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end else begin
           t88 := create_solution_for_ip_reg;
@@ -4352,19 +4294,17 @@ begin
               if t88^.object_with_name <> nil then begin
                 t88^.object_with_name := t88^.object_with_name;
               end else begin
-                t88^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                t88^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t88, nil);
+                  ord(opc$move), 0, subject^.children[2]^.base_register, t88,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[2],
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t88);
+                  subject^.children[2]^.base_register, t88);
             end;
           end
           else if ord(result.space136[229]) = 1 then begin
@@ -4375,8 +4315,7 @@ begin
           end else begin
             t89 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t89,
-                isc_solution_ptr_t(t89^.base_register), t88, t89^.il, 0,
+                ord(opc$loadl), 0, t89, t89^.base_register, t88, t89^.il, 0,
                 t89^.bits_known, t89^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -4396,7 +4335,7 @@ begin
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$costly), 0, nil, nil, nil);
-        pattern_match_error(10, il$t(subject^.il_kind), 0,
+        pattern_match_error(10, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end else begin
@@ -4412,8 +4351,8 @@ begin
                 ord(opc$loadl),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
                 duplicate_address_mode_adding_byte_offset(subject^.children[2],
-                0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-                t72, subject^.children[2]^.il, 0,
+                0), subject^.children[2]^.base_register, t72,
+                subject^.children[2]^.il, 0,
                 subject^.children[2]^.bits_known,
                 subject^.children[2]^.bits_trusted);
           end else begin
@@ -4423,19 +4362,17 @@ begin
                 if t90^.object_with_name <> nil then begin
                   t90^.object_with_name := t90^.object_with_name;
                 end else begin
-                  t90^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                  t90^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
                 end;
                 debug_lir_$simple_instruction(result.inherited_attributes,
-                    ord(opc$move), 0,
-                    isc_solution_ptr_t(subject^.children[2]^.base_register),
+                    ord(opc$move), 0, subject^.children[2]^.base_register,
                     t90, nil);
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$adj_move), 0, nil, nil, nil);
               end else begin
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$add), 0, subject^.children[2],
-                    isc_solution_ptr_t(subject^.children[2]^.base_register),
-                    t90);
+                    subject^.children[2]^.base_register, t90);
               end;
             end
             else if ord(result.space136[236]) = 1 then begin
@@ -4446,9 +4383,8 @@ begin
             end else begin
               t91 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
               debug_lir_$load_instruction(result.inherited_attributes,
-                  ord(opc$loadl), 0, t91,
-                  isc_solution_ptr_t(t91^.base_register), t90, t91^.il, 0,
-                  t91^.bits_known, t91^.bits_trusted);
+                  ord(opc$loadl), 0, t91, t91^.base_register, t90, t91^.il,
+                  0, t91^.bits_known, t91^.bits_trusted);
             end;
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadl),
@@ -4474,15 +4410,15 @@ begin
                 ord(opc$loadwu),
                 integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
                 duplicate_address_mode_adding_byte_offset(subject^.children[2],
-                0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-                t92, subject^.children[2]^.il, 0,
+                0), subject^.children[2]^.base_register, t92,
+                subject^.children[2]^.il, 0,
                 subject^.children[2]^.bits_known,
                 subject^.children[2]^.bits_trusted);
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadwu), t12 + t13 + t14,
                 duplicate_address_mode_adding_byte_offset(subject^.children[2],
-                2), isc_solution_ptr_t(subject^.children[2]^.base_register),
-                t93, subject^.children[2]^.il, 2,
+                2), subject^.children[2]^.base_register, t93,
+                subject^.children[2]^.il, 2,
                 subject^.children[2]^.bits_known,
                 subject^.children[2]^.bits_trusted);
           end else begin
@@ -4492,19 +4428,17 @@ begin
                 if t94^.object_with_name <> nil then begin
                   t94^.object_with_name := t94^.object_with_name;
                 end else begin
-                  t94^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                  t94^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
                 end;
                 debug_lir_$simple_instruction(result.inherited_attributes,
-                    ord(opc$move), 0,
-                    isc_solution_ptr_t(subject^.children[2]^.base_register),
+                    ord(opc$move), 0, subject^.children[2]^.base_register,
                     t94, nil);
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$adj_move), 0, nil, nil, nil);
               end else begin
                 debug_lir_$simple_instruction(result.inherited_attributes,
                     ord(opc$add), 0, subject^.children[2],
-                    isc_solution_ptr_t(subject^.children[2]^.base_register),
-                    t94);
+                    subject^.children[2]^.base_register, t94);
               end;
             end
             else if ord(result.space136[241]) = 1 then begin
@@ -4515,9 +4449,8 @@ begin
             end else begin
               t95 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
               debug_lir_$load_instruction(result.inherited_attributes,
-                  ord(opc$loadl), 0, t95,
-                  isc_solution_ptr_t(t95^.base_register), t94, t95^.il, 0,
-                  t95^.bits_known, t95^.bits_trusted);
+                  ord(opc$loadl), 0, t95, t95^.base_register, t94, t95^.il,
+                  0, t95^.bits_known, t95^.bits_trusted);
             end;
             debug_lir_$load_instruction(result.inherited_attributes,
                 ord(opc$loadwu),
@@ -4546,7 +4479,7 @@ begin
         end;
         if ord(result.space136[243]) <> 1 then begin
           if ord(result.space136[244]) = 1 then begin
-            pattern_match_error(2, il$t(0), 0,
+            pattern_match_error(2, il_none, 0,
                 subject^.children[2]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -4562,9 +4495,8 @@ begin
               ord(opc$loadwu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t72, subject^.children[2]^.il, 0,
-              subject^.children[2]^.bits_known,
+              0), subject^.children[2]^.base_register, t72,
+              subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end else begin
           t96 := create_solution_for_ip_reg;
@@ -4573,19 +4505,17 @@ begin
               if t96^.object_with_name <> nil then begin
                 t96^.object_with_name := t96^.object_with_name;
               end else begin
-                t96^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                t96^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t96, nil);
+                  ord(opc$move), 0, subject^.children[2]^.base_register, t96,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[2],
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t96);
+                  subject^.children[2]^.base_register, t96);
             end;
           end
           else if ord(result.space136[249]) = 1 then begin
@@ -4596,8 +4526,7 @@ begin
           end else begin
             t97 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t97,
-                isc_solution_ptr_t(t97^.base_register), t96, t97^.il, 0,
+                ord(opc$loadl), 0, t97, t97^.base_register, t96, t97^.il, 0,
                 t97^.bits_known, t97^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -4616,7 +4545,7 @@ begin
         end;
         if ord(result.space136[251]) <> 1 then begin
           if ord(result.space136[252]) = 1 then begin
-            pattern_match_error(3, il$t(0), 0,
+            pattern_match_error(3, il_none, 0,
                 subject^.children[2]^.inherited_attributes^.pos.source_line_number);
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
@@ -4632,9 +4561,8 @@ begin
               ord(opc$loadbu),
               integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + (t12 + t13 + t14),
               duplicate_address_mode_adding_byte_offset(subject^.children[2],
-              0), isc_solution_ptr_t(subject^.children[2]^.base_register),
-              t72, subject^.children[2]^.il, 0,
-              subject^.children[2]^.bits_known,
+              0), subject^.children[2]^.base_register, t72,
+              subject^.children[2]^.il, 0, subject^.children[2]^.bits_known,
               subject^.children[2]^.bits_trusted);
         end else begin
           t98 := create_solution_for_ip_reg;
@@ -4643,19 +4571,17 @@ begin
               if t98^.object_with_name <> nil then begin
                 t98^.object_with_name := t98^.object_with_name;
               end else begin
-                t98^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+                t98^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
               end;
               debug_lir_$simple_instruction(result.inherited_attributes,
-                  ord(opc$move), 0,
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t98, nil);
+                  ord(opc$move), 0, subject^.children[2]^.base_register, t98,
+                  nil);
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$adj_move), 0, nil, nil, nil);
             end else begin
               debug_lir_$simple_instruction(result.inherited_attributes,
                   ord(opc$add), 0, subject^.children[2],
-                  isc_solution_ptr_t(subject^.children[2]^.base_register),
-                  t98);
+                  subject^.children[2]^.base_register, t98);
             end;
           end
           else if ord(result.space136[257]) = 1 then begin
@@ -4666,8 +4592,7 @@ begin
           end else begin
             t99 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
             debug_lir_$load_instruction(result.inherited_attributes,
-                ord(opc$loadl), 0, t99,
-                isc_solution_ptr_t(t99^.base_register), t98, t99^.il, 0,
+                ord(opc$loadl), 0, t99, t99^.base_register, t98, t99^.il, 0,
                 t99^.bits_known, t99^.bits_trusted);
           end;
           debug_lir_$load_instruction(result.inherited_attributes,
@@ -4687,7 +4612,7 @@ begin
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$costly), 0, nil, nil, nil);
-        pattern_match_error(10, il$t(subject^.il_kind), 0,
+        pattern_match_error(10, subject^.il_kind, 0,
             subject^.inherited_attributes^.pos.source_line_number);
       end;
     end;
@@ -4803,10 +4728,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[264]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t16;
+  result.false_label := univ_ptr(t16);
 end;
 
 { transform_121_pass_2 - rule 121: flow <- agg_compare_top ($1:
@@ -4886,18 +4811,16 @@ begin
         if t15^.object_with_name <> nil then begin
           t15^.object_with_name := t15^.object_with_name;
         end else begin
-          t15^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+          t15^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
-            ord(opc$move), 0,
-            isc_solution_ptr_t(subject^.children[1]^.base_register), t15,
-            nil);
+            ord(opc$move), 0, subject^.children[1]^.base_register, t15, nil);
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 0, subject^.children[1],
-            isc_solution_ptr_t(subject^.children[1]^.base_register), t15);
+            subject^.children[1]^.base_register, t15);
       end;
     end
     else if ord(result.space136[140]) = 1 then begin
@@ -4908,8 +4831,8 @@ begin
     end else begin
       t16 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t16, isc_solution_ptr_t(t16^.base_register),
-          t15, t16^.il, 0, t16^.bits_known, t16^.bits_trusted);
+          ord(opc$loadl), 0, t16, t16^.base_register, t15, t16^.il, 0,
+          t16^.bits_known, t16^.bits_trusted);
     end;
     t17 := t15;
   end else begin
@@ -4922,18 +4845,16 @@ begin
         if t18^.object_with_name <> nil then begin
           t18^.object_with_name := t18^.object_with_name;
         end else begin
-          t18^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+          t18^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
-            ord(opc$move), 0,
-            isc_solution_ptr_t(subject^.children[2]^.base_register), t18,
-            nil);
+            ord(opc$move), 0, subject^.children[2]^.base_register, t18, nil);
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 0, subject^.children[2],
-            isc_solution_ptr_t(subject^.children[2]^.base_register), t18);
+            subject^.children[2]^.base_register, t18);
       end;
     end
     else if ord(result.space136[144]) = 1 then begin
@@ -4944,8 +4865,8 @@ begin
     end else begin
       t19 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t19, isc_solution_ptr_t(t19^.base_register),
-          t18, t19^.il, 0, t19^.bits_known, t19^.bits_trusted);
+          ord(opc$loadl), 0, t19, t19^.base_register, t18, t19^.il, 0,
+          t19^.bits_known, t19^.bits_trusted);
     end;
     t20 := t18;
   end else begin
@@ -5048,7 +4969,7 @@ begin
               univ_ptr(t14), ord(opc$jump), 0);
         end
         else if ord(result.space136[149]) <> 12 then begin
-          pattern_match_error(11, il$t(subject^.il_kind), 0,
+          pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited_attributes, t5,
@@ -5132,7 +5053,7 @@ begin
           ord(opc$jump), 0);
     end
     else if ord(result.space136[151]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t14),
@@ -5236,7 +5157,7 @@ begin
               univ_ptr(t14), ord(opc$jump), 0);
         end
         else if ord(result.space136[156]) <> 12 then begin
-          pattern_match_error(11, il$t(subject^.il_kind), 0,
+          pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited_attributes, t5,
@@ -5320,7 +5241,7 @@ begin
           ord(opc$jump), 0);
     end
     else if ord(result.space136[158]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, t5,
@@ -5427,7 +5348,7 @@ begin
               univ_ptr(t14), ord(opc$jump), 0);
         end
         else if ord(result.space136[163]) <> 12 then begin
-          pattern_match_error(11, il$t(subject^.il_kind), 0,
+          pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited_attributes, t5,
@@ -5511,7 +5432,7 @@ begin
           ord(opc$jump), 0);
     end
     else if ord(result.space136[165]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t14),
@@ -5529,7 +5450,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t5);
-  result.false_label := t14;
+  result.false_label := univ_ptr(t14);
 end;
 
 { transform_122_pass_2 - rule 122: flow <- agg_compare_top ($1:
@@ -5610,17 +5531,16 @@ begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
-        t11^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+        t11^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11, nil);
+          ord(opc$move), 0, subject^.children[1]^.base_register, t11, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[1],
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11);
+          subject^.children[1]^.base_register, t11);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
@@ -5631,25 +5551,24 @@ begin
   end else begin
     t18 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t18, isc_solution_ptr_t(t18^.base_register), t11, t18^.il, 0,
-        t18^.bits_known, t18^.bits_trusted);
+        0, t18, t18^.base_register, t11, t18^.il, 0, t18^.bits_known,
+        t18^.bits_trusted);
   end;
   if ord(result.space136[140]) = 1 then begin
     if ord(result.space136[141]) = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
-        t13^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t13^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t13, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13);
+          subject^.children[2]^.base_register, t13);
     end;
   end
   else if ord(result.space136[142]) = 1 then begin
@@ -5660,8 +5579,8 @@ begin
   end else begin
     t19 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t19, isc_solution_ptr_t(t19^.base_register), t13, t19^.il, 0,
-        t19^.bits_known, t19^.bits_trusted);
+        0, t19, t19^.base_register, t13, t19^.il, 0, t19^.bits_known,
+        t19^.bits_trusted);
   end;
   if ord(result.space136[143]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
@@ -5670,8 +5589,8 @@ begin
   end else begin
     t20 := address_mode_for_integer32_value(integer32(result.fields[0]));
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t20, isc_solution_ptr_t(t20^.base_register), t15, t20^.il, 0,
-        t20^.bits_known, t20^.bits_trusted);
+        0, t20, t20^.base_register, t15, t20^.il, 0, t20^.bits_known,
+        t20^.bits_trusted);
   end;
   debug_lir_$label(result.inherited_attributes, t3);
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
@@ -5759,7 +5678,7 @@ begin
               univ_ptr(t17), ord(opc$jump), 0);
         end
         else if ord(result.space136[146]) <> 12 then begin
-          pattern_match_error(11, il$t(subject^.il_kind), 0,
+          pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited_attributes, t1,
@@ -5843,7 +5762,7 @@ begin
           ord(opc$jump), 0);
     end
     else if ord(result.space136[148]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t17),
@@ -5868,7 +5787,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t17;
+  result.false_label := univ_ptr(t17);
 end;
 
 { transform_123_pass_2 - rule 123: flow <- bit_field_cmp_top ($1:
@@ -5984,8 +5903,7 @@ begin
           t8 + t6 + t7 + integer32(p2_locals_ptr_t(addr(result))^.p2[95]),
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89])),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t14,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t14, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]),
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -5993,8 +5911,7 @@ begin
           ord(opc$loadbu), t8 + t6 + t7,
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 1),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t15,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t15, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 1,
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6002,8 +5919,7 @@ begin
           ord(opc$loadbu), t8 + t6 + t7,
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 2),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t16,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t16, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 2,
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6011,8 +5927,7 @@ begin
           ord(opc$loadbu), t8 + t6 + t7,
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 3),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t17,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t17, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 3,
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6023,18 +5938,17 @@ begin
           if t18^.object_with_name <> nil then begin
             t18^.object_with_name := t18^.object_with_name;
           end else begin
-            t18^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+            t18^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t18,
+              ord(opc$move), 0, subject^.children[1]^.base_register, t18,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[1],
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t18);
+              subject^.children[1]^.base_register, t18);
         end;
       end
       else if ord(result.space136[141]) = 1 then begin
@@ -6045,8 +5959,8 @@ begin
       end else begin
         t19 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t19, isc_solution_ptr_t(t19^.base_register),
-            t18, t19^.il, 0, t19^.bits_known, t19^.bits_trusted);
+            ord(opc$loadl), 0, t19, t19^.base_register, t18, t19^.il, 0,
+            t19^.bits_known, t19^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6109,8 +6023,7 @@ begin
           t8 + t6 + t7 + integer32(p2_locals_ptr_t(addr(result))^.p2[95]),
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89])),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t20,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t20, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]),
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6118,8 +6031,7 @@ begin
           ord(opc$loadbu), t8 + t6 + t7,
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 1),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t21,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t21, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 1,
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6127,8 +6039,7 @@ begin
           ord(opc$loadbu), t8 + t6 + t7,
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 2),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t22,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t22, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 2,
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6139,18 +6050,17 @@ begin
           if t23^.object_with_name <> nil then begin
             t23^.object_with_name := t23^.object_with_name;
           end else begin
-            t23^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+            t23^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t23,
+              ord(opc$move), 0, subject^.children[1]^.base_register, t23,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[1],
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t23);
+              subject^.children[1]^.base_register, t23);
         end;
       end
       else if ord(result.space136[146]) = 1 then begin
@@ -6161,8 +6071,8 @@ begin
       end else begin
         t24 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t24, isc_solution_ptr_t(t24^.base_register),
-            t23, t24^.il, 0, t24^.bits_known, t24^.bits_trusted);
+            ord(opc$loadl), 0, t24, t24^.base_register, t23, t24^.il, 0,
+            t24^.bits_known, t24^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6214,8 +6124,7 @@ begin
           integer32(p2_locals_ptr_t(addr(result))^.p2[95]) + (t8 + t6 + t7),
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89])),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t25,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t25, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]),
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6223,8 +6132,7 @@ begin
           ord(opc$loadbu), t8 + t6 + t7,
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 1),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t26,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t26, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]) + 1,
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6235,18 +6143,17 @@ begin
           if t27^.object_with_name <> nil then begin
             t27^.object_with_name := t27^.object_with_name;
           end else begin
-            t27^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+            t27^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t27,
+              ord(opc$move), 0, subject^.children[1]^.base_register, t27,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[1],
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t27);
+              subject^.children[1]^.base_register, t27);
         end;
       end
       else if ord(result.space136[151]) = 1 then begin
@@ -6257,8 +6164,8 @@ begin
       end else begin
         t28 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t28, isc_solution_ptr_t(t28^.base_register),
-            t27, t28^.il, 0, t28^.bits_known, t28^.bits_trusted);
+            ord(opc$loadl), 0, t28, t28^.base_register, t27, t28^.il, 0,
+            t28^.bits_known, t28^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6298,8 +6205,7 @@ begin
           integer32(p2_locals_ptr_t(addr(result))^.p2[95]) + (t8 + t6 + t7),
           duplicate_address_mode_adding_byte_offset(subject^.children[1],
           integer32(p2_locals_ptr_t(addr(result))^.p2[89])),
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t1,
-          subject^.children[1]^.il,
+          subject^.children[1]^.base_register, t1, subject^.children[1]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[89]),
           subject^.children[1]^.bits_known,
           subject^.children[1]^.bits_trusted);
@@ -6310,18 +6216,17 @@ begin
           if t29^.object_with_name <> nil then begin
             t29^.object_with_name := t29^.object_with_name;
           end else begin
-            t29^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+            t29^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t29,
+              ord(opc$move), 0, subject^.children[1]^.base_register, t29,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[1],
-              isc_solution_ptr_t(subject^.children[1]^.base_register), t29);
+              subject^.children[1]^.base_register, t29);
         end;
       end
       else if ord(result.space136[156]) = 1 then begin
@@ -6332,8 +6237,8 @@ begin
       end else begin
         t30 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t30, isc_solution_ptr_t(t30^.base_register),
-            t29, t30^.il, 0, t30^.bits_known, t30^.bits_trusted);
+            ord(opc$loadl), 0, t30, t30^.base_register, t29, t30^.il, 0,
+            t30^.bits_known, t30^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6354,7 +6259,7 @@ begin
   end else begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$costly), 0, nil, nil, nil);
-    pattern_match_error(10, il$t(subject^.il_kind), 0,
+    pattern_match_error(10, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$field_instruction(result.inherited_attributes,
@@ -6377,8 +6282,7 @@ begin
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92])),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t31,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t31, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]),
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6386,8 +6290,7 @@ begin
           ord(opc$loadbu), t11 + t9 + t10,
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 1),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t32,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t32, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 1,
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6395,8 +6298,7 @@ begin
           ord(opc$loadbu), t11 + t9 + t10,
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 2),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t33,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t33, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 2,
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6404,8 +6306,7 @@ begin
           ord(opc$loadbu), t11 + t9 + t10,
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 3),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t34,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t34, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 3,
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6416,18 +6317,17 @@ begin
           if t35^.object_with_name <> nil then begin
             t35^.object_with_name := t35^.object_with_name;
           end else begin
-            t35^.object_with_name := isc_solution_ptr_t(subject^.children[3]^.base_register)^.object_with_name;
+            t35^.object_with_name := subject^.children[3]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t35,
+              ord(opc$move), 0, subject^.children[3]^.base_register, t35,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[3],
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t35);
+              subject^.children[3]^.base_register, t35);
         end;
       end
       else if ord(result.space136[162]) = 1 then begin
@@ -6438,8 +6338,8 @@ begin
       end else begin
         t36 := address_mode_for_integer32_value(subject^.children[3]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t36, isc_solution_ptr_t(t36^.base_register),
-            t35, t36^.il, 0, t36^.bits_known, t36^.bits_trusted);
+            ord(opc$loadl), 0, t36, t36^.base_register, t35, t36^.il, 0,
+            t36^.bits_known, t36^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6502,8 +6402,7 @@ begin
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92])),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t37,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t37, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]),
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6511,8 +6410,7 @@ begin
           ord(opc$loadbu), t11 + t9 + t10,
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 1),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t38,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t38, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 1,
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6520,8 +6418,7 @@ begin
           ord(opc$loadbu), t11 + t9 + t10,
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 2),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t39,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t39, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 2,
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6532,18 +6429,17 @@ begin
           if t40^.object_with_name <> nil then begin
             t40^.object_with_name := t40^.object_with_name;
           end else begin
-            t40^.object_with_name := isc_solution_ptr_t(subject^.children[3]^.base_register)^.object_with_name;
+            t40^.object_with_name := subject^.children[3]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t40,
+              ord(opc$move), 0, subject^.children[3]^.base_register, t40,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[3],
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t40);
+              subject^.children[3]^.base_register, t40);
         end;
       end
       else if ord(result.space136[167]) = 1 then begin
@@ -6554,8 +6450,8 @@ begin
       end else begin
         t41 := address_mode_for_integer32_value(subject^.children[3]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t41, isc_solution_ptr_t(t41^.base_register),
-            t40, t41^.il, 0, t41^.bits_known, t41^.bits_trusted);
+            ord(opc$loadl), 0, t41, t41^.base_register, t40, t41^.il, 0,
+            t41^.bits_known, t41^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6607,8 +6503,7 @@ begin
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92])),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t42,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t42, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]),
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6616,8 +6511,7 @@ begin
           ord(opc$loadbu), t11 + t9 + t10,
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 1),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t43,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t43, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]) + 1,
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6628,18 +6522,17 @@ begin
           if t44^.object_with_name <> nil then begin
             t44^.object_with_name := t44^.object_with_name;
           end else begin
-            t44^.object_with_name := isc_solution_ptr_t(subject^.children[3]^.base_register)^.object_with_name;
+            t44^.object_with_name := subject^.children[3]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t44,
+              ord(opc$move), 0, subject^.children[3]^.base_register, t44,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[3],
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t44);
+              subject^.children[3]^.base_register, t44);
         end;
       end
       else if ord(result.space136[172]) = 1 then begin
@@ -6650,8 +6543,8 @@ begin
       end else begin
         t45 := address_mode_for_integer32_value(subject^.children[3]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t45, isc_solution_ptr_t(t45^.base_register),
-            t44, t45^.il, 0, t45^.bits_known, t45^.bits_trusted);
+            ord(opc$loadl), 0, t45, t45^.base_register, t44, t45^.il, 0,
+            t45^.bits_known, t45^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6691,8 +6584,7 @@ begin
           integer32(p2_locals_ptr_t(addr(result))^.p2[96]) + (t11 + t9 + t10),
           duplicate_address_mode_adding_byte_offset(subject^.children[3],
           integer32(p2_locals_ptr_t(addr(result))^.p2[92])),
-          isc_solution_ptr_t(subject^.children[3]^.base_register), t3,
-          subject^.children[3]^.il,
+          subject^.children[3]^.base_register, t3, subject^.children[3]^.il,
           integer32(p2_locals_ptr_t(addr(result))^.p2[92]),
           subject^.children[3]^.bits_known,
           subject^.children[3]^.bits_trusted);
@@ -6703,18 +6595,17 @@ begin
           if t46^.object_with_name <> nil then begin
             t46^.object_with_name := t46^.object_with_name;
           end else begin
-            t46^.object_with_name := isc_solution_ptr_t(subject^.children[3]^.base_register)^.object_with_name;
+            t46^.object_with_name := subject^.children[3]^.base_register^.object_with_name;
           end;
           debug_lir_$simple_instruction(result.inherited_attributes,
-              ord(opc$move), 0,
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t46,
+              ord(opc$move), 0, subject^.children[3]^.base_register, t46,
               nil);
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$adj_move), 0, nil, nil, nil);
         end else begin
           debug_lir_$simple_instruction(result.inherited_attributes,
               ord(opc$add), 0, subject^.children[3],
-              isc_solution_ptr_t(subject^.children[3]^.base_register), t46);
+              subject^.children[3]^.base_register, t46);
         end;
       end
       else if ord(result.space136[177]) = 1 then begin
@@ -6725,8 +6616,8 @@ begin
       end else begin
         t47 := address_mode_for_integer32_value(subject^.children[3]^.literal_32_bits_value);
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t47, isc_solution_ptr_t(t47^.base_register),
-            t46, t47^.il, 0, t47^.bits_known, t47^.bits_trusted);
+            ord(opc$loadl), 0, t47, t47^.base_register, t46, t47^.il, 0,
+            t47^.bits_known, t47^.bits_trusted);
       end;
       debug_lir_$load_instruction(result.inherited_attributes,
           ord(opc$loadbu),
@@ -6747,7 +6638,7 @@ begin
   end else begin
     debug_lir_$simple_instruction(result.inherited_attributes,
         ord(opc$costly), 0, nil, nil, nil);
-    pattern_match_error(10, il$t(subject^.il_kind), 0,
+    pattern_match_error(10, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$field_instruction(result.inherited_attributes,
@@ -6821,10 +6712,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[179]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t13;
+  result.false_label := univ_ptr(t13);
 end;
 
 { transform_124_pass_2 - rule 124: flow <- bit_test_top ($1:
@@ -6914,10 +6805,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[137]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_125_pass_2 - rule 125: flow <- bit_test_top ($1:
@@ -7007,10 +6898,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[137]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_126_pass_2 - rule 126: flow <- bit_test_top ($1:
@@ -7071,8 +6962,8 @@ begin
     end else begin
       t11 := address_mode_for_integer32_value(integer32(result.fields[0]));
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t11, isc_solution_ptr_t(t11^.base_register),
-          t10, t11^.il, 0, t11^.bits_known, t11^.bits_trusted);
+          ord(opc$loadl), 0, t11, t11^.base_register, t10, t11^.il, 0,
+          t11^.bits_known, t11^.bits_trusted);
     end;
     t12 := t10;
   end;
@@ -7081,17 +6972,16 @@ begin
       if t4^.object_with_name <> nil then begin
         t4^.object_with_name := t4^.object_with_name;
       end else begin
-        t4^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t4^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t4, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t4, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t4);
+          subject^.children[2]^.base_register, t4);
     end;
   end
   else if ord(result.space136[141]) = 1 then begin
@@ -7102,8 +6992,8 @@ begin
   end else begin
     t13 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t13, isc_solution_ptr_t(t13^.base_register), t4, t13^.il, 0,
-        t13^.bits_known, t13^.bits_trusted);
+        0, t13, t13^.base_register, t4, t13^.il, 0, t13^.bits_known,
+        t13^.bits_trusted);
   end;
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
       t1 + t3 + t2, t12, t4, t5, subject^.children[2]^.il,
@@ -7178,10 +7068,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[142]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t8;
+  result.false_label := univ_ptr(t8);
 end;
 
 { transform_127_pass_2 - rule 127: flow <- bit_test_top ($1: ip_reg, $2:
@@ -7228,8 +7118,8 @@ begin
       end else begin
         t8 := address_mode_for_integer32_value(integer32(p2_locals_ptr_t(addr(result))^.p2[88]));
         debug_lir_$load_instruction(result.inherited_attributes,
-            ord(opc$loadl), 0, t8, isc_solution_ptr_t(t8^.base_register), t2,
-            t8^.il, 0, t8^.bits_known, t8^.bits_trusted);
+            ord(opc$loadl), 0, t8, t8^.base_register, t2, t8^.il, 0,
+            t8^.bits_known, t8^.bits_trusted);
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$rsub), 4, t2, subject^.children[1], t2);
@@ -7324,11 +7214,11 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[142]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t7;
+  result.false_label := univ_ptr(t7);
 end;
 
 { transform_128_pass_2 - rule 128: flow <- bit_test_top ($1: ip_reg, $2:
@@ -7395,8 +7285,8 @@ begin
     end else begin
       t12 := address_mode_for_integer32_value(integer32(p2_locals_ptr_t(addr(result))^.p2[88]));
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t12, isc_solution_ptr_t(t12^.base_register), t5,
-          t12^.il, 0, t12^.bits_known, t12^.bits_trusted);
+          ord(opc$loadl), 0, t12, t12^.base_register, t5, t12^.il, 0,
+          t12^.bits_known, t12^.bits_trusted);
     end;
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$rsub),
         4, t5, subject^.children[1], t5);
@@ -7420,17 +7310,16 @@ begin
       if t6^.object_with_name <> nil then begin
         t6^.object_with_name := t6^.object_with_name;
       end else begin
-        t6^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t6^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t6, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t6, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t6);
+          subject^.children[2]^.base_register, t6);
     end;
   end
   else if ord(result.space136[144]) = 1 then begin
@@ -7441,8 +7330,8 @@ begin
   end else begin
     t13 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t13, isc_solution_ptr_t(t13^.base_register), t6, t13^.il, 0,
-        t13^.bits_known, t13^.bits_trusted);
+        0, t13, t13^.base_register, t6, t13^.il, 0, t13^.bits_known,
+        t13^.bits_trusted);
   end;
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
       t4 + t2 + t3 + 16#1000000, t5, t6, t5, subject^.children[2]^.il, 0,
@@ -7528,11 +7417,11 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[146]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t11;
+  result.false_label := univ_ptr(t11);
 end;
 
 { transform_129_pass_2 - rule 129: flow <- f_compare_top ($1: fp_reg, $2:
@@ -7572,7 +7461,7 @@ begin
   end;
   debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
       p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[112 + t4], 0);
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_130_pass_2 - rule 130: flow <- f_compare_top ($1: fp_reg_pair,
@@ -7593,7 +7482,7 @@ begin
     t1 := p2_node_ptr_t(subject^.il)^.w[14];
   end;
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
@@ -7616,7 +7505,7 @@ begin
   end;
   debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t3),
       p2_readonly_ptr_t(addr(isc_readonly_tables))^.w[112 + t4], 0);
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_131_pass_2 - rule 131: flow <- f_compare_top ($1: fp_reg_pair,
@@ -7639,7 +7528,7 @@ begin
   t3 := high_half_of_fp_reg_pair(subject^.children[2]);
   t4 := low_half_of_fp_reg_pair(subject^.children[2]);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
@@ -7669,7 +7558,7 @@ begin
         ord(opc$fbeq), 0);
     debug_lir_$label(result.inherited_attributes, t7);
   end;
-  result.false_label := t6;
+  result.false_label := univ_ptr(t6);
 end;
 
 { transform_132_pass_2 - rule 132: flow <- f_compare_top ($1: fp_reg_quad,
@@ -7692,7 +7581,7 @@ begin
   t3 := high_half_of_fp_reg_quad(subject^.children[2]);
   t4 := low_half_of_fp_reg_quad(subject^.children[2]);
   if ord(result.space136[136]) = 1 then begin
-    pattern_match_error(4, il$t(subject^.il_kind), 0,
+    pattern_match_error(4, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
   if ord(result.space136[137]) = 1 then begin
@@ -7722,7 +7611,7 @@ begin
         ord(opc$fbeq), 0);
     debug_lir_$label(result.inherited_attributes, t7);
   end;
-  result.false_label := t6;
+  result.false_label := univ_ptr(t6);
 end;
 
 { transform_133_pass_2 - rule 133: flow <- isc_agg_cmp_top ($1:
@@ -7800,17 +7689,16 @@ begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
-        t11^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+        t11^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11, nil);
+          ord(opc$move), 0, subject^.children[1]^.base_register, t11, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[1],
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11);
+          subject^.children[1]^.base_register, t11);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
@@ -7821,25 +7709,24 @@ begin
   end else begin
     t17 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t17, isc_solution_ptr_t(t17^.base_register), t11, t17^.il, 0,
-        t17^.bits_known, t17^.bits_trusted);
+        0, t17, t17^.base_register, t11, t17^.il, 0, t17^.bits_known,
+        t17^.bits_trusted);
   end;
   if ord(result.space136[140]) = 1 then begin
     if ord(result.space136[141]) = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
-        t13^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t13^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t13, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13);
+          subject^.children[2]^.base_register, t13);
     end;
   end
   else if ord(result.space136[142]) = 1 then begin
@@ -7850,8 +7737,8 @@ begin
   end else begin
     t18 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t18, isc_solution_ptr_t(t18^.base_register), t13, t18^.il, 0,
-        t18^.bits_known, t18^.bits_trusted);
+        0, t18, t18^.base_register, t13, t18^.il, 0, t18^.bits_known,
+        t18^.bits_trusted);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
       8, subject^.children[3], create_solution_for_ip_reg, nil);
@@ -7968,7 +7855,7 @@ begin
               univ_ptr(t16), ord(opc$jump), 0);
         end
         else if ord(result.space136[146]) <> 12 then begin
-          pattern_match_error(11, il$t(subject^.il_kind), 0,
+          pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited_attributes, t1,
@@ -8052,7 +7939,7 @@ begin
           ord(opc$jump), 0);
     end
     else if ord(result.space136[148]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t16),
@@ -8078,7 +7965,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t16;
+  result.false_label := univ_ptr(t16);
 end;
 
 { transform_134_pass_2 - rule 134: flow <- isc_agg_lex_cmp_top ($1:
@@ -8160,17 +8047,16 @@ begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
-        t13^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+        t13^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t13, nil);
+          ord(opc$move), 0, subject^.children[1]^.base_register, t13, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[1],
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t13);
+          subject^.children[1]^.base_register, t13);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
@@ -8181,25 +8067,24 @@ begin
   end else begin
     t19 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t19, isc_solution_ptr_t(t19^.base_register), t13, t19^.il, 0,
-        t19^.bits_known, t19^.bits_trusted);
+        0, t19, t19^.base_register, t13, t19^.il, 0, t19^.bits_known,
+        t19^.bits_trusted);
   end;
   if ord(result.space136[140]) = 1 then begin
     if ord(result.space136[141]) = 1 then begin
       if t15^.object_with_name <> nil then begin
         t15^.object_with_name := t15^.object_with_name;
       end else begin
-        t15^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t15^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t15, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t15, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t15);
+          subject^.children[2]^.base_register, t15);
     end;
   end
   else if ord(result.space136[142]) = 1 then begin
@@ -8210,8 +8095,8 @@ begin
   end else begin
     t20 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t20, isc_solution_ptr_t(t20^.base_register), t15, t20^.il, 0,
-        t20^.bits_known, t20^.bits_trusted);
+        0, t20, t20^.base_register, t15, t20^.il, 0, t20^.bits_known,
+        t20^.bits_trusted);
   end;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
       2, subject^.children[3], create_solution_for_ip_reg, nil);
@@ -8349,7 +8234,7 @@ begin
               univ_ptr(t18), ord(opc$jump), 0);
         end
         else if ord(result.space136[146]) <> 12 then begin
-          pattern_match_error(11, il$t(subject^.il_kind), 0,
+          pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited_attributes, t1,
@@ -8433,7 +8318,7 @@ begin
           ord(opc$jump), 0);
     end
     else if ord(result.space136[148]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t18),
@@ -8495,7 +8380,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t18;
+  result.false_label := univ_ptr(t18);
 end;
 
 { transform_135_pass_2 - rule 135: flow <- set_compare_top ($1: ip_reg, $2:
@@ -8594,10 +8479,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[138]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_136_pass_2 - rule 136: flow <- set_compare_top ($1: ip_reg, $2:
@@ -8696,10 +8581,10 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[138]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
-  result.false_label := t3;
+  result.false_label := univ_ptr(t3);
 end;
 
 { transform_137_pass_2 - rule 137: flow <- set_compare_top ($1:
@@ -8780,17 +8665,16 @@ begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
-        t11^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+        t11^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11, nil);
+          ord(opc$move), 0, subject^.children[1]^.base_register, t11, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[1],
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11);
+          subject^.children[1]^.base_register, t11);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
@@ -8801,25 +8685,24 @@ begin
   end else begin
     t18 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t18, isc_solution_ptr_t(t18^.base_register), t11, t18^.il, 0,
-        t18^.bits_known, t18^.bits_trusted);
+        0, t18, t18^.base_register, t11, t18^.il, 0, t18^.bits_known,
+        t18^.bits_trusted);
   end;
   if ord(result.space136[140]) = 1 then begin
     if ord(result.space136[141]) = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
-        t13^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t13^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t13, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13);
+          subject^.children[2]^.base_register, t13);
     end;
   end
   else if ord(result.space136[142]) = 1 then begin
@@ -8830,8 +8713,8 @@ begin
   end else begin
     t19 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t19, isc_solution_ptr_t(t19^.base_register), t13, t19^.il, 0,
-        t19^.bits_known, t19^.bits_trusted);
+        0, t19, t19^.base_register, t13, t19^.il, 0, t19^.bits_known,
+        t19^.bits_trusted);
   end;
   if ord(result.space136[143]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
@@ -8840,8 +8723,8 @@ begin
   end else begin
     t20 := address_mode_for_integer32_value(integer32(result.fields[0]));
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t20, isc_solution_ptr_t(t20^.base_register), t15, t20^.il, 0,
-        t20^.bits_known, t20^.bits_trusted);
+        0, t20, t20^.base_register, t15, t20^.il, 0, t20^.bits_known,
+        t20^.bits_trusted);
   end;
   debug_lir_$label(result.inherited_attributes, t3);
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
@@ -8929,7 +8812,7 @@ begin
               univ_ptr(t17), ord(opc$jump), 0);
         end
         else if ord(result.space136[146]) <> 12 then begin
-          pattern_match_error(11, il$t(subject^.il_kind), 0,
+          pattern_match_error(11, subject^.il_kind, 0,
               subject^.inherited_attributes^.pos.source_line_number);
         end;
         debug_lir_$branch_instruction(result.inherited_attributes, t1,
@@ -9013,7 +8896,7 @@ begin
           ord(opc$jump), 0);
     end
     else if ord(result.space136[148]) <> 12 then begin
-      pattern_match_error(11, il$t(subject^.il_kind), 0,
+      pattern_match_error(11, subject^.il_kind, 0,
           subject^.inherited_attributes^.pos.source_line_number);
     end;
     debug_lir_$branch_instruction(result.inherited_attributes, univ_ptr(t17),
@@ -9038,7 +8921,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t17;
+  result.false_label := univ_ptr(t17);
 end;
 
 { transform_138_pass_2 - rule 138: flow <- set_compare_top ($1:
@@ -9122,17 +9005,16 @@ begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
-        t11^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+        t11^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11, nil);
+          ord(opc$move), 0, subject^.children[1]^.base_register, t11, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[1],
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11);
+          subject^.children[1]^.base_register, t11);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
@@ -9143,25 +9025,24 @@ begin
   end else begin
     t19 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t19, isc_solution_ptr_t(t19^.base_register), t11, t19^.il, 0,
-        t19^.bits_known, t19^.bits_trusted);
+        0, t19, t19^.base_register, t11, t19^.il, 0, t19^.bits_known,
+        t19^.bits_trusted);
   end;
   if ord(result.space136[140]) = 1 then begin
     if ord(result.space136[141]) = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
-        t13^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t13^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t13, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13);
+          subject^.children[2]^.base_register, t13);
     end;
   end
   else if ord(result.space136[142]) = 1 then begin
@@ -9172,8 +9053,8 @@ begin
   end else begin
     t20 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t20, isc_solution_ptr_t(t20^.base_register), t13, t20^.il, 0,
-        t20^.bits_known, t20^.bits_trusted);
+        0, t20, t20^.base_register, t13, t20^.il, 0, t20^.bits_known,
+        t20^.bits_trusted);
   end;
   if ord(result.space136[143]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
@@ -9182,8 +9063,8 @@ begin
   end else begin
     t21 := address_mode_for_integer32_value(integer32(result.fields[0]));
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t21, isc_solution_ptr_t(t21^.base_register), t15, t21^.il, 0,
-        t21^.bits_known, t21^.bits_trusted);
+        0, t21, t21^.base_register, t15, t21^.il, 0, t21^.bits_known,
+        t21^.bits_trusted);
   end;
   debug_lir_$label(result.inherited_attributes, t3);
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
@@ -9230,7 +9111,7 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t18;
+  result.false_label := univ_ptr(t18);
 end;
 
 { transform_139_pass_2 - rule 139: flow <- set_compare_top ($1:
@@ -9314,17 +9195,16 @@ begin
       if t11^.object_with_name <> nil then begin
         t11^.object_with_name := t11^.object_with_name;
       end else begin
-        t11^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.base_register)^.object_with_name;
+        t11^.object_with_name := subject^.children[1]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11, nil);
+          ord(opc$move), 0, subject^.children[1]^.base_register, t11, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[1],
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t11);
+          subject^.children[1]^.base_register, t11);
     end;
   end
   else if ord(result.space136[139]) = 1 then begin
@@ -9335,25 +9215,24 @@ begin
   end else begin
     t19 := address_mode_for_integer32_value(subject^.children[1]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t19, isc_solution_ptr_t(t19^.base_register), t11, t19^.il, 0,
-        t19^.bits_known, t19^.bits_trusted);
+        0, t19, t19^.base_register, t11, t19^.il, 0, t19^.bits_known,
+        t19^.bits_trusted);
   end;
   if ord(result.space136[140]) = 1 then begin
     if ord(result.space136[141]) = 1 then begin
       if t13^.object_with_name <> nil then begin
         t13^.object_with_name := t13^.object_with_name;
       end else begin
-        t13^.object_with_name := isc_solution_ptr_t(subject^.children[2]^.base_register)^.object_with_name;
+        t13^.object_with_name := subject^.children[2]^.base_register^.object_with_name;
       end;
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$move), 0,
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13, nil);
+          ord(opc$move), 0, subject^.children[2]^.base_register, t13, nil);
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$adj_move), 0, nil, nil, nil);
     end else begin
       debug_lir_$simple_instruction(result.inherited_attributes,
           ord(opc$add), 0, subject^.children[2],
-          isc_solution_ptr_t(subject^.children[2]^.base_register), t13);
+          subject^.children[2]^.base_register, t13);
     end;
   end
   else if ord(result.space136[142]) = 1 then begin
@@ -9364,8 +9243,8 @@ begin
   end else begin
     t20 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t20, isc_solution_ptr_t(t20^.base_register), t13, t20^.il, 0,
-        t20^.bits_known, t20^.bits_trusted);
+        0, t20, t20^.base_register, t13, t20^.il, 0, t20^.bits_known,
+        t20^.bits_trusted);
   end;
   if ord(result.space136[143]) = 1 then begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$move),
@@ -9374,8 +9253,8 @@ begin
   end else begin
     t21 := address_mode_for_integer32_value(integer32(result.fields[0]));
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadl),
-        0, t21, isc_solution_ptr_t(t21^.base_register), t15, t21^.il, 0,
-        t21^.bits_known, t21^.bits_trusted);
+        0, t21, t21^.base_register, t15, t21^.il, 0, t21^.bits_known,
+        t21^.bits_trusted);
   end;
   debug_lir_$label(result.inherited_attributes, t3);
   debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
@@ -9422,5 +9301,5 @@ begin
         ord(opc$jump), 0);
   end;
   debug_lir_$label(result.inherited_attributes, t1);
-  result.false_label := t18;
+  result.false_label := univ_ptr(t18);
 end;

@@ -2175,7 +2175,7 @@ begin
           if add_this_to_parent^.f76.physical_register and
              not add_this_to_parent^.f76.physical_register_is_no_modify and
              not add_this_to_parent^.f76.physical_register_user_declared then begin
-            if (solution$t(add_this_to_parent^.kind) in
+            if (add_this_to_parent^.kind in
                 [solution$fp_reg_pair_high, solution$fp_reg_pair_low, solution$fp_reg,
                  solution$fp_reg_pair, solution$fp_reg_quad]) or
                ((add_this_to_parent^.f76.physical_register_number <>
@@ -2198,7 +2198,7 @@ begin
   end;
   if add_this_to_parent <> nil then begin
     wanted := true;
-    if add_this_to_parent^.kind = ord(solution$proper_subtree) then begin
+    if add_this_to_parent^.kind = solution$proper_subtree then begin
       if pm_proper_subtree_seen then
         wanted := false;
       pm_proper_subtree_seen := true;
@@ -2261,8 +2261,8 @@ begin
 done:
     appended := false;
     if wanted then begin
-      if (add_this_to_parent^.kind = ord(solution$proper_subtree)) or
-         (solution$t(add_this_to_parent^.kind) in permissible_solution_kinds) then begin
+      if (add_this_to_parent^.kind = solution$proper_subtree) or
+         (add_this_to_parent^.kind in permissible_solution_kinds) then begin
         appended := true;
         if isc_user_routines_354 then begin
           write('That solution was appended to the solutions_of_parent.');
@@ -2286,7 +2286,7 @@ done:
   end;
   if add_this_to_work_list <> nil then begin
     if appended or
-       (not (solution$t(add_this_to_parent^.kind) in permissible_solution_kinds) and wanted and
+       (not (add_this_to_parent^.kind in permissible_solution_kinds) and wanted and
         not add_this_to_parent^.f76.dead_end) then begin
       if isc_user_routines_354 then begin
         write('Adding the following solution to the work list:');
@@ -2308,7 +2308,7 @@ end;
   lists after: `case solution^.kind of' (a chain rule's subject kind,
   every kind 1..23 a label; any other kind an error, a message under
   the traces, else bug_check) and, for a proper_subtree, `case
-  il$t(solution^.il_kind) of' (an operator no pattern names an error); in
+  solution^.il_kind of' (an operator no pattern names an error); in
   each arm the rules tried under it, in rule order, each when its
   pattern's tests hold (children's kinds, nested proper_subtrees'
   operators, in pattern order).  The case statements are the
@@ -2388,7 +2388,7 @@ begin
     end;
   end;
   pm_proper_subtree_seen := false;
-  case solution$t(solution^.kind) of
+  case solution^.kind of
     solution$address_mode: begin
       hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 378);
       hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 379);
@@ -2444,19 +2444,19 @@ begin
       hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 252);
       end;
     solution$proper_subtree:
-      case il$t(solution^.il_kind) of
+      case solution^.il_kind of
         il_addr_con: begin
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
+          if solution^.children[1]^.kind = solution$irrelevant then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 13);
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
+          if solution^.children[1]^.kind = solution$irrelevant then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 14);
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
+          if solution^.children[1]^.kind = solution$irrelevant then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 15);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 16);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 17);
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
+          if solution^.children[1]^.kind = solution$irrelevant then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 18);
           end;
         il_ap_register: begin
@@ -2466,607 +2466,607 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 20);
           end;
         il_add_to_aop: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 173);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 174);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 175);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 176);
           end;
         il_agg_aop: begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 140);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 141);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 142);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 143);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 144);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 145);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 146);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 147);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 148);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 149);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 150);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 151);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 152);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 153);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 154);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 155);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 156);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 157);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 158);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 159);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 160);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 161);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 162);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 163);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 164);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 165);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 166);
           end;
         il_agg_len_aop: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 206);
           end;
         il_and_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 175);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 176);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$proper_subtree) then
-              if solution^.children[2]^.il_kind = ord(il_not_top) then
-                if solution^.children[2]^.children[1]^.kind = ord(solution$proper_subtree) then
-                  if solution^.children[2]^.children[1]^.il_kind = ord(il_bit_set_top) then
-                    if solution^.children[2]^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
-                      if solution^.children[2]^.children[1]^.children[2]^.kind = ord(solution$ip_reg) then
-                        if solution^.children[2]^.children[1]^.children[3]^.kind = ord(solution$void) then
+            if solution^.children[2]^.kind = solution$proper_subtree then
+              if solution^.children[2]^.il_kind = il_not_top then
+                if solution^.children[2]^.children[1]^.kind = solution$proper_subtree then
+                  if solution^.children[2]^.children[1]^.il_kind = il_bit_set_top then
+                    if solution^.children[2]^.children[1]^.children[1]^.kind = solution$literal_32_bits then
+                      if solution^.children[2]^.children[1]^.children[2]^.kind = solution$ip_reg then
+                        if solution^.children[2]^.children[1]^.children[3]^.kind = solution$void then
                           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 182);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 183);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 184);
           end;
         il_div_by_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 185);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 186);
           end;
         il_eor_to_aop: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 173);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 174);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 175);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 176);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 187);
           end;
         il_f_add_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 178);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg_pair] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 180);
           end;
         il_f_div_by_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 178);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg_pair] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 180);
           end;
         il_f_mul_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 178);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg_pair] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 180);
           end;
         il_f_range_check_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
-              if solution^.children[3]^.kind = ord(solution$fp_reg) then
+            if solution^.children[2]^.kind = solution$fp_reg then
+              if solution^.children[3]^.kind = solution$fp_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 179);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg_pair] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
-              if solution^.children[3]^.kind = ord(solution$fp_reg_pair) then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
+              if solution^.children[3]^.kind = solution$fp_reg_pair then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 181);
           end;
         il_f_sub_from_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 178);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$fp_reg_pair] then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 180);
           end;
         il_fp_aop: begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 140);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 141);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 142);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 143);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 144);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 145);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 146);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 147);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 148);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 149);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 150);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 151);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 152);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 153);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 154);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 155);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 156);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 157);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 167);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 168);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 169);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 170);
           end;
         il_isc_agg_aop: begin
-          if solution$t(solution^.children[3]^.kind) in
+          if solution^.children[3]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 207);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 208);
           end;
         il_isc_agg_zero_aop: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 209);
           end;
         il_isc_fill_aop: begin
-          if solution$t(solution^.children[3]^.kind) in
+          if solution^.children[3]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 210);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$literal_32_bits then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 211);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 212);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$literal_32_bits then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 213);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$literal_32_bits then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 214);
           end;
         il_isc_mul_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 188);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 189);
           end;
         il_isc_slice_aop: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 215);
           end;
         il_lshft_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 190);
           end;
         il_mul_to_aop: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 191);
           end;
         il_neg_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 192);
           end;
         il_not_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 193);
           end;
         il_or_to_aop: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 173);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 174);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 175);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 176);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 194);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$proper_subtree) then
-              if solution^.children[2]^.il_kind = ord(il_bit_set_top) then
-                if solution^.children[2]^.children[1]^.kind = ord(solution$literal_32_bits) then
-                  if solution^.children[2]^.children[2]^.kind = ord(solution$ip_reg) then
-                    if solution^.children[2]^.children[3]^.kind = ord(solution$void) then
+            if solution^.children[2]^.kind = solution$proper_subtree then
+              if solution^.children[2]^.il_kind = il_bit_set_top then
+                if solution^.children[2]^.children[1]^.kind = solution$literal_32_bits then
+                  if solution^.children[2]^.children[2]^.kind = solution$ip_reg then
+                    if solution^.children[2]^.children[3]^.kind = solution$void then
                       hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 195);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 196);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 197);
           end;
         il_pack_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 216);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 217);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 218);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 219);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 220);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 221);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 222);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$processor_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field,
                  solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 247);
           end;
         il_range_check_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
-              if solution$t(solution^.children[3]^.kind) in
+              if solution^.children[3]^.kind in
                   [solution$ip_reg, solution$literal_32_bits] then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 177);
           end;
         il_rshft_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 198);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 199);
           end;
         il_scalar_aop: begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 140);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 141);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 142);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 143);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 144);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 145);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 146);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 147);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 148);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 149);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 150);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 151);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 152);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 153);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 154);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 155);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 156);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 157);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind in
                 [solution$address_mode, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 171);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 172);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$processor_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field,
                  solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 248);
           end;
         il_set_and_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 200);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 201);
           end;
         il_set_diff_from_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 202);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 203);
           end;
         il_set_or_to_aop: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 204);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 205);
           end;
         il_strcat_aop: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 223);
           end;
         il_strcpy_aop: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 224);
           end;
         il_strncat_aop: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 225);
           end;
         il_strncpy_aop: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 226);
           end;
         il_sub_from_aop: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 173);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 174);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg,
                solution$ip_reg_field] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 176);
           end;
@@ -3080,11 +3080,11 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 2);
           end;
         il_bit_field_assign: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$address_mode) then
-                if solution^.children[4]^.kind = ord(solution$literal_32_bits) then
-                  if solution^.children[5]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$address_mode then
+                if solution^.children[4]^.kind = solution$literal_32_bits then
+                  if solution^.children[5]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 450);
           end;
         il_blk_end_node: begin
@@ -3097,33 +3097,33 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 2);
           end;
         il_branch_node: begin
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
+          if solution^.children[1]^.kind = solution$irrelevant then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 229);
           end;
         il_case_node_range_check: begin
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$flow) then
-                if solution^.children[4]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$irrelevant then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$flow then
+                if solution^.children[4]^.kind = solution$ip_reg then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 230);
           end;
         il_case_node_no_range_check: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 231);
           end;
         il_cbranch_node: begin
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
-            if solution^.children[2]^.kind = ord(solution$flow) then
+          if solution^.children[1]^.kind = solution$irrelevant then
+            if solution^.children[2]^.kind = solution$flow then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 232);
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$irrelevant then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 233);
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$irrelevant then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 234);
-          if solution^.children[1]^.kind = ord(solution$irrelevant) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$irrelevant then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 235);
           end;
         il_cc_call: begin
@@ -3137,182 +3137,182 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 5);
           end;
         il_agg_compare_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$address_mode, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 120);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$address_mode, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$address_mode, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 121);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 122);
           end;
         il_bit_field_cmp_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$address_mode) then
-                if solution^.children[4]^.kind = ord(solution$literal_32_bits) then
-                  if solution^.children[5]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$address_mode then
+                if solution^.children[4]^.kind = solution$literal_32_bits then
+                  if solution^.children[5]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 123);
           end;
         il_bit_test_top: begin
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind in
                 [solution$address_mode, solution$ip_reg,
                  solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 101);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 102);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 103);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 104);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 105);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 106);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 124);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 125);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 126);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 127);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 128);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 559);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 560);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_field] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 561);
           end;
         il_compare_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 107);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 112);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 113);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 114);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 115);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 116);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 117);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 118);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 119);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 555);
           end;
         il_f_compare_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 129);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind in
                 [solution$fp_reg_pair, solution$literal_64_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 130);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 131);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 132);
           end;
         il_set_compare_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 112);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 113);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 114);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 115);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 116);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 117);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 118);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 119);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 135);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 136);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 137);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 138);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 139);
           end;
         il_complex_ob: begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 6);
           end;
         il_cs_node: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 459);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 460);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 461);
           end;
@@ -3341,72 +3341,72 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 25);
           end;
         il_dindex_node: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 63);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 64);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 65);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 66);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 67);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 68);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$processor_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 241);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$processor_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$ip_reg_scaled] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 242);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$processor_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 243);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$processor_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 244);
           end;
         il_disp_node: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 69);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 70);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 71);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 72);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 73);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 74);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 75);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 76);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 77);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 78);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 79);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 80);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 81);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_dpreal_ob) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_dpreal_ob then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 82);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
+          if solution^.children[1]^.kind = solution$processor_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 245);
-          if solution^.children[1]^.kind = ord(solution$processor_reg) then
+          if solution^.children[1]^.kind = solution$processor_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 246);
           end;
         il_display_register: begin
@@ -3452,13 +3452,13 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 28);
           end;
         il_insert_bit_field: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 468);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 469);
           end;
         il_integer_ob: begin
@@ -3489,11 +3489,11 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 11);
           end;
         il_nlbranch_node: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 238);
           end;
         il_pf_call: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 348);
           end;
         il_physical_register_ob: begin
@@ -3505,11 +3505,11 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 28);
           end;
         il_ptr_node: begin
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_addr_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_addr_top then
+              if solution^.children[1]^.children[1]^.kind = solution$address_mode then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 83);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 84);
           end;
         il_raise_exception: begin
@@ -3519,7 +3519,7 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 10);
           end;
         il_release_dynamic_space: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 481);
           end;
         il_return_node: begin
@@ -3542,593 +3542,593 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 2);
           end;
         il_sym_disp_node: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 85);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 86);
           end;
         il_abs_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 261);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 262);
           end;
         il_ada_expon_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 263);
           end;
         il_add_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 253);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 254);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 255);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 256);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 257);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 258);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 259);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 260);
           end;
         il_addr_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 441);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 442);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 443);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 444);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 445);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 552);
           end;
         il_align_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 446);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 447);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 448);
           end;
         il_allocate_dynamic_space_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 449);
           end;
         il_alshf_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 349);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 350);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 351);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 352);
           end;
         il_and_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 324);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 325);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 326);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 327);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 328);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 329);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 330);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 331);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 332);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 333);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$proper_subtree) then
-              if solution^.children[2]^.il_kind = ord(il_not_top) then
-                if solution^.children[2]^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$proper_subtree then
+              if solution^.children[2]^.il_kind = il_not_top then
+                if solution^.children[2]^.children[1]^.kind = solution$ip_reg then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 334);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_not_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
-                if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_not_top then
+              if solution^.children[1]^.children[1]^.kind = solution$ip_reg then
+                if solution^.children[2]^.kind = solution$ip_reg then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 335);
           end;
         il_arshf_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 349);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 350);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 353);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 354);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 355);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 356);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 357);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_lshf_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
-                  if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_lshf_top then
+              if solution^.children[1]^.children[1]^.kind = solution$ip_reg then
+                if solution^.children[1]^.children[2]^.kind = solution$literal_32_bits then
+                  if solution^.children[2]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 358);
           end;
         il_bit_set_top: begin
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 451);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 452);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 453);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$void then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 454);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$void then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 455);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$void then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 456);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$void then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 553);
           end;
         il_cache_top: begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 22);
           end;
         il_call_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 340);
           end;
         il_chk_top: begin
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 457);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 458);
           end;
         il_div_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 264);
           end;
         il_eor_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 324);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 325);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 326);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 327);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 328);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 329);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 330);
           end;
         il_expon_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 265);
           end;
         il_extend_top: begin
-          if solution^.children[1]^.kind = ord(solution$flow) then
+          if solution^.children[1]^.kind = solution$flow then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 109);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 404);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 405);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 406);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 407);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 408);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 409);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 410);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 411);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_lshf_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_lshf_top then
+              if solution^.children[1]^.children[1]^.kind = solution$ip_reg then
+                if solution^.children[1]^.children[2]^.kind = solution$literal_32_bits then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 412);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 413);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 414);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 415);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 416);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 417);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 418);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 419);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 420);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 421);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 422);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 423);
           end;
         il_extract_bit_field_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 463);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 464);
           end;
         il_f_ada_expon_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 266);
           end;
         il_f_add_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 306);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 307);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 493);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 494);
           end;
         il_f_div_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 306);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 307);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 495);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 496);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 497);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 498);
           end;
         il_f_expon_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 308);
           end;
         il_f_extend_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 424);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 425);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 426);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 427);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_f_extend_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$fp_reg) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$void) then
-                  if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_f_extend_top then
+              if solution^.children[1]^.children[1]^.kind = solution$fp_reg then
+                if solution^.children[1]^.children[2]^.kind = solution$void then
+                  if solution^.children[2]^.kind = solution$void then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 428);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 429);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 430);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 431);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 432);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 433);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_f_extend_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$fp_reg_pair) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$void) then
-                  if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_f_extend_top then
+              if solution^.children[1]^.children[1]^.kind = solution$fp_reg_pair then
+                if solution^.children[1]^.children[2]^.kind = solution$void then
+                  if solution^.children[2]^.kind = solution$void then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 434);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 499);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 500);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 501);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 502);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 503);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 504);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 505);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 506);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 507);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 508);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 509);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 510);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 511);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 512);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 513);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 514);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 515);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 516);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 562);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 563);
           end;
         il_f_math_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 309);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 310);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 311);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 312);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 313);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 314);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 315);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 316);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 317);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 318);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 319);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 320);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 321);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 517);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 518);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 519);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$void then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 520);
           end;
         il_f_mul_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 306);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 307);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 521);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 522);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 523);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 524);
           end;
         il_f_neg_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 322);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 323);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 525);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 526);
           end;
         il_f_range_check_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
-              if solution^.children[3]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
+              if solution^.children[3]^.kind = solution$fp_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 465);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
-              if solution^.children[3]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
+              if solution^.children[3]^.kind = solution$fp_reg_pair then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 466);
           end;
         il_f_sub_top: begin
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 306);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 307);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
+            if solution^.children[2]^.kind = solution$fp_reg_pair then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 527);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
+            if solution^.children[2]^.kind = solution$fp_reg_quad then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 528);
           end;
         il_func_call_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 341);
           end;
         il_index_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 467);
           end;
         il_isc_addr_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 470);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 471);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 472);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 473);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 474);
           end;
         il_isc_agg_cmp_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 133);
           end;
         il_isc_agg_lex_cmp_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
-                if solution^.children[4]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
+              if solution^.children[3]^.kind = solution$ip_reg then
+                if solution^.children[4]^.kind = solution$ip_reg then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 134);
           end;
         il_isc_call_top: begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 342);
           end;
         il_isc_fio_init: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 343);
           end;
         il_isc_func_call_hidden_temp_top: begin
@@ -4142,522 +4142,522 @@ begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 532);
           end;
         il_isc_mul_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 267);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 268);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 269);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 270);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 271);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 272);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 273);
           end;
         il_isc_signed_mod_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$fp_reg, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 274);
           end;
         il_isc_signed_rem_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$fp_reg, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 275);
           end;
         il_isc_unsigned_mod_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 276);
           end;
         il_isc_unsigned_rem_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 277);
           end;
         il_lshf_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 349);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 350);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 359);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_rshf_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
-                  if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_rshf_top then
+              if solution^.children[1]^.children[1]^.kind = solution$ip_reg then
+                if solution^.children[1]^.children[2]^.kind = solution$literal_32_bits then
+                  if solution^.children[2]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 360);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 361);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 362);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 363);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_rshf_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$ip_reg) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
-                  if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_rshf_top then
+              if solution^.children[1]^.children[1]^.kind = solution$ip_reg then
+                if solution^.children[1]^.children[2]^.kind = solution$literal_32_bits then
+                  if solution^.children[2]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 364);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 557);
           end;
         il_mark_dynamic_space_top: begin
           hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 475);
           end;
         il_max_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 278);
           end;
         il_min_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 279);
           end;
         il_mod_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 280);
           end;
         il_mul_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 281);
           end;
         il_neg_top: begin
-          if solution^.children[1]^.kind = ord(solution$flow) then
+          if solution^.children[1]^.kind = solution$flow then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 110);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 282);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 283);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 284);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 285);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 286);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_compare_top) then
-              if solution$t(solution^.children[1]^.children[1]^.kind) in
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_compare_top then
+              if solution^.children[1]^.children[1]^.kind in
                   [solution$ip_reg, solution$ip_reg_field] then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
+                if solution^.children[1]^.children[2]^.kind = solution$literal_32_bits then
                   hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 287);
           end;
         il_nop_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 435);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 436);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 437);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 438);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 439);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 440);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 476);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 489);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 490);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 491);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 492);
           end;
         il_not_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 336);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 337);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 338);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_bit_set_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$ip_reg) then
-                  if solution^.children[1]^.children[3]^.kind = ord(solution$void) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_bit_set_top then
+              if solution^.children[1]^.children[1]^.kind = solution$literal_32_bits then
+                if solution^.children[1]^.children[2]^.kind = solution$ip_reg then
+                  if solution^.children[1]^.children[3]^.kind = solution$void then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 554);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 556);
           end;
         il_or_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 324);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 325);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 326);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 327);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 328);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 329);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 330);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 339);
           end;
         il_physical_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 477);
           end;
         il_range_check_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$literal_32_bits then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 478);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
-              if solution^.children[3]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
+              if solution^.children[3]^.kind = solution$literal_32_bits then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 479);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
-              if solution$t(solution^.children[3]^.kind) in
+              if solution^.children[3]^.kind in
                   [solution$ip_reg, solution$literal_32_bits] then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 480);
           end;
         il_rshf_top: begin
-          if solution^.children[1]^.kind = ord(solution$flow) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$flow then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 111);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 349);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 350);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_bit_test_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$address_mode) then
-                  if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_bit_test_top then
+              if solution^.children[1]^.children[1]^.kind = solution$literal_32_bits then
+                if solution^.children[1]^.children[2]^.kind = solution$address_mode then
+                  if solution^.children[2]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 365);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_bit_test_top) then
-              if solution^.children[1]^.children[1]^.kind = ord(solution$literal_32_bits) then
-                if solution$t(solution^.children[1]^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_bit_test_top then
+              if solution^.children[1]^.children[1]^.kind = solution$literal_32_bits then
+                if solution^.children[1]^.children[2]^.kind in
                     [solution$ip_reg, solution$ip_reg_field] then
-                  if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+                  if solution^.children[2]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 366);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_bit_test_top) then
-              if solution$t(solution^.children[1]^.children[1]^.kind) in
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_bit_test_top then
+              if solution^.children[1]^.children[1]^.kind in
                   [solution$ip_reg, solution$literal_32_bits] then
-                if solution$t(solution^.children[1]^.children[2]^.kind) in
+                if solution^.children[1]^.children[2]^.kind in
                     [solution$ip_reg, solution$ip_reg_field] then
-                  if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+                  if solution^.children[2]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 367);
-          if solution^.children[1]^.kind = ord(solution$proper_subtree) then
-            if solution^.children[1]^.il_kind = ord(il_compare_top) then
-              if solution$t(solution^.children[1]^.children[1]^.kind) in
+          if solution^.children[1]^.kind = solution$proper_subtree then
+            if solution^.children[1]^.il_kind = il_compare_top then
+              if solution^.children[1]^.children[1]^.kind in
                   [solution$ip_reg, solution$ip_reg_field] then
-                if solution^.children[1]^.children[2]^.kind = ord(solution$literal_32_bits) then
-                  if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+                if solution^.children[1]^.children[2]^.kind = solution$literal_32_bits then
+                  if solution^.children[2]^.kind = solution$literal_32_bits then
                     hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 368);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 369);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 370);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 371);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 372);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 373);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 374);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 558);
           end;
         il_set_and_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 533);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 534);
           end;
         il_set_bit_in_set_top: begin
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 535);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 536);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 537);
           end;
         il_set_diff_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 538);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 539);
           end;
         il_set_extend_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 540);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 541);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 542);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 543);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 544);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 545);
           end;
         il_set_or_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 546);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 547);
           end;
         il_set_range_in_set_top: begin
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 548);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 549);
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$ip_reg then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 550);
           end;
         il_signed_div_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 288);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 289);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 290);
           end;
         il_signed_mod_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 291);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$fp_reg, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 292);
           end;
         il_sr_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits,
                  solution$void] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 482);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$literal_32_bits] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits,
                  solution$void] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 483);
           end;
         il_strcmp_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 375);
           end;
         il_strlen_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
+          if solution^.children[1]^.kind = solution$address_mode then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 376);
           end;
         il_strncmp_top: begin
-          if solution^.children[1]^.kind = ord(solution$address_mode) then
-            if solution^.children[2]^.kind = ord(solution$address_mode) then
-              if solution^.children[3]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$address_mode then
+            if solution^.children[2]^.kind = solution$address_mode then
+              if solution^.children[3]^.kind = solution$ip_reg then
                 hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 377);
           end;
         il_sub_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 253);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 254);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution$t(solution^.children[2]^.kind) in
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind in
                 [solution$ip_reg, solution$literal_32_bits] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 255);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_scaled) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$ip_reg_scaled then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 256);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_scaled) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg_scaled then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 257);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 258);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 259);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
-            if solution^.children[2]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
+            if solution^.children[2]^.kind = solution$fp_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 260);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg_field) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg_field then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 293);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 294);
-          if solution^.children[1]^.kind = ord(solution$literal_32_bits) then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$literal_32_bits then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 295);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 296);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 297);
-          if solution^.children[1]^.kind = ord(solution$ip_reg_field) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg_field then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 298);
           end;
         il_unpack_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 484);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 485);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 486);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 487);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$ip_reg) then
+            if solution^.children[2]^.kind = solution$ip_reg then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 488);
           end;
         il_unsigned_div_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 299);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+          if solution^.children[1]^.kind = solution$ip_reg then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 300);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$fp_reg, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 301);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$fp_reg, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 302);
           end;
         il_unsigned_mod_top: begin
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$ip_reg, solution$ip_reg_field] then
-            if solution^.children[2]^.kind = ord(solution$literal_32_bits) then
+            if solution^.children[2]^.kind = solution$literal_32_bits then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 303);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$fp_reg, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 304);
-          if solution$t(solution^.children[1]^.kind) in
+          if solution^.children[1]^.kind in
               [solution$fp_reg, solution$ip_reg] then
-            if solution$t(solution^.children[2]^.kind) in
+            if solution^.children[2]^.kind in
                 [solution$fp_reg, solution$ip_reg] then
               hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 305);
           end;
         il_value_top: begin
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 435);
-          if solution^.children[1]^.kind = ord(solution$ip_reg) then
+          if solution^.children[1]^.kind = solution$ip_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 436);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 437);
-          if solution^.children[1]^.kind = ord(solution$fp_reg) then
+          if solution^.children[1]^.kind = solution$fp_reg then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 438);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 439);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 440);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 489);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_pair) then
+          if solution^.children[1]^.kind = solution$fp_reg_pair then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 490);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 491);
-          if solution^.children[1]^.kind = ord(solution$fp_reg_quad) then
+          if solution^.children[1]^.kind = solution$fp_reg_quad then
             hard_work(solution, work_list, solutions_of_parent, il, inh, permissible, 492);
           end;
         il_use_def_ob: begin

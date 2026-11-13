@@ -405,9 +405,8 @@ begin
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
         t3 + t1 + t2 + integer32(result.fields[0]),
         duplicate_address_mode_adding_byte_offset(subject^.children[1]^.children[2],
-        0),
-        isc_solution_ptr_t(subject^.children[1]^.children[2]^.base_register),
-        solution, subject^.children[1]^.children[2]^.il, 0,
+        0), subject^.children[1]^.children[2]^.base_register, solution,
+        subject^.children[1]^.children[2]^.il, 0,
         subject^.children[1]^.children[2]^.bits_known,
         subject^.children[1]^.children[2]^.bits_trusted);
   end else begin
@@ -417,19 +416,17 @@ begin
         if t4^.object_with_name <> nil then begin
           t4^.object_with_name := t4^.object_with_name;
         end else begin
-          t4^.object_with_name := isc_solution_ptr_t(subject^.children[1]^.children[2]^.base_register)^.object_with_name;
+          t4^.object_with_name := subject^.children[1]^.children[2]^.base_register^.object_with_name;
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$move), 0,
-            isc_solution_ptr_t(subject^.children[1]^.children[2]^.base_register),
-            t4, nil);
+            subject^.children[1]^.children[2]^.base_register, t4, nil);
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 0, subject^.children[1]^.children[2],
-            isc_solution_ptr_t(subject^.children[1]^.children[2]^.base_register),
-            t4);
+            subject^.children[1]^.children[2]^.base_register, t4);
       end;
     end
     else if ord(result.space136[139]) = 1 then begin
@@ -440,8 +437,8 @@ begin
     end else begin
       t5 := address_mode_for_integer32_value(subject^.children[1]^.children[2]^.literal_32_bits_value);
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t5, isc_solution_ptr_t(t5^.base_register), t4,
-          t5^.il, 0, t5^.bits_known, t5^.bits_trusted);
+          ord(opc$loadl), 0, t5, t5^.base_register, t4, t5^.il, 0,
+          t5^.bits_known, t5^.bits_trusted);
     end;
     debug_lir_$load_instruction(result.inherited_attributes, ord(opc$loadbu),
         t3 + t1 + t2 + integer32(result.fields[0]),

@@ -90,8 +90,8 @@ procedure transform_5_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_330);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_330);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := widen_char_string_ob(self.il);
 end;
 
@@ -101,8 +101,8 @@ procedure transform_6_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_330);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_330);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -112,8 +112,8 @@ procedure transform_7_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_330);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_330);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -151,8 +151,8 @@ procedure transform_11_pass_2(var self: isc_solution_t;
     subject: isc_solution_ptr_t; var result: isc_solution_t;
     solution: isc_solution_ptr_t); options(val_param);
 begin
-  result.base_register := lr_ptr_t(isc_user_routines_330);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_330);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -174,17 +174,16 @@ begin
         if t1^.object_with_name <> nil then begin
           t1^.object_with_name := t1^.object_with_name;
         end else begin
-          t1^.object_with_name := isc_solution_ptr_t(result.fields[0]^.base_register)^.object_with_name;
+          t1^.object_with_name := result.fields[0]^.base_register^.object_with_name;
         end;
         debug_lir_$simple_instruction(result.inherited_attributes,
-            ord(opc$move), 0,
-            isc_solution_ptr_t(result.fields[0]^.base_register), t1, nil);
+            ord(opc$move), 0, result.fields[0]^.base_register, t1, nil);
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$adj_move), 0, nil, nil, nil);
       end else begin
         debug_lir_$simple_instruction(result.inherited_attributes,
             ord(opc$add), 0, result.fields[0],
-            isc_solution_ptr_t(result.fields[0]^.base_register), t1);
+            result.fields[0]^.base_register, t1);
       end;
     end
     else if ord(result.space136[139]) = 1 then begin
@@ -195,12 +194,12 @@ begin
     end else begin
       t2 := address_mode_for_integer32_value(result.fields[0]^.literal_32_bits_value);
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
-          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
+          ord(opc$loadl), 0, t2, t2^.base_register, t1, t2^.il, 0,
+          t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := create_solution_for_address_mode;
     t3^.f76.uses_the_base_register := true;
-    t3^.base_register := lr_ptr_t(t1);
+    t3^.base_register := t1;
     result.fields[0] := t3;
   end;
   if ord(result.space136[140]) = 1 then begin
@@ -217,7 +216,7 @@ begin
           result.fields[0]^.bits_known, result.fields[0]^.bits_trusted);
     end;
   end;
-  result.base_register := lr_ptr_t(isc_user_routines_340);
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.base_register := isc_solution_ptr_t(isc_user_routines_340);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := univ_ptr(result.fields[1]);
 end;

@@ -335,7 +335,7 @@ var
 begin
   result := nil;
   work := nil;
-  if (subject.children[2]^.kind = 14) or (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) and subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = 11) then begin
+  if (subject.children[2]^.kind = solution$literal_32_bits) or (subject.children[2]^.f76.physical_register_number = isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) and subject.children[2]^.f76.physical_register and (subject.children[2]^.kind = solution$ip_reg) then begin
     if isc_user_routines_354 then begin
       write('Pattern 233 matched the semantics.');
       writeln;
@@ -469,7 +469,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> 11) or (subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) then begin
+  if not subject.children[2]^.f76.physical_register or (subject.children[2]^.kind <> solution$ip_reg) or (subject.children[2]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) then begin
     if isc_user_routines_354 then begin
       write('Pattern 235 matched the semantics.');
       writeln;

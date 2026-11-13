@@ -17,7 +17,7 @@ dseeaggs/iscg_input/hd69fbe76.000/iscg_input):
                            pattern_matcher: the fixed traces around
                            `case solution^.kind of' with an arm per
                            solution kind (a chain rule's tries) and, for
-                           a proper_subtree, `case il$t(solution^.il_kind)
+                           a proper_subtree, `case solution^.il_kind
                            of' with an arm per IL operator some pattern
                            names; each arm the tries of the rules tried
                            under it, in rule order, a try being the
@@ -439,17 +439,17 @@ class Gen:
             spec = kids[k]
             if spec[0] == 'kind':
                 self.kind_ok(spec[1])
-                out.append('(%s^.kind = ord(solution$%s))' % (p, spec[1]))
+                out.append('(%s^.kind = solution$%s)' % (p, spec[1]))
             elif spec[0] == 'kinds':
                 for x in spec[1]:
                     self.kind_ok(x)
-                out.append('(solution$t(%s^.kind) in [%s])' % (
+                out.append('(%s^.kind in [%s])' % (
                     p, ', '.join('solution$' + x for x in spec[1])))
             else:
                 if 'il_' + spec[1] not in self.il_index:
                     raise Bad('no operator %s' % spec[1])
-                out.append('(%s^.kind = ord(solution$proper_subtree))' % p)
-                out.append('(%s^.il_kind = ord(il_%s))' % (p, spec[1]))
+                out.append('(%s^.kind = solution$proper_subtree)' % p)
+                out.append('(%s^.il_kind = il_%s)' % (p, spec[1]))
                 out.extend(self.tests(spec[2], p))
         return out
 
@@ -483,7 +483,7 @@ class Gen:
                         L.append(line)
                     d += '  '
                 L.append(d + call % r)
-        L.append('  case solution$t(solution^.kind) of')
+        L.append('  case solution^.kind of')
         kind_arms = {v: t for f, v, t in arms if f == 108}
         il_arms = [(v, t) for f, v, t in arms if f == 98]
         prop = self.kinds.index('proper_subtree')
@@ -496,7 +496,7 @@ class Gen:
                 L.append('      end;')
             elif k == prop:
                 L.append('    solution$proper_subtree:')
-                L.append('      case il$t(solution^.il_kind) of')
+                L.append('      case solution^.il_kind of')
                 for v, tries in il_arms:
                     L.append('        %s: begin' % self.ils[v])
                     emit_tries(tries, '          ')

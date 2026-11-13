@@ -242,7 +242,7 @@ begin
         ord(opc$jump), 0);
   end
   else if ord(result.space136[136]) <> 12 then begin
-    pattern_match_error(11, il$t(subject^.il_kind), 0,
+    pattern_match_error(11, subject^.il_kind, 0,
         subject^.inherited_attributes^.pos.source_line_number);
   end;
 end;

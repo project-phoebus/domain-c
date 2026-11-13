@@ -2273,7 +2273,7 @@ begin
       subject.children[1]^.bits_trusted);
   t2 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((t1 >= p2_node_ptr_t(subject.il)^.w[13]) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t2 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5)) then begin
+  if not ((t1 >= p2_node_ptr_t(subject.il)^.w[13]) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t2 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 448 matched the semantics.');
       writeln;
@@ -2611,7 +2611,7 @@ begin
       ord(opc$loadl), 1);
   t3 := lir_$can_encode_as_immediate_postincrement(subject.children[3]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or (not lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[3]^.f76.uses_the_displacement or subject.children[3]^.f76.has_a_symbolic_displacement) and (subject.children[3]^.f76.is_physical or subject.children[3]^.f76.is_atomic)) and (subject.children[3]^.kind = 5)) then begin
+  if not ((not t2 or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = solution$address_mode) or (not lir_$can_encode_as_immediate_operand(subject.children[3]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t3 and subject.children[3]^.f76.uses_the_displacement or subject.children[3]^.f76.has_a_symbolic_displacement) and (subject.children[3]^.f76.is_physical or subject.children[3]^.f76.is_atomic)) and (subject.children[3]^.kind = solution$address_mode)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 450 matched the semantics.');
       writeln;
@@ -3030,7 +3030,7 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 24;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
           legal_evaluation_orders(subject.children[2], subject.children[3]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -3089,7 +3089,7 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 28;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
         legal_evaluation_orders(subject.children[2], subject.children[3]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -3147,7 +3147,7 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + subject.children[3]^.code_bytes + 28;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references + subject.children[3]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + subject.children[3]^.delay;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[2]^.ip_reg_max, subject.children[3]^.ip_reg_max,
         legal_evaluation_orders(subject.children[2], subject.children[3]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -3891,7 +3891,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> 5) then begin
+  if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> solution$address_mode) then begin
     if isc_user_routines_354 then begin
       write('Pattern 463 matched the semantics.');
       writeln;
@@ -4192,27 +4192,27 @@ begin
     solution := new_solution(isc_heap, ord(solution$fp_reg), 0, inh, il, 0);
     solution^.which_transform := 465;
     solution^.before_transform := addr(subject);
-    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
       solution^.space136[136] := chr(2);
     end else begin
       solution^.space136[136] := chr(1);
-      if subject.children[1]^.kind = 11 then begin
+      if subject.children[1]^.kind = solution$ip_reg then begin
         solution^.space136[137] := chr(1);
       end
-      else if subject.children[1]^.kind = 8 then begin
+      else if subject.children[1]^.kind = solution$fp_reg then begin
         solution^.space136[137] := chr(2);
       end else begin
         solution^.space136[137] := chr(3);
       end;
     end;
-    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
       solution^.space136[138] := chr(2);
     end else begin
       solution^.space136[138] := chr(1);
-      if subject.children[1]^.kind = 11 then begin
+      if subject.children[1]^.kind = solution$ip_reg then begin
         solution^.space136[139] := chr(1);
       end
-      else if subject.children[1]^.kind = 8 then begin
+      else if subject.children[1]^.kind = solution$fp_reg then begin
         solution^.space136[139] := chr(2);
       end else begin
         solution^.space136[139] := chr(3);
@@ -4308,27 +4308,27 @@ begin
     solution := new_solution(isc_heap, ord(solution$fp_reg_pair), 0, inh, il, 0);
     solution^.which_transform := 466;
     solution^.before_transform := addr(subject);
-    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
       solution^.space136[136] := chr(2);
     end else begin
       solution^.space136[136] := chr(1);
-      if subject.children[1]^.kind = 11 then begin
+      if subject.children[1]^.kind = solution$ip_reg then begin
         solution^.space136[137] := chr(1);
       end
-      else if subject.children[1]^.kind = 8 then begin
+      else if subject.children[1]^.kind = solution$fp_reg then begin
         solution^.space136[137] := chr(2);
       end else begin
         solution^.space136[137] := chr(3);
       end;
     end;
-    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+    if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
       solution^.space136[138] := chr(2);
     end else begin
       solution^.space136[138] := chr(1);
-      if subject.children[1]^.kind = 11 then begin
+      if subject.children[1]^.kind = solution$ip_reg then begin
         solution^.space136[139] := chr(1);
       end
-      else if subject.children[1]^.kind = 8 then begin
+      else if subject.children[1]^.kind = solution$fp_reg then begin
         solution^.space136[139] := chr(2);
       end else begin
         solution^.space136[139] := chr(3);
@@ -4429,13 +4429,13 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+    solution^.bits_known := bits_known_function(subject.il_kind,
         subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-    solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+    solution^.bits_trusted := bits_trusted_function(subject.il_kind,
         subject.children[1]^.bits_trusted,
         subject.children[2]^.bits_trusted);
     solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -4486,7 +4486,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> 5) then begin
+  if lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) and ((t1 or not subject.children[1]^.f76.uses_the_displacement) and not subject.children[1]^.f76.has_a_symbolic_displacement or not subject.children[1]^.f76.is_physical and not subject.children[1]^.f76.is_atomic) or (subject.children[1]^.kind <> solution$address_mode) then begin
     if isc_user_routines_354 then begin
       write('Pattern 468 matched the semantics.');
       writeln;
@@ -5693,14 +5693,14 @@ begin
       end else begin
         solution^.space136[136] := chr(3);
       end;
-      if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+      if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
         solution^.space136[139] := chr(2);
       end else begin
         solution^.space136[139] := chr(1);
-        if subject.children[1]^.kind = 11 then begin
+        if subject.children[1]^.kind = solution$ip_reg then begin
           solution^.space136[140] := chr(1);
         end
-        else if subject.children[1]^.kind = 8 then begin
+        else if subject.children[1]^.kind = solution$fp_reg then begin
           solution^.space136[140] := chr(2);
         end else begin
           solution^.space136[140] := chr(3);
@@ -5832,14 +5832,14 @@ begin
         solution^.space136[139] := chr(1);
       end else begin
         solution^.space136[139] := chr(2);
-        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
           solution^.space136[140] := chr(2);
         end else begin
           solution^.space136[140] := chr(1);
-          if subject.children[1]^.kind = 11 then begin
+          if subject.children[1]^.kind = solution$ip_reg then begin
             solution^.space136[141] := chr(1);
           end
-          else if subject.children[1]^.kind = 8 then begin
+          else if subject.children[1]^.kind = solution$fp_reg then begin
             solution^.space136[141] := chr(2);
           end else begin
             solution^.space136[141] := chr(3);
@@ -5967,16 +5967,16 @@ begin
       end else begin
         solution^.space136[136] := chr(3);
       end;
-      if subject.children[2]^.kind = 14 then begin
+      if subject.children[2]^.kind = solution$literal_32_bits then begin
         solution^.space136[139] := chr(1);
-        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
           solution^.space136[140] := chr(2);
         end else begin
           solution^.space136[140] := chr(1);
-          if subject.children[1]^.kind = 11 then begin
+          if subject.children[1]^.kind = solution$ip_reg then begin
             solution^.space136[141] := chr(1);
           end
-          else if subject.children[1]^.kind = 8 then begin
+          else if subject.children[1]^.kind = solution$fp_reg then begin
             solution^.space136[141] := chr(2);
           end else begin
             solution^.space136[141] := chr(3);
@@ -6012,30 +6012,30 @@ begin
         end else begin
           solution^.space136[144] := chr(3);
         end;
-        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
           solution^.space136[147] := chr(2);
         end else begin
           solution^.space136[147] := chr(1);
-          if subject.children[1]^.kind = 11 then begin
+          if subject.children[1]^.kind = solution$ip_reg then begin
             solution^.space136[148] := chr(1);
           end
-          else if subject.children[1]^.kind = 8 then begin
+          else if subject.children[1]^.kind = solution$fp_reg then begin
             solution^.space136[148] := chr(2);
           end else begin
             solution^.space136[148] := chr(3);
           end;
         end;
       end;
-      if subject.children[3]^.kind = 14 then begin
+      if subject.children[3]^.kind = solution$literal_32_bits then begin
         solution^.space136[149] := chr(1);
-        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
           solution^.space136[150] := chr(2);
         end else begin
           solution^.space136[150] := chr(1);
-          if subject.children[1]^.kind = 11 then begin
+          if subject.children[1]^.kind = solution$ip_reg then begin
             solution^.space136[151] := chr(1);
           end
-          else if subject.children[1]^.kind = 8 then begin
+          else if subject.children[1]^.kind = solution$fp_reg then begin
             solution^.space136[151] := chr(2);
           end else begin
             solution^.space136[151] := chr(3);
@@ -6071,14 +6071,14 @@ begin
         end else begin
           solution^.space136[154] := chr(3);
         end;
-        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
+        if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> solution$ip_reg) then begin
           solution^.space136[157] := chr(2);
         end else begin
           solution^.space136[157] := chr(1);
-          if subject.children[1]^.kind = 11 then begin
+          if subject.children[1]^.kind = solution$ip_reg then begin
             solution^.space136[158] := chr(1);
           end
-          else if subject.children[1]^.kind = 8 then begin
+          else if subject.children[1]^.kind = solution$fp_reg then begin
             solution^.space136[158] := chr(2);
           end else begin
             solution^.space136[158] := chr(3);
@@ -6341,7 +6341,7 @@ begin
     solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
     solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
     solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb + subject.children[1]^.inherited_attributes^.fetch_precision - subject.children[2]^.literal_32_bits_value - p2_node_ptr_t(subject.il)^.b[29];
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     solution^.f76.field_precision := p2_node_ptr_t(subject.il)^.b[29];
@@ -6421,7 +6421,7 @@ begin
           subject.children[1]^.f76.bit_position_of_lsb);
       solution^.bits_trusted := rshft(subject.children[1]^.bits_trusted,
           subject.children[1]^.f76.bit_position_of_lsb) & t3;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t4 := subject.children[1]^.ip_reg_max;
@@ -6502,7 +6502,7 @@ begin
       t6 := validate_shift_count(p1_int_fields_ptr_t(addr(solution^))^.i[0]);
       solution^.bits_trusted := rshft(subject.children[1]^.bits_trusted,
           t6) & t3 + t2;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t7 := subject.children[1]^.ip_reg_max;
@@ -6579,7 +6579,7 @@ begin
       solution^.code_bytes := cost_487_4[ord(solution^.space136[136])] + cost_487_3[ord(solution^.space136[137])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 12;
       solution^.memory_references := cost_487_2[ord(solution^.space136[136])] + subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := cost_487_1[ord(solution^.space136[136])] + subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -6659,7 +6659,7 @@ begin
       solution^.delay := cost_488_1[ord(solution^.space136[136])] + subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := 0;
       solution^.bits_trusted := t2;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[1]^.ip_reg_max;

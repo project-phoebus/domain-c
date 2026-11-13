@@ -95,7 +95,7 @@ begin
   result.live_range := subject^.children[1]^.live_range;
   result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
   result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
-  result.base_register := lr_ptr_t(subject^.children[2]);
+  result.base_register := subject^.children[2];
 end;
 
 { transform_242_pass_2 - rule 242: processor_reg <- dindex_node ($1:
@@ -109,8 +109,7 @@ var
 begin
   t1 := create_solution_for_ip_reg;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add), 0,
-      subject^.children[2],
-      isc_solution_ptr_t(subject^.children[1]^.base_register), t1);
+      subject^.children[2], subject^.children[1]^.base_register, t1);
   result.base_register := subject^.children[1]^.base_register;
   result.index_register := subject^.children[1]^.index_register;
   result.false_label := subject^.children[1]^.false_label;
@@ -118,7 +117,7 @@ begin
   result.live_range := subject^.children[1]^.live_range;
   result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
   result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
-  result.base_register := lr_ptr_t(t1);
+  result.base_register := t1;
 end;
 
 { transform_243_pass_2 - rule 243: processor_reg <- dindex_node ($1:
@@ -142,7 +141,7 @@ begin
   result.live_range := subject^.children[1]^.live_range;
   result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
   result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
-  result.base_register := lr_ptr_t(t1);
+  result.base_register := t1;
 end;
 
 { transform_244_pass_2 - rule 244: processor_reg <- dindex_node ($1:
@@ -158,7 +157,7 @@ begin
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add), 0,
       ip_reg_to_ip_reg_scaled(subject^.children[2],
       p2_node_ptr_t(subject^.il)^.w[20]),
-      isc_solution_ptr_t(subject^.children[1]^.base_register), t1);
+      subject^.children[1]^.base_register, t1);
   result.base_register := subject^.children[1]^.base_register;
   result.index_register := subject^.children[1]^.index_register;
   result.false_label := subject^.children[1]^.false_label;
@@ -166,7 +165,7 @@ begin
   result.live_range := subject^.children[1]^.live_range;
   result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
   result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
-  result.base_register := lr_ptr_t(t1);
+  result.base_register := t1;
 end;
 
 { transform_245_pass_2 - rule 245: processor_reg <- disp_node ($1:
@@ -200,7 +199,7 @@ begin
     debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$add),
         0,
         find_well_known_literal_solution(integer32(p2_node_ptr_t(subject^.il)^.p[8])),
-        isc_solution_ptr_t(subject^.children[1]^.base_register), nil);
+        subject^.children[1]^.base_register, nil);
     t3 := 0;
   end else begin
     t1 := create_solution_for_ip_reg;
@@ -212,13 +211,12 @@ begin
     end else begin
       t2 := address_mode_for_integer32_value(integer32(p2_node_ptr_t(subject^.il)^.p[8]));
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
-          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
+          ord(opc$loadl), 0, t2, t2^.base_register, t1, t2^.il, 0,
+          t2^.bits_known, t2^.bits_trusted);
     end;
     if ord(result.space136[138]) = 1 then begin
       debug_lir_$simple_instruction(result.inherited_attributes,
-          ord(opc$add), 0,
-          isc_solution_ptr_t(subject^.children[1]^.base_register), t1, t1);
+          ord(opc$add), 0, subject^.children[1]^.base_register, t1, t1);
     end;
     t3 := integer32(t1);
   end;
@@ -229,7 +227,7 @@ begin
   result.live_range := subject^.children[1]^.live_range;
   result.live_range_of_imaginary_part := subject^.children[1]^.live_range_of_imaginary_part;
   result.f114.already_through_pass_2 := subject^.children[1]^.f114.already_through_pass_2;
-  result.base_register := lr_ptr_t(t3);
+  result.base_register := isc_solution_ptr_t(t3);
 end;
 
 { transform_247_pass_2 - rule 247: void <- pack_aop ($1: processor_reg, $2:
@@ -263,9 +261,8 @@ begin
   end else begin
     t3 := create_solution_for_ip_reg;
     debug_lir_$mfpr_instruction(result.inherited_attributes, ord(opc$mfpr),
-        t1 + t2, subject^.children[1],
-        isc_solution_ptr_t(subject^.children[1]^.base_register), t3,
-        subject^.children[1]^.object_with_name);
+        t1 + t2, subject^.children[1], subject^.children[1]^.base_register,
+        t3, subject^.children[1]^.object_with_name);
     if ord(result.space136[137]) = 1 then begin
       debug_lir_$field_instruction(result.inherited_attributes,
           ord(opc$transfer), 0, integer32(result.fields[0]),
@@ -286,8 +283,8 @@ begin
         end else begin
           t6 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t6, isc_solution_ptr_t(t6^.base_register),
-              t5, t6^.il, 0, t6^.bits_known, t6^.bits_trusted);
+              ord(opc$loadl), 0, t6, t6^.base_register, t5, t6^.il, 0,
+              t6^.bits_known, t6^.bits_trusted);
         end;
         t7 := t5;
       end;
@@ -303,8 +300,7 @@ begin
     t8 := t3;
   end;
   debug_lir_$mtpr_instruction(result.inherited_attributes, ord(opc$mtpr),
-      t1 + t2, t8, subject^.children[1],
-      isc_solution_ptr_t(subject^.children[1]^.base_register),
+      t1 + t2, t8, subject^.children[1], subject^.children[1]^.base_register,
       subject^.children[1]^.object_with_name);
 end;
 
@@ -339,9 +335,8 @@ begin
   end else begin
     t3 := create_solution_for_ip_reg;
     debug_lir_$mfpr_instruction(result.inherited_attributes, ord(opc$mfpr),
-        t1 + t2, subject^.children[1],
-        isc_solution_ptr_t(subject^.children[1]^.base_register), t3,
-        subject^.children[1]^.object_with_name);
+        t1 + t2, subject^.children[1], subject^.children[1]^.base_register,
+        t3, subject^.children[1]^.object_with_name);
     if ord(result.space136[137]) = 1 then begin
       debug_lir_$field_instruction(result.inherited_attributes,
           ord(opc$transfer), 0, integer32(result.fields[0]),
@@ -362,8 +357,8 @@ begin
         end else begin
           t6 := address_mode_for_integer32_value(subject^.children[2]^.literal_32_bits_value);
           debug_lir_$load_instruction(result.inherited_attributes,
-              ord(opc$loadl), 0, t6, isc_solution_ptr_t(t6^.base_register),
-              t5, t6^.il, 0, t6^.bits_known, t6^.bits_trusted);
+              ord(opc$loadl), 0, t6, t6^.base_register, t5, t6^.il, 0,
+              t6^.bits_known, t6^.bits_trusted);
         end;
         t7 := t5;
       end;
@@ -379,8 +374,7 @@ begin
     t8 := t3;
   end;
   debug_lir_$mtpr_instruction(result.inherited_attributes, ord(opc$mtpr),
-      t1 + t2, t8, subject^.children[1],
-      isc_solution_ptr_t(subject^.children[1]^.base_register),
+      t1 + t2, t8, subject^.children[1], subject^.children[1]^.base_register,
       subject^.children[1]^.object_with_name);
 end;
 
@@ -404,19 +398,19 @@ begin
     end else begin
       t2 := address_mode_for_integer32_value(integer32(result.fields[0]));
       debug_lir_$load_instruction(result.inherited_attributes,
-          ord(opc$loadl), 0, t2, isc_solution_ptr_t(t2^.base_register), t1,
-          t2^.il, 0, t2^.bits_known, t2^.bits_trusted);
+          ord(opc$loadl), 0, t2, t2^.base_register, t1, t2^.il, 0,
+          t2^.bits_known, t2^.bits_trusted);
     end;
     t3 := t1;
   end else begin
     t3 := nil;
   end;
   if p2_locals_ptr_t(addr(result))^.c[356] & 128 <> 0 then begin
-    result.base_register := lr_ptr_t(isc_user_routines_31c);
+    result.base_register := isc_solution_ptr_t(isc_user_routines_31c);
   end else begin
-    result.base_register := lr_ptr_t(t3);
+    result.base_register := t3;
   end;
-  result.index_register := lr_ptr_t(isc_user_routines_31c);
+  result.index_register := isc_solution_ptr_t(isc_user_routines_31c);
   result.object_with_name := self.il;
 end;
 
@@ -440,7 +434,7 @@ begin
     t2 := 0;
   end;
   debug_lir_$mfpr_instruction(result.inherited_attributes, ord(opc$mfpr),
-      t2 + t1, subject, isc_solution_ptr_t(subject^.base_register), solution,
+      t2 + t1, subject, subject^.base_register, solution,
       subject^.object_with_name);
 end;
 
@@ -470,7 +464,7 @@ begin
   t1 := create_solution_for_ip_reg;
   debug_lir_$simple_instruction(result.inherited_attributes, ord(opc$sub), 0,
       find_well_known_literal_solution(integer32(result.fields[0])),
-      isc_solution_ptr_t(subject^.base_register), t1);
+      subject^.base_register, t1);
   result.base_register := subject^.base_register;
   result.index_register := subject^.index_register;
   result.false_label := subject^.false_label;
@@ -478,5 +472,5 @@ begin
   result.live_range := subject^.live_range;
   result.live_range_of_imaginary_part := subject^.live_range_of_imaginary_part;
   result.f114.already_through_pass_2 := subject^.f114.already_through_pass_2;
-  result.base_register := lr_ptr_t(t1);
+  result.base_register := t1;
 end;

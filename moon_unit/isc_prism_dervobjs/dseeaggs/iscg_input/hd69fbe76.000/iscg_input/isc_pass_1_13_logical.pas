@@ -148,13 +148,13 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+    solution^.bits_known := bits_known_function(subject.il_kind,
         subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-    solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+    solution^.bits_trusted := bits_trusted_function(subject.il_kind,
         subject.children[1]^.bits_trusted,
         subject.children[2]^.bits_trusted);
     solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -212,13 +212,13 @@ begin
     solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+    solution^.bits_known := bits_known_function(subject.il_kind,
         subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-    solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+    solution^.bits_trusted := bits_trusted_function(subject.il_kind,
         subject.children[1]^.bits_trusted,
         subject.children[2]^.bits_trusted);
     solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1], subject.children[2]));
     t2 := subject.children[1]^.ip_reg_max;
@@ -259,7 +259,7 @@ var
 begin
   result := nil;
   work := nil;
-  if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, isc_tool_generated_readonly_tables.opcode_rr[il$t(subject.il_kind)], 1) or (subject.children[2]^.kind <> 14) then begin
+  if lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, isc_tool_generated_readonly_tables.opcode_rr[subject.il_kind], 1) or (subject.children[2]^.kind <> solution$literal_32_bits) then begin
     if isc_user_routines_354 then begin
       write('Pattern 326 matched the semantics.');
       writeln;
@@ -277,13 +277,13 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
       solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.ip_reg_max;
@@ -327,7 +327,7 @@ begin
   result := nil;
   work := nil;
   t1 := validate_shift_count(subject.children[1]^.f76.bit_position_of_lsb);
-  if not (not lir_$can_encode_as_immediate_operand(lshft(subject.children[2]^.literal_32_bits_value, t1), isc_tool_generated_readonly_tables.opcode_rr[il$t(subject.il_kind)], 1) or (subject.children[1]^.f76.field_precision < subject.inherited_attributes^.required_precision) and ((subject.children[2]^.literal_32_bits_value & ((-1) - (lshft(1, subject.children[1]^.f76.field_precision) - 1)) <> 0) or (subject.il_kind <> 110) and subject.children[1]^.f76.field_requires_sign_extend)) then begin
+  if not (not lir_$can_encode_as_immediate_operand(lshft(subject.children[2]^.literal_32_bits_value, t1), isc_tool_generated_readonly_tables.opcode_rr[subject.il_kind], 1) or (subject.children[1]^.f76.field_precision < subject.inherited_attributes^.required_precision) and ((subject.children[2]^.literal_32_bits_value & ((-1) - (lshft(1, subject.children[1]^.f76.field_precision) - 1)) <> 0) or (subject.il_kind <> il_and_top) and subject.children[1]^.f76.field_requires_sign_extend)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 327 matched the semantics.');
       writeln;
@@ -346,12 +346,12 @@ begin
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
@@ -426,12 +426,12 @@ begin
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.f76.bit_position_of_lsb := subject.children[2]^.f76.bit_position_of_lsb;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       solution^.f76.field_precision := subject.children[2]^.f76.field_precision;
@@ -506,12 +506,12 @@ begin
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.f76.bit_position_of_lsb := subject.children[1]^.f76.bit_position_of_lsb;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       solution^.f76.field_precision := subject.children[1]^.f76.field_precision;
@@ -573,12 +573,12 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay + 2;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t2 := subject.children[1]^.fp_reg_max;
@@ -655,7 +655,7 @@ begin
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := t5 & subject.children[1]^.bits_known;
       solution^.bits_trusted := t6 + t5 & subject.children[1]^.bits_trusted + t4;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t7 := subject.children[1]^.ip_reg_max;
@@ -730,7 +730,7 @@ begin
       solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
       solution^.bits_known := t6 & subject.children[1]^.bits_known;
       solution^.bits_trusted := subject.children[1]^.bits_trusted & t6 + t5;
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t8 := subject.children[1]^.ip_reg_max;
@@ -853,12 +853,12 @@ begin
       solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
       solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
       solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t3 := subject.children[1]^.ip_reg_max;
@@ -922,16 +922,16 @@ begin
     solution^.code_bytes := cost_334_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+    solution^.bits_known := bits_known_function(subject.il_kind,
         subject.children[1]^.bits_known,
-        bits_known_function(il$t(subject.children[2]^.il_kind),
+        bits_known_function(subject.children[2]^.il_kind,
         subject.children[2]^.children[1]^.bits_known, 0));
-    solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+    solution^.bits_trusted := bits_trusted_function(subject.il_kind,
         subject.children[1]^.bits_trusted,
-        bits_trusted_function(il$t(subject.children[2]^.il_kind),
+        bits_trusted_function(subject.children[2]^.il_kind,
         subject.children[2]^.children[1]^.bits_trusted, 0));
     solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.children[1]^.f76.embedded_strength_reduction_temporary;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.ip_reg_max,
         subject.children[2]^.children[1]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1],
@@ -996,16 +996,16 @@ begin
     solution^.code_bytes := cost_335_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes + subject.children[2]^.code_bytes + 4;
     solution^.memory_references := subject.children[1]^.memory_references + subject.children[2]^.memory_references;
     solution^.delay := subject.children[1]^.delay + subject.children[2]^.delay;
-    solution^.bits_known := bits_known_function(il$t(subject.il_kind),
-        bits_known_function(il$t(subject.children[1]^.il_kind),
+    solution^.bits_known := bits_known_function(subject.il_kind,
+        bits_known_function(subject.children[1]^.il_kind,
         subject.children[1]^.children[1]^.bits_known, 0),
         subject.children[2]^.bits_known);
-    solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
-        bits_trusted_function(il$t(subject.children[1]^.il_kind),
+    solution^.bits_trusted := bits_trusted_function(subject.il_kind,
+        bits_trusted_function(subject.children[1]^.il_kind,
         subject.children[1]^.children[1]^.bits_trusted, 0),
         subject.children[2]^.bits_trusted);
     solution^.f76.embedded_strength_reduction_temporary := subject.children[1]^.children[1]^.f76.embedded_strength_reduction_temporary or subject.children[2]^.f76.embedded_strength_reduction_temporary;
-    solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+    solution^.evaluation_order := evaluation_order_function(subject.il_kind,
         subject.children[1]^.children[1]^.ip_reg_max,
         subject.children[2]^.ip_reg_max,
         legal_evaluation_orders(subject.children[1]^.children[1],
@@ -1118,9 +1118,9 @@ begin
       solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
       solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
       solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, 0);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted, 0);
       solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
       solution^.ip_reg_result := 1;
@@ -1170,9 +1170,9 @@ begin
     solution^.code_bytes := cost_337_1[ord(solution^.space136[136])] + subject.children[1]^.code_bytes;
     solution^.memory_references := subject.children[1]^.memory_references;
     solution^.delay := subject.children[1]^.delay;
-    solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+    solution^.bits_known := bits_known_function(subject.il_kind,
         subject.children[1]^.bits_known, 0);
-    solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+    solution^.bits_trusted := bits_trusted_function(subject.il_kind,
         subject.children[1]^.bits_trusted, 0);
     solution^.ip_reg_max := subject.children[1]^.ip_reg_max + 1;
     solution^.ip_reg_result := 1;
@@ -1217,9 +1217,9 @@ begin
       solution^.code_bytes := subject.children[1]^.code_bytes + 4;
       solution^.memory_references := subject.children[1]^.memory_references;
       solution^.delay := subject.children[1]^.delay + 2;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, 0);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted, 0);
       solution^.fp_reg_max := subject.children[1]^.fp_reg_max + 1;
       solution^.fp_reg_result := 1;
@@ -1344,12 +1344,12 @@ begin
       solution^.f76.uses_the_base_register := subject.children[1]^.f76.uses_the_base_register;
       solution^.f76.uses_the_displacement := subject.children[1]^.f76.uses_the_displacement;
       solution^.f76.uses_the_index_register := subject.children[1]^.f76.uses_the_index_register;
-      solution^.bits_known := bits_known_function(il$t(subject.il_kind),
+      solution^.bits_known := bits_known_function(subject.il_kind,
           subject.children[1]^.bits_known, subject.children[2]^.bits_known);
-      solution^.bits_trusted := bits_trusted_function(il$t(subject.il_kind),
+      solution^.bits_trusted := bits_trusted_function(subject.il_kind,
           subject.children[1]^.bits_trusted,
           subject.children[2]^.bits_trusted);
-      solution^.evaluation_order := evaluation_order_function(il$t(subject.il_kind),
+      solution^.evaluation_order := evaluation_order_function(subject.il_kind,
           subject.children[1]^.ip_reg_max, subject.children[2]^.ip_reg_max,
           legal_evaluation_orders(subject.children[1], subject.children[2]));
       t9 := subject.children[1]^.ip_reg_max;

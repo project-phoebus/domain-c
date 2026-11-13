@@ -133,14 +133,14 @@ begin
   while cell <> nil do begin
     s := cell^.sol;
     cost := s^.code_bytes + s^.delay;
-    if s^.kind = ord(solution$literal_32_bits) then begin
+    if s^.kind = solution$literal_32_bits then begin
       if (lit = nil) or (cost < lit_cost)
          or ((cost = lit_cost) and (s^.memory_references < lit^.memory_references)) then begin
         lit := s;
         lit_cost := cost;
       end;
     end
-    else if s^.kind = ord(solution$address_mode) then begin
+    else if s^.kind = solution$address_mode then begin
       if (am = nil) or (cost < am_cost)
          or ((cost = am_cost) and (s^.memory_references < am^.memory_references)) then begin
         am := s;
@@ -199,7 +199,7 @@ begin
     solution_kind_of_cse := 0;
   end
   else
-    solution_kind_of_cse := s^.kind;
+    solution_kind_of_cse := ord(s^.kind);
 end;
 
 { pass_1_cse_parent_ob - pass 1 of a CSE's tree under inh (once: tree
@@ -1084,7 +1084,7 @@ end;
   (+24) nil: bug_check and nil; else movea.l (4). }
 
 function pass_2_cse_parent_base_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param);
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param);
 var
   s: isc_solution_ptr_t;
 begin
@@ -1102,7 +1102,7 @@ end;
   chosen_solution (+24) nil: bug_check and nil; else movea.l (8). }
 
 function pass_2_cse_parent_index_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param);
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param);
 var
   s: isc_solution_ptr_t;
 begin
@@ -1227,10 +1227,10 @@ begin
           writeln;
         end;
         case home^.kind of
-          5: opc := ord(opc$none);
-          8: opc := ord(opc$copys);
-          9: opc := ord(opc$copyd);
-          11: opc := ord(opc$move);
+          solution$address_mode: opc := ord(opc$none);
+          solution$fp_reg: opc := ord(opc$copys);
+          solution$fp_reg_pair: opc := ord(opc$copyd);
+          solution$ip_reg: opc := ord(opc$move);
           otherwise
             bug_check('ISC: pass_2_cse_parent_ob: unknown home_solution^.kind.%$');
         end;
@@ -1253,10 +1253,10 @@ begin
   end
   else if home^.live_range = nil then
     case home^.kind of
-      5: ;
-      8: home^.live_range := lir_$new_live_range_fp_reg;
-      9: home^.live_range := lir_$new_live_range_fp_reg_pair;
-      11: home^.live_range := lir_$new_live_range_ip_reg;
+      solution$address_mode: ;
+      solution$fp_reg: home^.live_range := lir_$new_live_range_fp_reg;
+      solution$fp_reg_pair: home^.live_range := lir_$new_live_range_fp_reg_pair;
+      solution$ip_reg: home^.live_range := lir_$new_live_range_ip_reg;
       otherwise
         bug_check('ISC: pass_2_cse_parent_ob: unknown home_solution^.kind.%$');
     end;
@@ -1268,7 +1268,7 @@ end;
   pass_2_cse_parent_base_reg. }
 
 function pass_2_cse_use_base_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param);
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param);
 var
   s: isc_solution_ptr_t;
 begin
@@ -1289,7 +1289,7 @@ end;
   pass_2_cse_parent_index_reg. }
 
 function pass_2_cse_use_index_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param);
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param);
 var
   s: isc_solution_ptr_t;
 begin
@@ -1424,10 +1424,10 @@ begin
           writeln;
         end;
         case home^.kind of
-          5: opc := ord(opc$none);
-          8: opc := ord(opc$copys);
-          9: opc := ord(opc$copyd);
-          11: opc := ord(opc$move);
+          solution$address_mode: opc := ord(opc$none);
+          solution$fp_reg: opc := ord(opc$copys);
+          solution$fp_reg_pair: opc := ord(opc$copyd);
+          solution$ip_reg: opc := ord(opc$move);
           otherwise
             bug_check('ISC: pass_2_cse_use_ob: unknown home_solution^.kind.%$');
         end;
@@ -1450,10 +1450,10 @@ begin
   end
   else if home^.live_range = nil then
     case home^.kind of
-      5: ;
-      8: home^.live_range := lir_$new_live_range_fp_reg;
-      9: home^.live_range := lir_$new_live_range_fp_reg_pair;
-      11: home^.live_range := lir_$new_live_range_ip_reg;
+      solution$address_mode: ;
+      solution$fp_reg: home^.live_range := lir_$new_live_range_fp_reg;
+      solution$fp_reg_pair: home^.live_range := lir_$new_live_range_fp_reg_pair;
+      solution$ip_reg: home^.live_range := lir_$new_live_range_ip_reg;
       otherwise
         bug_check('ISC: pass_2_cse_use_ob: unknown home_solution^.kind.%$');
     end;

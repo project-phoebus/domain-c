@@ -636,12 +636,12 @@ function pass_1_cse_use_uses_index_reg(
 { PASS_2_CSE_PARENT_BASE_REG - 0x0BC3CA: the base_register of the solution
   chosen for the CSE whose parent is node. }
 function pass_2_cse_parent_base_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param); extern;
 
 { PASS_2_CSE_PARENT_INDEX_REG - 0x0BC45C: the index_register of the solution
   chosen for the CSE whose parent is node. }
 function pass_2_cse_parent_index_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param); extern;
 
 { PASS_2_CSE_PARENT_OBJ_W_NAME - 0x0BC4F0: the object_with_name of the solution
   chosen for the CSE whose parent is node. }
@@ -661,12 +661,12 @@ function pass_2_cse_parent_live_range(
 { PASS_2_CSE_USE_BASE_REG - 0x0BCAFE: the base_register of the solution chosen
   for the CSE of node (a use, or its parent). }
 function pass_2_cse_use_base_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param); extern;
 
 { PASS_2_CSE_USE_INDEX_REG - 0x0BCBA6: the index_register of the solution
   chosen for the CSE of node (a use, or its parent). }
 function pass_2_cse_use_index_reg(
-    node: isc_node_ptr_t): lr_ptr_t; options(val_param); extern;
+    node: isc_node_ptr_t): isc_solution_ptr_t; options(val_param); extern;
 
 { PASS_2_CSE_USE_OBJ_W_NAME - 0x0BCC4E: the object_with_name of the solution
   chosen for the CSE of node (a use, or its parent). }

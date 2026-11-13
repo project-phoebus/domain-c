@@ -63,18 +63,22 @@ type
     fields carry the image's names (dump_solution prints each attribute
     after its name, docs/questions.md 267; the generator's attribute
     declarations, rules/declarations.isc, use the same names); those
-    named by offset are fields dump_solution does not print. }
+    named by offset are fields dump_solution does not print.  The
+    types are the ones dump_solution prints by (docs/questions.md 312):
+    base_register and index_register solutions, false_label a label
+    (label_to_string's; the LIR's labels are univ_ptr), il_kind an il$t
+    and kind a solution$t. }
   isc_solution_ptr_t = ^isc_solution_t;
   isc_solution_t = record
     object_with_name: univ_ptr;         { +0: the object (node) }
-    base_register: lr_ptr_t;            { +4: new_solution sets it and
+    base_register: isc_solution_ptr_t;  { +4: new_solution sets it and
                                           index_register to
-                                          isc_user_routines_31c (a
-                                          solution: docs/questions.md
-                                          262) }
-    index_register: lr_ptr_t;           { +8 }
+                                          isc_user_routines_31c (every
+                                          writer stores a solution:
+                                          docs/questions.md 262) }
+    index_register: isc_solution_ptr_t; { +8 }
     l12: integer32;                     { +12 }
-    false_label: integer32;             { +16 }
+    false_label: univ_ptr;              { +16: a LIR label }
     live_range: lr_ptr_t;               { +20 }
     live_range_of_imaginary_part: lr_ptr_t;     { +24 }
     advancing_displacement: integer32;  { +28 }
@@ -144,12 +148,11 @@ type
     evaluation_order: integer;          { +96: 1 the children left to
                                           right, 2 right to left
                                           (pass_2); 1 when made }
-    il_kind: integer;                   { +98: il$t's ordinal
-                                          (new_solution's last
-                                          argument) }
+    il_kind: il$t;                      { +98: new_solution's last
+                                          argument }
     il: univ_ptr;                       { +100 }
     inherited_attributes: inherited_attributes_ptr_t;   { +104 }
-    kind: integer;                      { +108: solution$t's ordinal }
+    kind: solution$t;                   { +108 }
     memory_references: 0..65535;        { +110 (compared `bcc') }
     which_transform: integer;           { +112: the pattern's number
                                           (pass_2 calls the pass-2

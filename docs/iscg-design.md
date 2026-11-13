@@ -740,10 +740,10 @@ modules, isc_pass_1_main's operator routines.
 | isc_pass_2_main | 1 | errors=0; sim 0.00 (see below) | 2252 bytes, 563 relocations: no difference |
 | isc_vars | 0 | errors=0 (nothing to compare) | both sections, 6384 bytes: no difference |
 
-- pattern_matcher is `case solution$t(solution^.kind) of` with every
+- pattern_matcher is `case solution^.kind of` with every
   kind 1..23 a label (the kinds without chain rules share one empty
   arm: the image's in-range kinds without tries go to the case's end,
-  only 0 and 24 to the error) and `case il$t(solution^.il_kind) of` with a
+  only 0 and 24 to the error) and `case solution^.il_kind of` with a
   label per operator some pattern names (unlabelled ones go to the
   otherwise, as in the image).  A try is one `if` per test, nested, in
   pattern order: the image leaves at the first failing test, a child is
