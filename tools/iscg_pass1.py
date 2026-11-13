@@ -1213,6 +1213,31 @@ def kind_names(text, value=False):
 
 _IL_KIND_NAMES = None
 
+# a node's register class (+24), tree operator (+36) or assignment operator
+# (+76) by name (iscg_p2lang.il_names: il.ins.pas's rlen_ constants,
+# il_$top_t, il_$aop_t), in relations and as a stored value
+_WORD_REL = re.compile(r'(\b(?:il|n\d+)(?:\.[plwb]\d+)*\.(w24|w36|w76)) (=|<>|<|>|<=|>=) (\d+)\b')
+
+
+def word_name(word, v):
+    import iscg_p2lang
+    what = iscg_p2lang.NAMED_WORDS[word]
+    for n, (w, x) in iscg_p2lang.il_names().items():
+        if w == what and x == int(v):
+            return n
+    return v
+
+
+def word_names(text, path=None):
+    """The relations of text with a named word by name; or text, a stored
+    value, by name when path (the store's destination) is such a word."""
+    if path is not None:
+        m = re.search(r'\.(w24|w36|w76)$', path)
+        if m and re.match(r'\d+$', text):
+            return word_name(m.group(1), text)
+        return text
+    return _WORD_REL.sub(lambda m: '%s %s %s' % (m.group(1), m.group(3), word_name(m.group(2), m.group(4))), text)
+
 
 def format_body(L, body, ind, unions, kinds, op_name):
     for b in body:
@@ -1225,11 +1250,11 @@ def format_body(L, body, ind, unions, kinds, op_name):
         elif b[0] == 'made':
             L.append('%ssolutions_made;' % ind)
         elif b[0] == 'nstore':
-            L.append('%s%s <- %s;' % (ind, b[1], kind_names(b[2], b[1].endswith('.w2'))))
+            L.append('%s%s <- %s;' % (ind, b[1], word_names(kind_names(b[2], b[1].endswith('.w2')), b[1])))
         elif b[0] == 'solution':
             L.append('%schild %d %s solution %s;' % (ind, b[1], b[2], kinds[b[3]]))
         elif b[0] == 'if':
-            L.append('%sif %s;' % (ind, kind_names(b[1])))
+            L.append('%sif %s;' % (ind, word_names(kind_names(b[1]))))
             format_body(L, b[2], ind + '  ', unions, kinds, op_name)
             if b[3]:
                 L.append('%selse;' % ind)
@@ -1242,7 +1267,7 @@ def format_body(L, body, ind, unions, kinds, op_name):
             for a, v in stmts:
                 if a == 'parent_il_kind':
                     v = op_name(int(v) & 255)
-                L.append('%s  %s <- %s;' % (ind, a, v))
+                L.append('%s  %s <- %s;' % (ind, a, word_names(v)))
             L.append('%s  permissible %s;' % (ind, mask_text(mask, kpos, unions, kinds)))
 
 
@@ -1373,7 +1398,7 @@ OPERATORS_COMMENT = [
     "  il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN, nK.bN.B",
     "  and nK.index (the statement index, 16 bits at bit 8 of +42); the",
     "  attributes' values may be rlen_arith(X), rlen_bits(X) (isc_readonly_",
-    "  tables by rlen) and a compare (il.w36 = 59). }",
+    "  tables by rlen) and a compare (il.w36 = signed_div_top). }",
 ]
 
 TABLES = [  # (prefix, enumeration, A5 offset, entries)
@@ -1495,6 +1520,10 @@ def node_ref(path):
             e = '%s.x%s[%d]' % (base, m.group(1), off // 4)
         elif m.group(1) == 'w' and off == 2:
             e = '%s.kind' % base
+        elif m.group(1) == 'w' and off == 36:
+            e = '%s.tr_op' % base       # il_$top_t
+        elif m.group(1) == 'w' and off == 76:
+            e = '%s.as_op' % base       # il_$aop_t
         elif m.group(1) == 'w':
             e = '%s.xw[%d]' % (base, off // 2)
         else:

@@ -66,7 +66,7 @@ type
   ra_rtn_ptr_t = ^ra_rtn_t;
 
 var
-  desc: add_node_$desc_t := [size := 4, rlen := 5, w6 := 0, w8 := 0,
+  desc: add_node_$desc_t := [size := 4, rlen := rlen_addr, w6 := 0, w8 := 0,
                              flags := [b7 := false, signed := false,
                                        b5 := false, b4 := false,
                                        b3 := false, b2 := false,
@@ -220,7 +220,7 @@ begin
   s^.acts[1].node := nil;
   s^.acts[1].reg := 31;
   s^.acts[1].reg2 := 31;
-  s^.acts[1].rlen := 0;
+  s^.acts[1].rlen := rlen_null;
   s^.acts[1].action := 0;
   for k := 2 to n do
     s^.acts[k] := s^.acts[1];

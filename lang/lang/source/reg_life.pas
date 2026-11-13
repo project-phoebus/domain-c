@@ -433,7 +433,7 @@ begin
   r^.reg := 31;
   r^.w24 := 31;
   r^.prefer := [];
-  r^.rlen := 0;
+  r^.rlen := rlen_null;
   r^.uses := 0;
   r^.defs := 0;
   r^.cost := 0;
@@ -574,15 +574,15 @@ begin
   p := g_opt_cse_ptr_t(opt_4009c[s]^.cses);
   while p <> nil do begin
     t := g_opt_tree_ptr_t(p^.p_tree);
-    skip := t^.flags * [1..4] <> [];
+    skip := t^.flags * [phase_vol..phase_devwt] <> [];
     if not skip then
       skip := t^.kind = cmp_tree_node;
     if not skip then
       if t^.kind = tree_node then
-        if (t^.rlen = 6) or (t^.rlen = 7) or (t^.rlen = 12) or (t^.rlen = 8) then
+        if (t^.rlen = rlen_r4) or (t^.rlen = rlen_r8) or (t^.rlen = rlen_c16) or (t^.rlen = rlen_c8) then
           skip := cargs_$options.cpu * [2, 4, 8..10] = [];
     if not skip then
-      skip := (t^.rlen >= 8) or (t^.rlen = 12);
+      skip := (t^.rlen >= rlen_c8) or (t^.rlen = rlen_c16);
     if not skip then
       if t^.uses = 2 then begin
         if t^.op = func_call_top then
@@ -825,7 +825,7 @@ begin
   if t^.kind = var_name then begin
     vn := t^.xw[37];
     if t^.xw[36] = 5 then
-      rr^.rlen := 5
+      rr^.rlen := rlen_addr
     else
       rr^.rlen := get_rlen(opt_var_types^[vn]);
   end
@@ -833,7 +833,7 @@ begin
     vn := t^.xw[8];
     if (rshft(ord(t^.xc[11]) & 16#F0, 4) = 5) or
        ((rshft(ord(t^.xc[44]) & 16#F0, 4) = 3) and (t^.xl[8] <> 0)) then
-      rr^.rlen := 5
+      rr^.rlen := rlen_addr
     else
       rr^.rlen := runbackend_18[ord(t^.xc[10]) & 15];
   end;
@@ -1063,18 +1063,18 @@ begin
   init_graph(rr);
   rr^.node := t;
   if rr^.node^.kind = real_ob then
-    rr^.rlen := 6
+    rr^.rlen := rlen_r4
   else if rr^.node^.kind = dpreal_ob then
-    rr^.rlen := 7
+    rr^.rlen := rlen_r8
   else if (rr^.node^.kind = reloc_absolute_addr_con)
       or (rr^.node^.kind = addr_con) then
-    rr^.rlen := 5
+    rr^.rlen := rlen_addr
   else if rr^.node^.kind = disp_node then begin
     x := rr^.node^.xp[7];
     if x^.kind = fortran_symbol then
       rr^.rlen := runbackend_18[ord(x^.xc[10]) & 15]
     else
-      rr^.rlen := 5;
+      rr^.rlen := rlen_addr;
   end
   else if rr^.node^.kind = ptr_node then begin
     x := rr^.node^.xp[7];
@@ -1083,7 +1083,7 @@ begin
     else if x^.kind = common_block_name then
       rr^.rlen := runbackend_18[ord(x^.xp[3]^.xc[10]) & 15]
     else
-      rr^.rlen := 5;
+      rr^.rlen := rlen_addr;
   end
   else if rr^.node^.kind = var_name then begin
     type_exp(rr^.node^.xp[7], addr(te));
@@ -1092,7 +1092,7 @@ begin
   else if rr^.node^.kind = fortran_symbol then
     rr^.rlen := runbackend_18[ord(rr^.node^.xc[10]) & 15]
   else
-    rr^.rlen := 5;
+    rr^.rlen := rlen_addr;
   rr^.first := s;
   add_block(rr, opt_4009c[s]^.block^.num);
   from := s * 2;

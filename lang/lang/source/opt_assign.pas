@@ -400,7 +400,7 @@ var
     if lhs^.kind = var_name then
       if (lhs^.xl[8] & 16#200000) <> 0 then
         return;
-    if (getphase(t^.asg_rhs) + getphase(t^.asg_lhs)) * [1, 2] <> [] then
+    if (getphase(t^.asg_rhs) + getphase(t^.asg_lhs)) * [phase_vol, phase_volexpr] <> [] then
       return;
     if rshft(ord(il_180^.xc[377]) & 16#70, 4) = 2 then
       if (t^.asg_rhs^.kind = cs_node)
@@ -415,7 +415,7 @@ var
       if not var_is_ok(lhs) then
         return;
     if t^.asg_op = scalar_aop then
-      if target_properties.p_84 or (t^.asg_rlen <> 1) then begin
+      if target_properties.p_84 or (t^.asg_rlen <> rlen_byte) then begin
         ok_node := true;
         return;
       end;
@@ -626,7 +626,7 @@ begin
   goto 20;
 30:
   if n > 1 then begin
-    isnum := cur^.asg_rlen in [2, 4..8];
+    isnum := cur^.asg_rlen in [rlen_word, rlen_long..rlen_c8];
     if src = nil then begin
       p := cur;
       buflen := 0;
@@ -646,9 +646,9 @@ begin
           char_ob, llogical_ob, slogical_ob, blogical_ob, ulinteger_ob,
               uinteger_ob, usinteger_ob, ubinteger_ob, linteger_ob,
               sinteger_ob, binteger_ob, integer_ob:
-            if p^.asg_rlen = 1 then
+            if p^.asg_rlen = rlen_byte then
               cpbyte(x^.xc[11])
-            else if p^.asg_rlen = 2 then
+            else if p^.asg_rlen = rlen_word then
               cpword(x^.xw[5])
             else
               cplong(x^.int_value);
@@ -689,14 +689,14 @@ begin
     end;
     cur^.asg_size := size;
     if not isnum then
-      cur^.asg_rlen := 11
+      cur^.asg_rlen := rlen_agg
     else if size = 4 then
-      cur^.asg_rlen := 4
+      cur^.asg_rlen := rlen_long
     else if size = 2 then
-      cur^.asg_rlen := 2
+      cur^.asg_rlen := rlen_word
     else
-      cur^.asg_rlen := 11;
-    if cur^.asg_rlen = 11 then begin
+      cur^.asg_rlen := rlen_agg;
+    if cur^.asg_rlen = rlen_agg then begin
       cur^.asg_op := agg_aop;
       cur^.asg_flags.chars := not isnum;
     end;

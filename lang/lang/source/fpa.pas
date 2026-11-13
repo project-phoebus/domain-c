@@ -1277,7 +1277,7 @@ begin
       else
         push_fpa_opr(t^.opnd[3 - k], 1, t^.desc.rlen, 31);
   end;
-  if (t^.op = f_math_top) and (t^.desc.w6 = 11) and (t^.desc.rlen <= 4) then begin
+  if (t^.op = f_math_top) and (t^.desc.w6 = 11) and (t^.desc.rlen <= rlen_long) then begin
     emit_jsr(o, t^.desc.w8, 0);
     address_reg(16, r);
     emit_extend(t^.desc.rlen, r, r, t^.desc.w8);

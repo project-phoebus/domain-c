@@ -2687,7 +2687,7 @@ begin
     isc_$get_memory_home := lr^.memory_home;
   end
   else if ((s^.kind = var_name) or (s^.kind = fortran_symbol)) and (bits >= 32)
-          and not (20 in getphase(s)) then
+          and not (phase_proc_reg in getphase(s)) then
     isc_$get_memory_home := s
   else
     isc_$get_memory_home := nil;
@@ -4366,25 +4366,25 @@ end;
 function phase_set_to_string;
 begin
   write('( ');
-  if 0 in p then write('atomic_address ');
-  if 1 in p then write('voladdr ');
-  if 2 in p then write('volexpr ');
-  if 3 in p then write('devread ');
-  if 4 in p then write('devwrite ');
-  if 5 in p then write('visited ');
-  if 6 in p then write('iscse ');
-  if 7 in p then write('align_arg_list ');
-  if 8 in p then write('indexlong ');
-  if 9 in p then write('delayed ');
-  if 10 in p then write('wasbound ');
-  if 11 in p then write('was_walked ');
-  if 12 in p then write('sideeffects ');
-  if 13 in p then write('targetright ');
-  if 14 in p then write('targetleft ');
-  if 15 in p then write('invariant ');
-  if 19 in p then write('physical_address ');
-  if 20 in p then write('processor_reg_address ');
-  if 22 in p then write('local_cse ');
+  if phase_atm in p then write('atomic_address ');
+  if phase_vol in p then write('voladdr ');
+  if phase_volexpr in p then write('volexpr ');
+  if phase_devrd in p then write('devread ');
+  if phase_devwt in p then write('devwrite ');
+  if phase_vis in p then write('visited ');
+  if phase_cse in p then write('iscse ');
+  if phase_algn_arg_lst in p then write('align_arg_list ');
+  if phase_indx_lng in p then write('indexlong ');
+  if phase_dly in p then write('delayed ');
+  if phase_bnd in p then write('wasbound ');
+  if phase_wlkd in p then write('was_walked ');
+  if phase_sd_eff in p then write('sideeffects ');
+  if phase_tgt_rt in p then write('targetright ');
+  if phase_tgt_lft in p then write('targetleft ');
+  if phase_invar in p then write('invariant ');
+  if phase_phys in p then write('physical_address ');
+  if phase_proc_reg in p then write('processor_reg_address ');
+  if phase_lcl_cse in p then write('local_cse ');
   write(')');
   phase_set_to_string := ' ';
 end;

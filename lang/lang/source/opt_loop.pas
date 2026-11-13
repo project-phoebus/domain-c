@@ -231,7 +231,7 @@ begin
                               dindex_node..disp_node, cs_node, cc_call,
                               pf_call, cse_use_ob, sym_disp_node]) then
             next;
-          while 6 in t^.flags do
+          while phase_cse in t^.flags do
             t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[t^.stmt]);
           case t^.kind of
             cmp_tree_node, tree_node:
@@ -273,7 +273,7 @@ begin
                     next;
                   if u^.uses = 0 then
                     next;
-                  while 6 in u^.flags do
+                  while phase_cse in u^.flags do
                     u := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[u^.stmt]);
                   if not (u^.kind in [tree_node, cmp_tree_node,
                                       dindex_node..disp_node,
@@ -313,7 +313,7 @@ begin
                             if t^.opnd[k] <> u^.opnd[k] then
                               same := false;
                           if same then begin
-                            u^.flags := u^.flags + [6];
+                            u^.flags := u^.flags + [phase_cse];
                             u^.stmt := t^.stmt;
                             t^.uses := t^.uses + u^.uses;
                             for k := 1 to u^.count do
@@ -324,7 +324,7 @@ begin
                       if il_$node_ptr_t(t)^.xl[8] = il_$node_ptr_t(u)^.xl[8] then
                         if il_$node_ptr_t(t)^.xp[7] = il_$node_ptr_t(u)^.xp[7] then
                           if il_$node_ptr_t(t)^.xp[6] = il_$node_ptr_t(u)^.xp[6] then begin
-                            u^.flags := u^.flags + [6];
+                            u^.flags := u^.flags + [phase_cse];
                             u^.stmt := t^.stmt;
                             t^.uses := t^.uses + u^.uses;
                           end;
@@ -332,7 +332,7 @@ begin
                       if il_$node_ptr_t(t)^.xp[8] = il_$node_ptr_t(u)^.xp[8] then
                         if il_$node_ptr_t(t)^.xp[7] = il_$node_ptr_t(u)^.xp[7] then
                           if il_$node_ptr_t(t)^.xp[6] = il_$node_ptr_t(u)^.xp[6] then begin
-                            u^.flags := u^.flags + [6];
+                            u^.flags := u^.flags + [phase_cse];
                             u^.stmt := t^.stmt;
                             t^.uses := t^.uses + u^.uses;
                           end;
@@ -341,7 +341,7 @@ begin
                         if il_$node_ptr_t(t)^.xp[6] = il_$node_ptr_t(u)^.xp[6] then
                           if not target_properties.p_7f or
                              (il_$node_ptr_t(t)^.xc[22] = il_$node_ptr_t(u)^.xc[22]) then begin
-                            u^.flags := u^.flags + [6];
+                            u^.flags := u^.flags + [phase_cse];
                             u^.stmt := t^.stmt;
                             t^.uses := t^.uses + u^.uses;
                           end;
@@ -353,7 +353,7 @@ begin
                               if il_$node_ptr_t(t)^.xw[20] = il_$node_ptr_t(u)^.xw[20] then
                                 if not target_properties.p_7f or
                                    (il_$node_ptr_t(t)^.xc[22] = il_$node_ptr_t(u)^.xc[22]) then begin
-                                  u^.flags := u^.flags + [6];
+                                  u^.flags := u^.flags + [phase_cse];
                                   u^.stmt := t^.stmt;
                                   t^.uses := t^.uses + u^.uses;
                                 end;
@@ -568,7 +568,7 @@ begin
   if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then
-    if 12 in g_opt_tree_ptr_t(n)^.flags then
+    if phase_sd_eff in g_opt_tree_ptr_t(n)^.flags then
       return;
   if n^.kind = tree_node then begin
     if opt_loop_hoist^[g_opt_tree_ptr_t(n)^.stmt] = 0 then
@@ -629,7 +629,7 @@ begin
   if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then
-    if 12 in g_opt_tree_ptr_t(n)^.flags then
+    if phase_sd_eff in g_opt_tree_ptr_t(n)^.flags then
       return;
   if (n^.kind = ptr_node) or (n^.kind = sym_disp_node)
       or (n^.kind = disp_node) then
@@ -663,7 +663,7 @@ begin
     if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      g_opt_tree_ptr_t(n)^.flags := g_opt_tree_ptr_t(n)^.flags + [15];
+      g_opt_tree_ptr_t(n)^.flags := g_opt_tree_ptr_t(n)^.flags + [phase_invar];
   if m^.eval_count >= 10 then
     return;
   m^.eval_count := m^.eval_count + 1;
@@ -729,7 +729,7 @@ begin
                  sym_disp_node] then begin
     if g_opt_tree_ptr_t(t)^.stmt = 0 then
       return;
-    if 15 in g_opt_tree_ptr_t(t)^.flags then
+    if phase_invar in g_opt_tree_ptr_t(t)^.flags then
       return;
     if t^.kind = tree_node then
       if opt_4009c[cur_r] <> g_opt_tree_ptr_t(t)^.owner then
@@ -741,7 +741,7 @@ begin
     if not ((t^.kind = sym_disp_node) or (t^.kind = disp_node)
             or (t^.kind = ptr_node) or
             (t^.kind = dindex_node)) then
-      g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags + [15];
+      g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags + [phase_invar];
     if t^.kind = tree_node then
       if opt_loop_hoist^[g_opt_tree_ptr_t(t)^.stmt] = 0 then
         if g_opt_tree_ptr_t(t)^.uses > 1 then begin
@@ -749,7 +749,7 @@ begin
           if hb^.depth = 0 then
             return;
           if hb^.serial <> g_opt_blocks_ptr_t(il_11c)^[preh^.num + 1]^.serial then begin
-            g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags - [15];
+            g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags - [phase_invar];
             return;
           end;
         end;
@@ -844,7 +844,7 @@ begin
         end;
 
         { Not to be hoisted: a constant reference. }
-        if (g_opt_tree_ptr_t(t)^.flags * [2, 3, 4, 12]) <> [] then
+        if (g_opt_tree_ptr_t(t)^.flags * [phase_volexpr, phase_devrd, phase_devwt, phase_sd_eff]) <> [] then
           return;
         if (lang <> 2) or ((ord(il_180^.xc[376]) & 16#08) <> 0) or
            preh^.first_stmt^.hdr.b3 or (hh <> 0) then begin
@@ -1230,8 +1230,8 @@ var
             if g_opt_tree_ptr_t(t)^.op = f_math_top then
               if 4 in cargs_$options.cpu then
                 if cargs_$options.cpu * [5, 9] = [] then
-                  if (g_opt_tree_ptr_t(t)^.rlen = 7) or
-                     (g_opt_tree_ptr_t(t)^.rlen = 6) then
+                  if (g_opt_tree_ptr_t(t)^.rlen = rlen_r8) or
+                     (g_opt_tree_ptr_t(t)^.rlen = rlen_r4) then
                     if g_opt_tree_ptr_t(t)^.w26 = 4 then begin
                       walkt(rlcontk(0.5));
                       walkt(rlcontk(1.0));

@@ -199,7 +199,7 @@ var
   excluded: g_opt_varset_t;             { +32 }
   others: g_opt_varset_t;               { +64 }
   ivset: g_opt_varset_t;                { +96 }
-  auto_desc: add_node_$desc_t := [size := 4, rlen := 5];
+  auto_desc: add_node_$desc_t := [size := 4, rlen := rlen_addr];
                                         { +128: autoinc's descriptor of
                                           the addresses it forms (.rwdi:
                                           size 4, rlen 5) }
@@ -548,11 +548,11 @@ begin
     d.w8 := class_size[rlen_b];
     d.size := class_size[rlen];
     d.flags.signed := sgn;
-    if rlen = 4 then
+    if rlen = rlen_long then
       if not ((b^.kind = sinteger_ob) or (b^.kind = binteger_ob)
               or (b^.kind = integer_ob)) or
          (a^.kind <> var_name) or (a^.xw[37] <> 0) or (d.w6 <> 2) or
-         (d.w8 <> 2) or (d.rlen <> 4) then begin
+         (d.w8 <> 2) or (d.rlen <> rlen_long) then begin
         d.w6 := 4;
         d.w8 := 4;
       end
@@ -563,7 +563,7 @@ begin
           d.w8 := 4;
         end;
       end;
-    if d.rlen = 2 then begin
+    if d.rlen = rlen_word then begin
       d.w6 := 2;
       d.w8 := 2;
     end;
@@ -1083,7 +1083,7 @@ begin
         return;
       end;
       if x^.op <> addr_top then
-        if x^.flags * [0..4, 12, 16, 19] <> [] then begin
+        if x^.flags * [phase_atm..phase_devwt, phase_sd_eff, phase_voldecl, phase_phys] <> [] then begin
           opt_str_$trees_equivalent := false;
           return;
         end;
@@ -1565,14 +1565,14 @@ begin
                             nil));
       opt_str_$add_substitution_point(old, s^.asg_rhs);
     end;
-  if (s^.asg_rlen = 5) or (s^.asg_rlen = 4) then begin
+  if (s^.asg_rlen = rlen_addr) or (s^.asg_rlen = rlen_long) then begin
     r := g_opt_tree_ptr_t(s^.asg_rhs);
     if r^.kind = tree_node then
-      if r^.rlen = 2 then
+      if r^.rlen = rlen_word then
         if r^.op = mul_top then
-          r^.rlen := 4;
+          r^.rlen := rlen_long;
   end;
-  if s^.asg_rlen = 5 then
+  if s^.asg_rlen = rlen_addr then
     if s^.asg_lhs^.kind = var_name then
       if s^.asg_lhs^.xl[9] = 16 then
         s^.asg_lhs^.xl[9] := 32;
@@ -1968,7 +1968,7 @@ var
   x: g_opt_tree_ptr_t;
   k: integer;
 begin
-  auto_desc.rlen := 5;
+  auto_desc.rlen := rlen_addr;
   auto_desc.w6 := 0;
   auto_desc.w8 := 0;
   auto_desc.size := 4;
@@ -1989,8 +1989,8 @@ begin
                                dindex_node..disp_node, cs_node, cc_call,
                                pf_call, cse_use_ob,
                                sym_disp_node] then
-                  if 6 in g_opt_tree_ptr_t(t)^.flags then
-                    while 6 in g_opt_tree_ptr_t(t)^.flags do
+                  if phase_cse in g_opt_tree_ptr_t(t)^.flags then
+                    while phase_cse in g_opt_tree_ptr_t(t)^.flags do
                       t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
                 if not ((t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                                      dindex_node..disp_node, cs_node, cc_call,
@@ -2358,13 +2358,13 @@ begin
     n^.line := spos_$null_position;
   end;
   n^.asg_desc := d;
-  if n^.asg_rlen = 2 then
+  if n^.asg_rlen = rlen_word then
     n^.asg_size := 2
-  else if n^.asg_rlen = 4 then
+  else if n^.asg_rlen = rlen_long then
     n^.asg_size := 4;
   if temp^.kind = var_name then
     if temp^.xp[7] = il_$node_ptr_t(runbackend_10) then
-      if (d.w6 = 2) and (d.rlen = 4) then
+      if (d.w6 = 2) and (d.rlen = rlen_long) then
         temp^.xp[7] := il_$node_ptr_t(runbackend_0c);
   n^.asg_w54 := 0;
   n^.asg_w56 := 0;
@@ -3060,7 +3060,7 @@ begin
     if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if 20 in t^.flags then
+      if phase_proc_reg in t^.flags then
         ok := false;
     if ok then
       if t^.kind = tree_node then begin
@@ -3278,7 +3278,7 @@ begin
             x := g_opt_tree_ptr_t(t^.opnd[k]);
             if x^.kind = tree_node then
               if (x^.op = mul_top) or (x^.op = f_mul_top) or (x^.op = lshf_top) then
-                if 6 in t^.flags then begin
+                if phase_cse in t^.flags then begin
                   t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[t^.stmt]);
                   goto 10;
                 end
@@ -3286,7 +3286,7 @@ begin
                   newexpr(il_$node_ptr_t(t));
           end;
         dindex_node: begin
-          while 6 in t^.flags do
+          while phase_cse in t^.flags do
             t := g_opt_tree_ptr_t(g_opt_nodes_ptr_t(il_120)^[t^.stmt]);
           x := g_opt_tree_ptr_t(il_$node_ptr_t(t)^.xp[9]);
           if x^.kind = tree_node then
@@ -3514,14 +3514,14 @@ procedure minimally_size_sr_temp(
     rlen: integer;
     v: il_$node_ptr_t); options(val_param); internal;
 begin
-  if (rlen = 4) and (v^.xp[7] = il_$node_ptr_t(runbackend_10)) then
+  if (rlen = rlen_long) and (v^.xp[7] = il_$node_ptr_t(runbackend_10)) then
     v^.xp[7] := il_$node_ptr_t(runbackend_0c)
-  else if (rlen = 2) and (v^.xp[7] = il_$node_ptr_t(runbackend_0c)) then
+  else if (rlen = rlen_word) and (v^.xp[7] = il_$node_ptr_t(runbackend_0c)) then
     v^.xp[7] := il_$node_ptr_t(runbackend_10)
-  else if (rlen = 4) and
+  else if (rlen = rlen_long) and
           (v^.xp[7]^.xp[7] = il_$node_ptr_t(runbackend_10)) then
     v^.xp[7] := il_$node_ptr_t(runbackend_0c)
-  else if (rlen = 2) and
+  else if (rlen = rlen_word) and
           (v^.xp[7]^.xp[7] = il_$node_ptr_t(runbackend_0c)) then
     v^.xp[7] := il_$node_ptr_t(runbackend_10);
   if (v^.xp[7] = il_$node_ptr_t(runbackend_10)) or
@@ -3603,7 +3603,7 @@ begin
                     if n <= 0 then
                       goto 90;
                     temp := create_sr_temp_var(nil, h);
-                    if x^.rlen = 4 then
+                    if x^.rlen = rlen_long then
                       temp^.xc[10] := chr(ord(temp^.xc[10]) & 16#F0 ! 3);
                     rg := x^.owner^.hdr.region;
                     sr_temp_ptr_t(temp^.xp2[11])^.tree := x;
@@ -3628,8 +3628,8 @@ begin
                                   char16_ob, binteger_ob]) and
                                   ((s^.asg_rhs^.int_value > 32767) or
                                    (s^.asg_rhs^.int_value < -32768))) or
-                                 (x^.rlen = 4) then begin
-                                s^.asg_rlen := 4;
+                                 (x^.rlen = rlen_long) then begin
+                                s^.asg_rlen := rlen_long;
                                 s^.asg_lhs^.xc[10] :=
                                   chr(ord(s^.asg_lhs^.xc[10]) & 16#F0 ! 3);
                               end;
@@ -3651,8 +3651,8 @@ begin
                                   char16_ob, binteger_ob]) and
                                   ((s^.asg_rhs^.int_value > 32767) or
                                    (s^.asg_rhs^.int_value < -32768))) or
-                                 (x^.rlen = 4) then begin
-                                s^.asg_rlen := 4;
+                                 (x^.rlen = rlen_long) then begin
+                                s^.asg_rlen := rlen_long;
                                 s^.asg_lhs^.xc[10] :=
                                   chr(ord(s^.asg_lhs^.xc[10]) & 16#F0 ! 3);
                               end;
@@ -3664,13 +3664,13 @@ begin
                     il_utils_$do_substitution(il_$node_ptr_t(x), x^.opnd[1],
                       g_opt_tree_ptr_t(x^.opnd[1])^.opnd[2]);
                     x^.op := add_top;
-                    if x^.rlen = 4 then begin
+                    if x^.rlen = rlen_long then begin
                       w := x^.opnd[1];
                       if w^.kind = fortran_symbol then
                         if ((ord(w^.xc[10]) & 15) = 2) or
                            ((ord(w^.xc[10]) & 15) = 1) then begin
                           ops[1] := w;
-                          dd.rlen := 4;
+                          dd.rlen := rlen_long;
                           if (ord(w^.xc[10]) & 15) = 1 then
                             dd.w6 := 1
                           else
@@ -3681,13 +3681,13 @@ begin
                           opt_str_$add_substitution_point(ops[1], x^.opnd[1]);
                         end;
                     end;
-                    if x^.rlen = 4 then begin
+                    if x^.rlen = rlen_long then begin
                       w := x^.opnd[2];
                       if w^.kind = fortran_symbol then
                         if ((ord(w^.xc[10]) & 15) = 2) or
                            ((ord(w^.xc[10]) & 15) = 1) then begin
                           ops[1] := w;
-                          dd.rlen := 4;
+                          dd.rlen := rlen_long;
                           if (ord(w^.xc[10]) & 15) = 1 then
                             dd.w6 := 1
                           else
@@ -3763,7 +3763,7 @@ begin
                         if iv^.kind = fortran_symbol then begin
                           n := iv^.xw[8];
                           temp := create_sr_temp_var(nil, h);
-                          if x^.rlen = 4 then
+                          if x^.rlen = rlen_long then
                             temp^.xc[10] := chr(ord(temp^.xc[10]) & 16#F0 ! 3);
                           sr_temp_ptr_t(temp^.xp2[11])^.tree := x;
                         end
@@ -3871,7 +3871,7 @@ begin
           if (iv^.xl[6] & 16#100000) = 0 then
             goto 90;
           temp := create_sr_temp_var(nil, h);
-          if x^.rlen = 4 then
+          if x^.rlen = rlen_long then
             temp^.xc[10] := chr(ord(temp^.xc[10]) & 16#F0 ! 3);
           sr_temp_ptr_t(temp^.xp2[11])^.tree := x;
         end;
@@ -3886,7 +3886,7 @@ begin
       end;
       dindex_node: begin
         iv := nil;
-        if 6 in t^.flags then
+        if phase_cse in t^.flags then
           goto 90;
         x := g_opt_tree_ptr_t(il_$node_ptr_t(t)^.xp[9]);
         if x^.kind <> tree_node then
@@ -3961,7 +3961,7 @@ begin
           if (iv^.xl[6] & 16#100000) = 0 then
             goto 90;
           temp := create_sr_temp_var(nil, h);
-          if x^.rlen = 4 then
+          if x^.rlen = rlen_long then
             temp^.xc[10] := chr(ord(temp^.xc[10]) & 16#F0 ! 3);
           sr_temp_ptr_t(temp^.xp2[11])^.tree := x;
         end;

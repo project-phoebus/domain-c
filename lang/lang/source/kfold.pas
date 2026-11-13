@@ -516,7 +516,7 @@ begin { kfold_$general }
 
   if t^.op in [add_top..div_top, mod_top..or_top, compare_top, set_and_top..set_diff_top, lshf_top..abs_top, f_extend_top, eor_top..min_top, alshf_top..cc_logand_ptop, cc_lognot_ptop] then begin
     { The real part of a double complex constant. }
-    if (t^.op = f_extend_top) and (t^.desc.rlen = 7) and (t^.desc.w6 = 12) and
+    if (t^.op = f_extend_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = 12) and
        (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_re;
       res := dpcontk(dd);
@@ -594,7 +594,7 @@ begin { kfold_$general }
     if t^.op = add_top then begin
       x := t^.opnd[1];
       y := t^.opnd[2];
-      if (x^.kind = tree_node) and (t^.desc.rlen >= 0) and (t^.desc.rlen <= 4)
+      if (x^.kind = tree_node) and (t^.desc.rlen >= rlen_null) and (t^.desc.rlen <= rlen_long)
           and
          (kf_tree_ptr_t(x)^.op = lshf_top) and (y^.kind = tree_node) and
          (kf_tree_ptr_t(y)^.op = lshf_top) and
@@ -631,7 +631,7 @@ begin { kfold_$general }
     end;
 
     { A conversion to an integer of a constant. }
-    if (t^.op = f_extend_top) and (t^.desc.rlen >= 0) and (t^.desc.rlen <= 4) then begin
+    if (t^.op = f_extend_top) and (t^.desc.rlen >= rlen_null) and (t^.desc.rlen <= rlen_long) then begin
       x := t^.opnd[1];
       if x^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
         res := smcontk(integer_ob, dfetch(x^.int_value, t^.desc.rlen,
@@ -665,7 +665,7 @@ begin { kfold_$general }
     end;
 
     { Between the real classes. }
-    if (t^.op = f_extend_top) and ((t^.desc.rlen = 7) or (t^.desc.rlen = 6)) and
+    if (t^.op = f_extend_top) and ((t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4)) and
        ((t^.desc.w6 = 7) or (t^.desc.w6 = 6)) and
        ((t^.opnd[1]^.kind = dpreal_ob)
         or (t^.opnd[1]^.kind = real_ob)) then begin
@@ -673,7 +673,7 @@ begin { kfold_$general }
         res := t^.opnd[1];
         goto 80;
       end;
-      if t^.desc.rlen = 6 then
+      if t^.desc.rlen = rlen_r4 then
         res := rlcontk(t^.opnd[1]^.real_value)
       else
         res := dpcontk(t^.opnd[1]^.real_value);
@@ -794,11 +794,11 @@ begin { kfold_$general }
         v1 := dfetch(v1, t^.desc.w6, t^.desc.flags.signed);
         if sgn then r := v1 else if v1 < 0 then r := v1 + 4294967296.0 else r := v1;
         a := r;
-        if t^.desc.rlen = 7 then begin
+        if t^.desc.rlen = rlen_r8 then begin
           res := dpcontk(a);
           goto 80;
         end;
-        if t^.desc.rlen <> 6 then
+        if t^.desc.rlen <> rlen_r4 then
           goto 70;
         res := rlcontk(a);
         goto 80;
@@ -968,7 +968,7 @@ begin { kfold_$general }
 
   { The real operators. }
   if t^.op in [f_add_top..f_neg_top, f_compare_top..f_expon_top] then begin
-    if (t^.op = f_math_top) and (t^.desc.rlen = 7) and (t^.desc.w6 = 15) and
+    if (t^.op = f_math_top) and (t^.desc.rlen = rlen_r8) and (t^.desc.w6 = 15) and
        (t^.count = 1) and (t^.opnd[1]^.kind = dpcomplex_ob) then begin
       dd := t^.opnd[1]^.dcx_im;
       res := dpcontk(dd);
@@ -1030,12 +1030,12 @@ begin { kfold_$general }
         case t^.desc.w6 of
           0: a := abs(a);
           11: begin
-            if t^.desc.rlen >= 6 then
+            if t^.desc.rlen >= rlen_r4 then
               goto 50;
             v1 := round(a);
           end;
           10: begin
-            if t^.desc.rlen >= 6 then
+            if t^.desc.rlen >= rlen_r4 then
               goto 50;
             v1 := trunc(a);
           end;
@@ -1081,13 +1081,13 @@ begin { kfold_$general }
             a := sin(a) / r;
           end;
           6: begin
-            if (a > 88.72283905206835) and (t^.desc.rlen = 6) or
-               (a > 709.782712893384) and (t^.desc.rlen = 7) then begin
+            if (a > 88.72283905206835) and (t^.desc.rlen = rlen_r4) or
+               (a > 709.782712893384) and (t^.desc.rlen = rlen_r8) then begin
               report_failure_once(n, 56);
               goto 50;
             end;
-            if (a < -744.0) and (t^.desc.rlen = 7) or
-               (a < -103.3) and (t^.desc.rlen = 6) then begin
+            if (a < -744.0) and (t^.desc.rlen = rlen_r8) or
+               (a < -103.3) and (t^.desc.rlen = rlen_r4) then begin
               report_failure_once(n, 57);
               goto 50;
             end;
@@ -1116,13 +1116,13 @@ begin { kfold_$general }
                 report_failure_once(n, 58);
                 goto 50;
               end;
-          if (c > 88.72283905206835) and (t^.desc.rlen = 6) or
-             (c > 709.782712893384) and (t^.desc.rlen = 7) then begin
+          if (c > 88.72283905206835) and (t^.desc.rlen = rlen_r4) or
+             (c > 709.782712893384) and (t^.desc.rlen = rlen_r8) then begin
             report_failure_once(n, 56);
             goto 50;
           end;
-          if (c < -103.3) and (t^.desc.rlen = 6) or
-             (c < -744.0) and (t^.desc.rlen = 7) then begin
+          if (c < -103.3) and (t^.desc.rlen = rlen_r4) or
+             (c < -744.0) and (t^.desc.rlen = rlen_r8) then begin
             report_failure_once(n, 57);
             goto 50;
           end;
@@ -1142,7 +1142,7 @@ begin { kfold_$general }
     if (t^.op = f_compare_top) or
        ((t^.op = f_math_top) and ((t^.desc.w6 = 11) or (t^.desc.w6 = 10))) then
       res := smcontk(integer_ob, v1)
-    else if t^.desc.rlen = 7 then
+    else if t^.desc.rlen = rlen_r8 then
       res := dpcontk(a)
     else
       res := rlcontk(a);
@@ -1317,9 +1317,9 @@ begin { kfold_$general }
   else if t^.desc.w6 <> 4 then
     goto 90;
   case t^.desc.rlen of
-    1: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
-    2: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
-    4: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
+    rlen_byte: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
+    rlen_word: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
+    rlen_long: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
     otherwise
       if t^.desc.flags.signed then kind := integer_ob else kind := uinteger_ob;
   end;
@@ -1330,16 +1330,16 @@ begin { kfold_$general }
   if res^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
     if ((res^.kind = sinteger_ob) or (res^.kind = integer_ob)
         or (res^.kind = binteger_ob) or
-        (res^.kind = linteger_ob)) and (t^.desc.rlen = 1) and
+        (res^.kind = linteger_ob)) and (t^.desc.rlen = rlen_byte) and
        (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 3) then
       res := strtk(res^.xc[11], 1)
     else begin
       kind := res^.kind;
       if kind = integer_ob then
         case t^.desc.rlen of
-          1: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
-          2: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
-          4: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
+          rlen_byte: if t^.desc.flags.signed then kind := binteger_ob else kind := ubinteger_ob;
+          rlen_word: if t^.desc.flags.signed then kind := sinteger_ob else kind := usinteger_ob;
+          rlen_long: if t^.desc.flags.signed then kind := linteger_ob else kind := ulinteger_ob;
           otherwise
             if t^.desc.flags.signed then kind := integer_ob else kind := uinteger_ob;
         end;

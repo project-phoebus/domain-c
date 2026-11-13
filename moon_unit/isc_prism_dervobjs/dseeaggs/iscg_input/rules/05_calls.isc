@@ -119,7 +119,7 @@ end;
 
 transform 347  fp_reg_pair <- isc_func_call_top
   pass_1 image 16#116A7E begin
-    condition not (subject.il.b10 <> 2 or subject.il.w24 = 8 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
+    condition not (subject.il.b10 <> 2 or subject.il.w24 = rlen_c8 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286));
     cycle_guard already_fp_reg_pair;
     result.l352 <- lir_3f90[subject.il.b11];
     if not isc_user_routines_358 then

@@ -450,6 +450,77 @@ type
     extern_bat,                       { 2 }
     param_bat);                       { 3 }
 
+{ The register classes (a tree node's descriptor's word at +4,
+  add_node_$desc_t's rlen, and the operand modifiers that name a class),
+  as list_tree's print_rlen names them: 0 null (printed '??-null-??'),
+  1 byte, 2 word, 4 long, 5 addr, 6 r4, 7 r8, 8 c8, 9 cs, 10 vcs, 11
+  agg, 12 c16; 3 has no name and is not used.  Constants, not an
+  enumeration: the values have a gap, and the units keep a class in
+  integer words, index tables by it (opt_inline's class_bytes, the ISC's
+  rlen_arith) and compare it as a number.  The names are the dump's
+  with rlen_ before them, chosen here: the dump's names alone (byte,
+  word, long) would clash with the units' identifiers.
+
+  Not known from the original: the constants' names. }
+const
+  rlen_null = 0;
+  rlen_byte = 1;
+  rlen_word = 2;
+  rlen_long = 4;
+  rlen_addr = 5;
+  rlen_r4 = 6;
+  rlen_r8 = 7;
+  rlen_c8 = 8;
+  rlen_cs = 9;
+  rlen_vcs = 10;
+  rlen_agg = 11;
+  rlen_c16 = 12;
+
+{ A variable's attributes (the set at +32 of a variable node, 109), as
+  list_tree's print_variable names them ('var_$volatile ' ..
+  'var_$withrecord ', its string pool in cc.m68k: the identifiers are the
+  strings without the trailing blank): bit n is element n.  A set of 32
+  elements is a longword, as set of 0..31 is.  The other units test the
+  attributes as masks of the node's longword (il_utils' 16#20000 for
+  var_$strength_reduction) and keep their numbers.
+
+  Not known from the original: the types' names. }
+type
+  il_$var_attr_t = (
+    var_$volatile,                    { 0 }
+    var_$atomic,                      { 1 }
+    var_$physical,                    { 2 }
+    var_$dev_read,                    { 3 }
+    var_$dev_write,                   { 4 }
+    var_$processor_reg,               { 5 }
+    var_$initialized,                 { 6 }
+    var_$forloopindex,                { 7 }
+    var_$uplevel,                     { 8 }
+    var_$loop_trip_count,             { 9 }
+    var_$is_formal_parameter,         { 10 }
+    var_$unique_value,                { 11 }
+    var_$address_exposed,             { 12 }
+    var_$passed_by_reference,         { 13 }
+    var_$temporary,                   { 14 }
+    var_$register,                    { 15 }
+    var_$bss,                         { 16 }
+    var_$strength_reduction,          { 17 }
+    var_$allocated,                   { 18 }
+    var_$already_seen_this_formal,    { 19 }
+    var_$induction,                   { 20 }
+    var_$nooptimize,                  { 21 }
+    var_$force_to_memory,             { 22 }
+    var_$display_ptr,                 { 23 }
+    var_$wasbound,                    { 24 }
+    var_$isc_was_here,                { 25 }
+    var_$is_a_register_candidate,     { 26 }
+    var_$seen_in_ra,                  { 27 }
+    var_$mentioned_in_sym_disp,       { 28 }
+    var_$spilled_to_memory,           { 29 }
+    var_$local_copy,                  { 30 }
+    var_$withrecord);                 { 31 }
+  il_$var_attrs_t = set of il_$var_attr_t;
+
 { The compiler's nodes.  Every node begins with a word not yet
   identified and the node's kind at +2 (il.pas initialize_module 0x07D882
   sets +2 of each node it creates; idntk sets it in each identifier

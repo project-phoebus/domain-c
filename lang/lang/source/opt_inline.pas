@@ -530,7 +530,7 @@ var
   next: il_$node_ptr_t;
 begin
   d.size := -1;
-  d.rlen := 0;
+  d.rlen := rlen_null;
   while n <> nil do begin
     next := nil;
     case n^.kind of
@@ -540,51 +540,51 @@ begin
         case te.base^.kind of
           integer_type:
             if te.size = 1 then
-              d.rlen := 1
+              d.rlen := rlen_byte
             else if te.size = 2 then
-              d.rlen := 2
+              d.rlen := rlen_word
             else if te.size = 4 then
-              d.rlen := 4
+              d.rlen := rlen_long
             else
-              d.rlen := 11;
+              d.rlen := rlen_agg;
           real_type:
             if d.size = 4 then
-              d.rlen := 6
+              d.rlen := rlen_r4
             else
-              d.rlen := 7;
+              d.rlen := rlen_r8;
           bool_type:
-            d.rlen := 1;
+            d.rlen := rlen_byte;
           char_type:
             if d.size = 1 then
-              d.rlen := 1
+              d.rlen := rlen_byte
             else
-              d.rlen := 9;
+              d.rlen := rlen_cs;
           char_string_con_type:
-            d.rlen := 9;
+            d.rlen := rlen_cs;
           char_array_type:
-            d.rlen := 11;
+            d.rlen := rlen_agg;
           subr_type, enum_type:
             d.rlen := d.size;
           ptr_type, univ_ptr_type:
             d.rlen := d.size;
           array_type:
-            d.rlen := 11;
+            d.rlen := rlen_agg;
           record_type:
             if d.size <= 4 then
               d.rlen := d.size
             else if d.size = 8 then
-              d.rlen := 7
+              d.rlen := rlen_r8
             else
-              d.rlen := 11;
+              d.rlen := rlen_agg;
           null_set_type, set_type:
             if d.size <= 4 then
               d.rlen := d.size
             else if d.size = 8 then
-              d.rlen := 7
+              d.rlen := rlen_r8
             else
-              d.rlen := 11;
+              d.rlen := rlen_agg;
           varying_type:
-            d.rlen := 11;
+            d.rlen := rlen_agg;
           offset_type:
             d.rlen := d.size;
           otherwise
@@ -595,30 +595,30 @@ begin
         case ord(n^.xc[10]) & 15 of
           1, 8: begin
             d.size := 1;
-            d.rlen := 1;
+            d.rlen := rlen_byte;
           end;
           2, 9: begin
             d.size := 2;
-            d.rlen := 2;
+            d.rlen := rlen_word;
           end;
           3, 10: begin
             d.size := 4;
-            d.rlen := 4;
+            d.rlen := rlen_long;
           end;
           4: begin
             d.size := 4;
-            d.rlen := 6;
+            d.rlen := rlen_r4;
           end;
           5: begin
             d.size := 8;
-            d.rlen := 7;
+            d.rlen := rlen_r8;
           end;
           6: begin
             d.size := 8;
-            d.rlen := 8;
+            d.rlen := rlen_c8;
           end;
           7: begin
-            d.rlen := 1;
+            d.rlen := rlen_byte;
             if ord(n^.xc[10]) >= 128 then
               d.size := 0
             else if n^.xw[4] = -1 then
@@ -628,22 +628,22 @@ begin
           end;
           11: begin
             d.size := 4;
-            d.rlen := 5;
+            d.rlen := rlen_addr;
           end;
           13: begin
             d.size := 16;
-            d.rlen := 12;
+            d.rlen := rlen_c16;
           end;
           otherwise
             ;
         end;
       integer_type: begin
         d.rlen := n^.xw[2];
-        if d.rlen = 1 then
+        if d.rlen = rlen_byte then
           d.size := 1
-        else if d.rlen = 2 then
+        else if d.rlen = rlen_word then
           d.size := 2
-        else if d.rlen = 4 then
+        else if d.rlen = rlen_long then
           d.size := 4;
       end;
       common_block_name:
@@ -654,9 +654,9 @@ begin
           if d.size <= 4 then
             d.rlen := d.size
           else if d.size = 8 then
-            d.rlen := 7
+            d.rlen := rlen_r8
           else
-            d.rlen := 11;
+            d.rlen := rlen_agg;
         end;
       reloc_absolute_addr_con:
         next := n^.xp[3];
@@ -664,51 +664,51 @@ begin
         d.size := n^.xl[5];
         d.rlen := n^.xw[12];
         if d.size = 8 then
-          if d.rlen = 11 then
-            d.rlen := 7;
+          if d.rlen = rlen_agg then
+            d.rlen := rlen_r8;
       end;
       ptr_node, dindex_node, disp_node, sym_disp_node:
         next := n^.xp[7];
       cs_node: begin
         d.size := n^.xw[15];
-        d.rlen := 1;
+        d.rlen := rlen_byte;
       end;
       blogical_ob, binteger_ob, char_ob: begin
         d.size := 1;
-        d.rlen := 1;
+        d.rlen := rlen_byte;
       end;
       slogical_ob, sinteger_ob: begin
         d.size := 2;
-        d.rlen := 2;
+        d.rlen := rlen_word;
       end;
       llogical_ob, linteger_ob: begin
         d.size := 4;
-        d.rlen := 4;
+        d.rlen := rlen_long;
       end;
       integer_ob:
         if cargs_$options.i_star_2 then begin
           d.size := 2;
-          d.rlen := 2;
+          d.rlen := rlen_word;
         end
         else begin
           d.size := 4;
-          d.rlen := 4;
+          d.rlen := rlen_long;
         end;
       real_ob: begin
         d.size := 4;
-        d.rlen := 6;
+        d.rlen := rlen_r4;
       end;
       dpreal_ob: begin
         d.size := 8;
-        d.rlen := 7;
+        d.rlen := rlen_r8;
       end;
       complex_ob: begin
         d.size := 8;
-        d.rlen := 8;
+        d.rlen := rlen_c8;
       end;
       dpcomplex_ob: begin
         d.size := 16;
-        d.rlen := 12;
+        d.rlen := rlen_c16;
       end;
       otherwise
         ;
@@ -1225,9 +1225,9 @@ function inline_$compatible_types(
 begin
   if a.rlen = b.rlen then
     inline_$compatible_types := true
-  else if (a.rlen = 11) and (a.size = b.size) then
+  else if (a.rlen = rlen_agg) and (a.size = b.size) then
     inline_$compatible_types := true
-  else if b.rlen = 11 then
+  else if b.rlen = rlen_agg then
     inline_$compatible_types := b.size = a.size
   else
     inline_$compatible_types := false;
@@ -1289,7 +1289,7 @@ begin
     end;
     get_size_rlen(v, d1);
     get_size_rlen(e^.call, d2);
-    if not inline_$compatible_types(d1, d2) and (d2.rlen <> 0) then begin
+    if not inline_$compatible_types(d1, d2) and (d2.rlen <> rlen_null) then begin
       val := v;
       coerce(e, val, d1.rlen, d2.rlen, (ord(e^.call^.xc[30]) & 64) <> 0);
       v := val;
@@ -1415,7 +1415,7 @@ begin
     r := 3;
     get_size_rlen(a, d1);
     get_size_rlen(f, d2);
-    if d1.rlen = 0 then begin
+    if d1.rlen = rlen_null then begin
       pass_method := r;
       return;
     end;
@@ -1675,17 +1675,17 @@ begin
   static := false;
   get_size_rlen(v, d);
   case d.rlen of
-    0, 1:
+    rlen_null, rlen_byte:
       n := 0;
-    2:
+    rlen_word:
       n := 1;
-    4, 5, 6:
+    rlen_long, rlen_addr, rlen_r4:
       n := 2;
-    7, 8:
+    rlen_r8, rlen_c8:
       n := 3;
-    9, 10:
+    rlen_cs, rlen_vcs:
       n := 2;
-    11, 12:
+    rlen_agg, rlen_c16:
       n := 3;
     otherwise
       cgerr_no_source(28, integer32(strtk(
@@ -2038,7 +2038,7 @@ begin
             adr := a^.xp[6]
           else begin
             d.d.size := 4;
-            d.d.rlen := 4;
+            d.d.rlen := rlen_long;
             ops1 := a;
             adr := buildtreenode(addr_top, d.d, ops1, 1);
           end;
@@ -2062,14 +2062,14 @@ begin
           else begin
             if (language = 1) and (a^.kind = integer_ob) then begin
               get_size_rlen(f, d3);
-              if d3.rlen = 1 then
+              if d3.rlen = rlen_byte then
                 a := smcontk(binteger_ob, a^.xl[2])
-              else if d3.rlen = 2 then
+              else if d3.rlen = rlen_word then
                 a := smcontk(sinteger_ob, a^.xl[2]);
             end;
             ops2 := a;
             d.d.size := 4;
-            d.d.rlen := 5;
+            d.d.rlen := rlen_addr;
             adr := buildtreenode(addr_top, d.d, ops2, 1);
           end;
           pv := ptr_variable(e, f);
@@ -2142,9 +2142,9 @@ begin
       else begin
         d.d.size := 4;
         if language = 2 then
-          d.d.rlen := 4
+          d.d.rlen := rlen_long
         else
-          d.d.rlen := 5;
+          d.d.rlen := rlen_addr;
         val := buildtreenode(addr_top, d.d, val, 1);
       end;
     end
@@ -2180,9 +2180,9 @@ begin
     if fl = [2] then begin
       d.d.size := 4;
       if language = 2 then
-        d.d.rlen := 4
+        d.d.rlen := rlen_long
       else
-        d.d.rlen := 5;
+        d.d.rlen := rlen_addr;
       ops3 := v;
       v := buildtreenode(addr_top, d.d, ops3, 1);
     end;
@@ -3521,20 +3521,20 @@ begin
         size := size + d.size + 7;
         if language in [3, 4] then begin
           w := e^.call^.xp[10]^.xw[9 + 2 * k];
-          if ((w = 7) or (w = 6)) and not ((d.rlen = 7) or (d.rlen = 6)) then begin
+          if ((w = 7) or (w = 6)) and not ((d.rlen = rlen_r8) or (d.rlen = rlen_r4)) then begin
             call_status := 35;
             return;
           end;
-          if (d.rlen = 7) or (d.rlen = 6) then
+          if (d.rlen = rlen_r8) or (d.rlen = rlen_r4) then
             if not ((w = 7) or (w = 6)) then begin
               call_status := 35;
               return;
             end;
-          if (w = 11) and (d.rlen <> 11) then begin
+          if (w = 11) and (d.rlen <> rlen_agg) then begin
             call_status := 35;
             return;
           end;
-          if (d.rlen = 11) and (w <> 11) then begin
+          if (d.rlen = rlen_agg) and (w <> 11) then begin
             call_status := 35;
             return;
           end;
@@ -4074,7 +4074,7 @@ begin
         return;
       end;
     get_size_rlen(f, d);
-    if d.rlen = 0 then begin
+    if d.rlen = rlen_null then begin
       callee_status := 36;
       return;
     end;

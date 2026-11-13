@@ -372,7 +372,7 @@ begin
       if cg_fp_result <> nil then
         rlen := cg_tree_ptr_t(cg_fp_result)^.desc.rlen
       else
-        rlen := 0;
+        rlen := rlen_null;
       setresult(16, cg_fp_result, rlen);
     end;
   end;
@@ -633,7 +633,7 @@ begin
     stack_fp(op, rlen, t^.opnd[3 - k]^.xp[4])
   else
     stack_fp(op, rlen, t^.opnd[3 - k]);
-  if not (((op = 130) or (op = 129)) and (t^.desc.rlen <= 4)) then
+  if not (((op = 130) or (op = 129)) and (t^.desc.rlen <= rlen_long)) then
     fp_temp(n, t^.opnd[1])
   else
     cg_fp_result := n;

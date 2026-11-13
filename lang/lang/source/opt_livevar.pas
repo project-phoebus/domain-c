@@ -583,7 +583,7 @@ begin
                 if vi^.du <> nil then
                   if vi^.du^.next = nil then
                     if vi^.du^.stmt = opt_4009c[r] then
-                      if getphase(s^.asg_rhs) * [1, 2, 12] = [] then
+                      if getphase(s^.asg_rhs) * [phase_vol, phase_volexpr, phase_sd_eff] = [] then
                         vi^.du := nil;
         if vi^.du <> nil then
           next;
@@ -633,11 +633,11 @@ begin
         s^.hdr.vnum := 0;
         adjust_uc(s^.asg_lhs, -1);
         ph := getphase(s^.asg_rhs);
-        if (ph * [1, 2, 12] <> []) or
+        if (ph * [phase_vol, phase_volexpr, phase_sd_eff] <> []) or
            (s^.hdr.first and s^.hdr.last) or s^.hdr.no_prune then begin
           { An evaluation of the right side in its place. }
           x := s^.asg_rhs;
-          if ph * [1, 2] <> [] then begin
+          if ph * [phase_vol, phase_volexpr] <> [] then begin
             x := buildtreenode(value_top, s^.asg_desc, x, 1);
             g_opt_tree_ptr_t(x)^.owner := opt_4009c[r];
           end;
@@ -647,12 +647,12 @@ begin
           t^.eval_opnd[1] := x;
           lv_head_ptr_t(addr(t^.prev))^ := lv_head_ptr_t(addr(opt_4009c[r]^.prev))^;
           t^.hdr.vnum := 0;
-          if ph * [1, 2, 12] = [] then
+          if ph * [phase_vol, phase_volexpr, phase_sd_eff] = [] then
             if s^.hdr.no_prune then begin
               rr := r;
               check_cse_uses(rr);
             end;
-          if (ph * [1, 2, 12] = []) and s^.hdr.first and s^.hdr.last and
+          if (ph * [phase_vol, phase_volexpr, phase_sd_eff] = []) and s^.hdr.first and s^.hdr.last and
              not s^.hdr.no_prune then begin
             { A lone store of no effects: an evaluation of 0. }
             opt_4009c[r] := t;
@@ -810,7 +810,7 @@ begin
   if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then begin
-    if 6 in g_opt_tree_ptr_t(n)^.flags then
+    if phase_cse in g_opt_tree_ptr_t(n)^.flags then
       return;
     if g_opt_tree_ptr_t(n)^.owner <> nil then
       if g_opt_tree_ptr_t(n)^.owner <> opt_4009c[lv_cur] then

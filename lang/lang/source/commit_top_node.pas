@@ -376,7 +376,7 @@ begin
     bug_check('IL_UTILS_$\USER_ATOMICNESS --- node^.kind is not an assign_node.%.');
   l := n^.xp[16];
   r := n^.xp[17];
-  if (0 in getphase(l)) and (r^.kind = tree_node) then
+  if (phase_atm in getphase(l)) and (r^.kind = tree_node) then
     user_atomicness := contains_same_lvalue(l, r)
   else
     user_atomicness := false;
@@ -395,7 +395,7 @@ begin
   if (n = nil) or else (n^.kind <> assign_node) then
     bug_check('IL_UTILS_$\IMPLICIT_ATOMICNESS  --- node^.kind is not an assign_node.%.');
   l := n^.xp[16];
-  if (0 in getphase(l)) and ((n^.xw[38] = 12) or (n^.xw[38] = 10)) then
+  if (phase_atm in getphase(l)) and ((n^.xw[38] = 12) or (n^.xw[38] = 10)) then
     implicit_atomicness := true
   else
     implicit_atomicness := false;
@@ -429,7 +429,7 @@ begin
   op := t^.xw[38];
   if op in [26, 31, 32, 33, 34] then
     bug_check('IL_UTILS_$CONVERT_AOPS_TO__AOP_TO_MEM --- isc_aop???%.');
-  if not (20 in getphase(t^.xp[16])) then
+  if not (phase_proc_reg in getphase(t^.xp[16])) then
     if op in [0, 6, 10, 11] then
       if not (op in [1..5, 7..9, 13..24]) then begin
         if (op = 10) or (op = 6) then begin

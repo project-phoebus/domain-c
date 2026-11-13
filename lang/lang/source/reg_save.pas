@@ -509,7 +509,7 @@ begin
       else
         r := [24];
     add_top, sub_top, and_top, or_top:
-      if t^.desc.rlen = 5 then
+      if t^.desc.rlen = rlen_addr then
         r := [27]
       else
         r := [24];
@@ -523,28 +523,28 @@ begin
       r := [24, 25, 27, 28];
     index_top: begin
       r := [27];
-      if t^.desc.rlen = 4 then
+      if t^.desc.rlen = rlen_long then
         r := [24, 27];
     end;
     value_top: begin
-      if (t^.desc.rlen = 7) or (t^.desc.rlen = 6) then
+      if (t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4) then
         if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
           r := [30]
         else
           r := reg_save_$killed_by_routine(18);
       if assert_is_tree_node(t^.opnd[1]) then begin
-        if (t^.desc.rlen = 1) or (t^.desc.rlen = 4) or
-           (t^.desc.rlen = 2) then
+        if (t^.desc.rlen = rlen_byte) or (t^.desc.rlen = rlen_long) or
+           (t^.desc.rlen = rlen_word) then
           r := r + [24]
-        else if ((t^.desc.rlen = 7) or (t^.desc.rlen = 6)) and
-                (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 5) then
+        else if ((t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4)) and
+                (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_addr) then
           r := r + [27]
-        else if t^.desc.rlen = 5 then
+        else if t^.desc.rlen = rlen_addr then
           r := r + [27]
-        else if (t^.desc.rlen = 7) or (t^.desc.rlen = 6) then
-          if (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 1) or
-             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 4) or
-             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = 2) then
+        else if (t^.desc.rlen = rlen_r8) or (t^.desc.rlen = rlen_r4) then
+          if (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_byte) or
+             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_long) or
+             (cg_tree_ptr_t(t^.opnd[1])^.desc.rlen = rlen_word) then
             r := r + [27];
       end
       else if t^.opnd[1]^.kind in [var_name..fortran_symbol,
@@ -629,7 +629,7 @@ begin
     f_math_top:
       if cg_tree_$needs_lib_support(n, rtn) then begin
         r := reg_save_$killed_by_routine(rtn);
-        if (t^.desc.w6 = 11) and (t^.desc.rlen <= 4) then
+        if (t^.desc.w6 = 11) and (t^.desc.rlen <= rlen_long) then
           r := r + [0];
         if 10 in cargs_$options.cpu then
           if t^.desc.w6 in [8, 12..15] then
@@ -686,7 +686,7 @@ begin
   if s^.asg_flags.chars then
     if unaligned(s^.asg_rhs) or unaligned(s^.asg_lhs) then
       unit := 1;
-  if s^.asg_rlen = 9 then
+  if s^.asg_rlen = rlen_cs then
     size := s^.asg_size - s^.asg_w56
   else
     size := s^.asg_size;
@@ -713,7 +713,7 @@ begin
     if not cg_asn_$inline_move_is_best(n + 1, unit) then
       r := [24, 27, 28];
   end;
-  if (s^.asg_rlen = 9) and (s^.asg_w56 <> 0) then
+  if (s^.asg_rlen = rlen_cs) and (s^.asg_w56 <> 0) then
     r := r + [24, 25, 27, 28];
   registers_consumed_by_agg_aop := r;
 end;
@@ -784,8 +784,8 @@ begin
                                    set_con_ob, rec_const_ob, dpcomplex_ob,
                                    binteger_ob]) then
         r := [24];
-      if s^.asg_rlen > 6 then
-        if s^.asg_rlen = 7 then
+      if s^.asg_rlen > rlen_r4 then
+        if s^.asg_rlen = rlen_r8 then
           r := [27, 28]
         else
           r := [24, 25, 27, 28];

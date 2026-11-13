@@ -881,7 +881,7 @@ begin
         normalize_il(t^.xp[i + 12], fold);
     assign_node: begin
       if not (8 in cargs_$options.opt_on) then
-        if 0 in getphase(t^.xp[16]) then begin
+        if phase_atm in getphase(t^.xp[16]) then begin
           q := t^.xp[17];
           commit_top_$convert_aops_to__aop_to_mem(t);
           if t^.xp[17] <> q then begin
@@ -1200,7 +1200,7 @@ begin
       type_exp(t, addr(te));
       if (blk^.xw[157] & 16#800) <> 0 then
         te.size := rshft(blk^.xl[79] + 7, 3);
-      big := get_rlen(te) > 6;
+      big := get_rlen(te) > rlen_r4;
       if big then
         blk^.xp[24]^.xl[14] := blk^.xp[24]^.xl[14] + 4;
     end;

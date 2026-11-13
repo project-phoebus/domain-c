@@ -1810,7 +1810,7 @@ begin
     t8 := make_bit_mask_1(8, 0);
     p1_int_fields_ptr_t(addr(solution^))^.i[1] := 0;
     t9 := make_bit_mask_1(16, 0);
-    if (p2_node_ptr_t(subject.il)^.w[28] <> 0) or (p2_node_ptr_t(subject.il)^.w[38] <> 6) or (p2_node_ptr_t(subject.il)^.w[26] <> 9) then begin
+    if (p2_node_ptr_t(subject.il)^.w[28] <> 0) or (p2_node_ptr_t(subject.il)^.w[38] <> ord(agg_aop)) or (p2_node_ptr_t(subject.il)^.w[26] <> 9) then begin
       solution^.space136[136] := chr(2);
       if subject.children[2]^.inherited_attributes^.fetch_precision = 32 then begin
         solution^.space136[158] := chr(1);
@@ -2036,7 +2036,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[38] = 6) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 4) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5) or subject.children[2]^.f76.arg_block_location and subject.children[1]^.f76.physical_register and not subject.children[1]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[38] = ord(agg_aop)) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 4) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5) or subject.children[2]^.f76.arg_block_location and subject.children[1]^.f76.physical_register and not subject.children[1]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 151 matched the semantics.');
       writeln;
@@ -2152,7 +2152,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[38] = 6) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 8) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5) or not isc_user_routines_358 or subject.children[2]^.f76.arg_block_location and subject.children[1]^.f76.physical_register and not subject.children[1]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[38] = ord(agg_aop)) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 8) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5) or not isc_user_routines_358 or subject.children[2]^.f76.arg_block_location and subject.children[1]^.f76.physical_register and not subject.children[1]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 152 matched the semantics.');
       writeln;
@@ -2408,7 +2408,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[2]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[38] = 6) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 16) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5) or not isc_user_routines_358 or subject.children[2]^.f76.arg_block_location and subject.children[1]^.f76.physical_register and not subject.children[1]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[38] = ord(agg_aop)) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 16) or (not lir_$can_encode_as_immediate_operand(subject.children[2]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[2]^.f76.uses_the_displacement or subject.children[2]^.f76.has_a_symbolic_displacement) and (subject.children[2]^.f76.is_physical or subject.children[2]^.f76.is_atomic)) and (subject.children[2]^.kind = 5) or not isc_user_routines_358 or subject.children[2]^.f76.arg_block_location and subject.children[1]^.f76.physical_register and not subject.children[1]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 153 matched the semantics.');
       writeln;
@@ -2978,7 +2978,7 @@ begin
       t10 := 0;
     end;
     t11 := make_bit_mask_1(16, 0);
-    if (p2_node_ptr_t(subject.il)^.w[28] <> 0) or (p2_node_ptr_t(subject.il)^.w[38] <> 6) or (p2_node_ptr_t(subject.il)^.w[26] <> 9) then begin
+    if (p2_node_ptr_t(subject.il)^.w[28] <> 0) or (p2_node_ptr_t(subject.il)^.w[38] <> ord(agg_aop)) or (p2_node_ptr_t(subject.il)^.w[26] <> 9) then begin
       solution^.space136[136] := chr(2);
       if subject.children[1]^.inherited_attributes^.fetch_precision = 32 then begin
         solution^.space136[158] := chr(1);
@@ -3206,7 +3206,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[38] = 6) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 4) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or subject.children[1]^.f76.arg_block_location and subject.children[2]^.f76.physical_register and not subject.children[2]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[38] = ord(agg_aop)) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 4) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or subject.children[1]^.f76.arg_block_location and subject.children[2]^.f76.physical_register and not subject.children[2]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 155 matched the semantics.');
       writeln;
@@ -3345,7 +3345,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[38] = 6) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 8) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or not isc_user_routines_358 or subject.children[1]^.f76.arg_block_location and subject.children[2]^.f76.physical_register and not subject.children[2]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[38] = ord(agg_aop)) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 8) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or not isc_user_routines_358 or subject.children[1]^.f76.arg_block_location and subject.children[2]^.f76.physical_register and not subject.children[2]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 156 matched the semantics.');
       writeln;
@@ -3658,7 +3658,7 @@ begin
   work := nil;
   t1 := lir_$can_encode_as_immediate_postincrement(subject.children[1]^.literal_32_bits_value,
       ord(opc$loadl));
-  if not ((p2_node_ptr_t(subject.il)^.w[38] = 6) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 16) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or not isc_user_routines_358 or subject.children[1]^.f76.arg_block_location and subject.children[2]^.f76.physical_register and not subject.children[2]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[38] = ord(agg_aop)) and (p2_node_ptr_t(subject.il)^.w[26] = 9) and (p2_node_ptr_t(subject.il)^.w[28] = 0) or (integer32(p2_node_ptr_t(subject.il)^.p[12]) <> 16) or (not lir_$can_encode_as_immediate_operand(subject.children[1]^.literal_32_bits_value, ord(opc$loadl), 1) or (not t1 and subject.children[1]^.f76.uses_the_displacement or subject.children[1]^.f76.has_a_symbolic_displacement) and (subject.children[1]^.f76.is_physical or subject.children[1]^.f76.is_atomic)) and (subject.children[1]^.kind = 5) or not isc_user_routines_358 or subject.children[1]^.f76.arg_block_location and subject.children[2]^.f76.physical_register and not subject.children[2]^.f76.physical_register_user_declared or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 157 matched the semantics.');
       writeln;

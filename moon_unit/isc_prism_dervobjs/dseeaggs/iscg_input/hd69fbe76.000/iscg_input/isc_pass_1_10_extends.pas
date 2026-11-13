@@ -786,7 +786,7 @@ begin
       subject.children[1]^.bits_trusted, 8, 24, 0);
   t35 := verify_bits(subject.children[1]^.bits_known,
       subject.children[1]^.bits_trusted, 7, 1, 0);
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or ((not t12 and not t11 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t10 and not t9 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t8 and not t7 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t6 and not t5 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t4 and not t3 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t2 and not t1 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 = 0)) and ((not t21 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t20 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t19 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t18 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t17 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t16 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t15 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t14 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t13 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((not t27 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t26 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t25 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t24 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t23 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t22 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((p2_node_ptr_t(subject.il)^.w[14] <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 = 0) or (not t28 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t29 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t30 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t31 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t32 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t33 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t34 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t35 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 8, 0) or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)))) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or ((not t12 and not t11 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t10 and not t9 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t8 and not t7 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t6 and not t5 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t4 and not t3 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t2 and not t1 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 = 0)) and ((not t21 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t20 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t19 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t18 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t17 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t16 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t15 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t14 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t13 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((not t27 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t26 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t25 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t24 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t23 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t22 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and ((p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((p2_node_ptr_t(subject.il)^.w[14] <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 = 0) or (not t28 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t29 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t30 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t31 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t32 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t33 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t34 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t35 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 8, 8, 0) or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)))) then begin
     if isc_user_routines_354 then begin
       write('Pattern 408 matched the semantics.');
       writeln;
@@ -964,7 +964,7 @@ begin
       subject.children[1]^.bits_trusted, 8, 8, 1);
   t29 := verify_any_bits(subject.children[1]^.bits_known,
       subject.children[1]^.bits_trusted, 8, 24, 1);
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or ((not t6 or not t5 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t4 or not t3 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t2 or not t1 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 = 0)) and ((not t15 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t14 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t13 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t12 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t11 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t10 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t9 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t8 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t7 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((not t21 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t20 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t19 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t18 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t17 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t16 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((p2_node_ptr_t(subject.il)^.b[30] & 64 = 0) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) or (not t22 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t23 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t24 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t25 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not t26 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t27 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)) and (not t28 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 2)) and (not t29 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) and (not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 7, 1, 1) or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> 1)))) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or ((not t6 or not t5 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t4 or not t3 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t2 or not t1 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 = 0)) and ((not t15 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t14 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t13 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t12 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t11 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t10 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t9 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t8 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t7 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) or (p2_node_ptr_t(subject.il)^.w[14] <> 1) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((not t21 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t20 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t19 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t18 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t17 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t16 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0)) and ((p2_node_ptr_t(subject.il)^.b[30] & 64 = 0) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) or (not t22 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t23 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t24 or (p2_node_ptr_t(subject.il)^.w[13] <> 4) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t25 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not t26 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t27 or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)) and (not t28 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) and (not t29 or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) and (not verify_bits(subject.children[1]^.bits_known, subject.children[1]^.bits_trusted, 7, 1, 1) or (p2_node_ptr_t(subject.il)^.w[13] <> 1) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte)))) then begin
     if isc_user_routines_354 then begin
       write('Pattern 409 matched the semantics.');
       writeln;
@@ -1141,7 +1141,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> 4)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.b[30] & 128 <> 0) or (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) or (p2_node_ptr_t(subject.il)^.w[13] <> 2) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 412 matched the semantics.');
       writeln;
@@ -1813,7 +1813,7 @@ begin
             end;
           end else begin
             solution^.space136[136] := chr(3);
-            if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
               solution^.space136[138] := chr(1);
               if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                 solution^.space136[139] := chr(2);
@@ -2230,7 +2230,7 @@ begin
         if (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) then begin
           if not (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) then begin
             solution^.space136[136] := chr(4);
-            if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
               solution^.space136[163] := chr(1);
               if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                 solution^.space136[164] := chr(2);
@@ -2281,14 +2281,14 @@ begin
                 end;
               end;
             end;
-            if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
               solution^.space136[172] := chr(1);
             end else begin
               solution^.space136[172] := chr(2);
             end;
           end else begin
             solution^.space136[136] := chr(3);
-            if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
               solution^.space136[152] := chr(1);
               if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                 solution^.space136[153] := chr(2);
@@ -2339,7 +2339,7 @@ begin
                 end;
               end;
             end;
-            if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
               solution^.space136[161] := chr(1);
               if subject.children[1]^.f76.bit_15_was_sign_extended then begin
                 solution^.space136[162] := chr(1);
@@ -2352,7 +2352,7 @@ begin
           end;
         end else begin
           solution^.space136[136] := chr(2);
-          if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+          if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
             solution^.space136[147] := chr(1);
             if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
               solution^.space136[148] := chr(2);
@@ -2378,7 +2378,7 @@ begin
               end;
             end;
           end
-          else if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+          else if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
             solution^.space136[147] := chr(2);
           end else begin
             solution^.space136[147] := chr(3);
@@ -2386,7 +2386,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(1);
-        if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+        if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
           solution^.space136[137] := chr(1);
           if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
             solution^.space136[138] := chr(2);
@@ -2435,7 +2435,7 @@ begin
             end;
           end;
         end
-        else if p2_node_ptr_t(subject.il)^.w[12] = 4 then begin
+        else if p2_node_ptr_t(subject.il)^.w[12] = rlen_long then begin
           solution^.space136[137] := chr(2);
           if subject.children[1]^.f76.bit_15_was_sign_extended then begin
             solution^.space136[146] := chr(1);
@@ -2507,7 +2507,7 @@ begin
         if (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) then begin
           if not (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) or (p2_node_ptr_t(subject.il)^.w[14] <> 0) then begin
             solution^.space136[136] := chr(4);
-            if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
               solution^.space136[179] := chr(1);
               if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                 solution^.space136[180] := chr(2);
@@ -2534,7 +2534,7 @@ begin
               end;
             end else begin
               solution^.space136[179] := chr(2);
-              if p2_node_ptr_t(subject.il)^.w[12] = 2 then begin
+              if p2_node_ptr_t(subject.il)^.w[12] = rlen_word then begin
                 solution^.space136[184] := chr(1);
                 if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                   solution^.space136[185] := chr(2);
@@ -2588,7 +2588,7 @@ begin
             end;
           end else begin
             solution^.space136[136] := chr(3);
-            if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
               solution^.space136[165] := chr(1);
               if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                 solution^.space136[166] := chr(2);
@@ -2615,7 +2615,7 @@ begin
               end;
             end else begin
               solution^.space136[165] := chr(2);
-              if p2_node_ptr_t(subject.il)^.w[12] = 2 then begin
+              if p2_node_ptr_t(subject.il)^.w[12] = rlen_word then begin
                 solution^.space136[170] := chr(1);
                 if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                   solution^.space136[171] := chr(2);
@@ -2670,7 +2670,7 @@ begin
           end;
         end else begin
           solution^.space136[136] := chr(2);
-          if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+          if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
             solution^.space136[155] := chr(1);
             if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
               solution^.space136[156] := chr(2);
@@ -2697,7 +2697,7 @@ begin
             end;
           end else begin
             solution^.space136[155] := chr(2);
-            if p2_node_ptr_t(subject.il)^.w[12] = 2 then begin
+            if p2_node_ptr_t(subject.il)^.w[12] = rlen_word then begin
               solution^.space136[160] := chr(1);
               if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
                 solution^.space136[161] := chr(2);
@@ -2729,7 +2729,7 @@ begin
         end;
       end else begin
         solution^.space136[136] := chr(1);
-        if p2_node_ptr_t(subject.il)^.w[12] = 1 then begin
+        if p2_node_ptr_t(subject.il)^.w[12] = rlen_byte then begin
           solution^.space136[137] := chr(1);
           if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
             solution^.space136[138] := chr(2);
@@ -2779,7 +2779,7 @@ begin
           end;
         end else begin
           solution^.space136[137] := chr(2);
-          if p2_node_ptr_t(subject.il)^.w[12] = 2 then begin
+          if p2_node_ptr_t(subject.il)^.w[12] = rlen_word then begin
             solution^.space136[146] := chr(1);
             if (subject.children[1]^.f76.physical_register_number <> isc_solution_ptr_t(isc_user_routines_31c)^.f76.physical_register_number) or not subject.children[1]^.f76.physical_register or (subject.children[1]^.kind <> 11) then begin
               solution^.space136[147] := chr(2);
@@ -2916,7 +2916,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = 6) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_r4) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 424 matched the semantics.');
       writeln;
@@ -3023,7 +3023,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 425 matched the semantics.');
       writeln;
@@ -3078,7 +3078,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 426 matched the semantics.');
       writeln;
@@ -3135,7 +3135,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> 7) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 6) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 427 matched the semantics.');
       writeln;
@@ -3187,7 +3187,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = 6) and (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(subject.children[1]^.il)^.w[13] = 6) and ((p2_node_ptr_t(subject.children[1]^.il)^.w[12] = 4) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = 1) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = 2)) and (p2_node_ptr_t(subject.children[1]^.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_r4) and (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(subject.children[1]^.il)^.w[13] = 6) and ((p2_node_ptr_t(subject.children[1]^.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = rlen_word)) and (p2_node_ptr_t(subject.children[1]^.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 428 matched the semantics.');
       writeln;
@@ -3237,7 +3237,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = 7) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_r8) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 429 matched the semantics.');
       writeln;
@@ -3349,7 +3349,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 430 matched the semantics.');
       writeln;
@@ -3411,7 +3411,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 431 matched the semantics.');
       writeln;
@@ -3475,7 +3475,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> 6) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4) or (p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 432 matched the semantics.');
       writeln;
@@ -3527,7 +3527,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> 7)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 7) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 433 matched the semantics.');
       writeln;
@@ -3619,7 +3619,7 @@ var
 begin
   result := nil;
   work := nil;
-  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = 7) and (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(subject.children[1]^.il)^.w[13] = 7) and ((p2_node_ptr_t(subject.children[1]^.il)^.w[12] = 4) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = 1) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = 2)) and (p2_node_ptr_t(subject.children[1]^.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
+  if ((p2_node_ptr_t(subject.il)^.w[13] = 4) or (p2_node_ptr_t(subject.il)^.w[13] = 1) or (p2_node_ptr_t(subject.il)^.w[13] = 2)) and (p2_node_ptr_t(subject.il)^.w[12] = rlen_r8) and (p2_node_ptr_t(subject.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(subject.children[1]^.il)^.w[13] = 7) and ((p2_node_ptr_t(subject.children[1]^.il)^.w[12] = rlen_long) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = rlen_byte) or (p2_node_ptr_t(subject.children[1]^.il)^.w[12] = rlen_word)) and (p2_node_ptr_t(subject.children[1]^.il)^.b[30] & 64 <> 0) and (p2_node_ptr_t(il_180)^.b[374] & 16 = 0) and not (13 in cargs_$options.flags_286) and ((p2_node_ptr_t(il_180)^.b[374] & 16 <> 0) or (13 in cargs_$options.flags_286) or not (14 in cargs_$options.flags_286)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 434 matched the semantics.');
       writeln;

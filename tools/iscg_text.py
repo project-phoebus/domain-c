@@ -1236,9 +1236,9 @@ begin
       and not p1_node_bytes_ptr_t(il)^[30].b7
       and not il_node_is_literal_sequence_of_zeroes(isc_node_ptr_t(il)^.xp[11])
       and ((invertible_in_sp(il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11]))
-            and (isc_node_ptr_t(il)^.xw[12] = 6))
+            and (isc_node_ptr_t(il)^.xw[12] = rlen_r4))
            or (invertible_in_dp(il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11]))
-               and (isc_node_ptr_t(il)^.xw[12] = 7))) then begin
+               and (isc_node_ptr_t(il)^.xw[12] = rlen_r8))) then begin
     @TRACE
     n := mrh_$alloc(isc_preserve_heap, 48);
     isc_node_ptr_t(n)^.kind := tree_node;
@@ -1246,7 +1246,7 @@ begin
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(get_reciprocal(
         il_$node_ptr_t(isc_node_ptr_t(il)^.xp[11])));
-    isc_node_ptr_t(n)^.xw[18] := 36;
+    isc_node_ptr_t(n)^.tr_op := f_mul_top;
     isc_node_ptr_t(n)^.xl[5] := isc_node_ptr_t(il)^.xl[5];
     isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
     inh_1 := new_inherited_attributes(isc_heap, n);
@@ -1373,7 +1373,7 @@ begin
     isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n)^.xp[17] := isc_node_ptr_t(il)^.xp[17];
     isc_node_ptr_t(n)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
-    isc_node_ptr_t(n)^.xw[38] := 6;
+    isc_node_ptr_t(n)^.as_op := agg_aop;
     isc_node_ptr_t(n)^.xw[28] := 0;
     isc_node_ptr_t(n)^.xw[26] := 11;
     isc_node_ptr_t(n)^.xl[12] := size;
@@ -1583,7 +1583,7 @@ begin
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
-    isc_node_ptr_t(n)^.xw[18] := 12;
+    isc_node_ptr_t(n)^.tr_op := compare_top;
     isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
     isc_node_ptr_t(n)^.xw[14] :=
         p1_readonly_words_ptr_t(addr(isc_readonly_tables))^[24 + abs(isc_node_ptr_t(il)^.xw[14])];
@@ -1659,7 +1659,7 @@ begin
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[10];
-    isc_node_ptr_t(n)^.xw[18] := 3;
+    isc_node_ptr_t(n)^.tr_op := mul_top;
     isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
     isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
     p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
@@ -1678,7 +1678,7 @@ begin
     isc_node_ptr_t(n)^.rewritten := true;
     isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
     isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
-    isc_node_ptr_t(n)^.xw[18] := 33;
+    isc_node_ptr_t(n)^.tr_op := isc_mul_top;
     isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
     isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
     p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
@@ -1781,17 +1781,17 @@ begin
       isc_node_ptr_t(n1)^.kind := tree_node;
       isc_node_ptr_t(n1)^.rewritten := true;
       isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
-      isc_node_ptr_t(n1)^.xw[18] := 18;
+      isc_node_ptr_t(n1)^.tr_op := extend_top;
       isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
-      isc_node_ptr_t(n1)^.xw[12] := 4;
+      isc_node_ptr_t(n1)^.xw[12] := rlen_long;
       p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n2 := mrh_$alloc(isc_preserve_heap, 44);
       isc_node_ptr_t(n2)^.kind := tree_node;
       isc_node_ptr_t(n2)^.rewritten := true;
       isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
-      isc_node_ptr_t(n2)^.xw[18] := 18;
+      isc_node_ptr_t(n2)^.tr_op := extend_top;
       isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
-      isc_node_ptr_t(n2)^.xw[12] := 4;
+      isc_node_ptr_t(n2)^.xw[12] := rlen_long;
       p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(n)^.kind := tree_node;
@@ -1875,7 +1875,7 @@ begin
     isc_node_ptr_t(n1)^.rewritten := true;
     isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[17];
-    isc_node_ptr_t(n1)^.xw[18] := 3;
+    isc_node_ptr_t(n1)^.tr_op := mul_top;
     isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[26];
     isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[26];
     p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[58].b7;
@@ -1887,7 +1887,7 @@ begin
     isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n)^.xp[17] := n1;
     isc_node_ptr_t(n)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
-    isc_node_ptr_t(n)^.xw[38] := 0;
+    isc_node_ptr_t(n)^.as_op := scalar_aop;
     isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
     isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
     isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
@@ -1965,7 +1965,7 @@ begin
     isc_node_ptr_t(n1)^.rewritten := true;
     isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n1)^.xp[11] := isc_node_ptr_t(il)^.xp[17];
-    isc_node_ptr_t(n1)^.xw[18] := 4;
+    isc_node_ptr_t(n1)^.tr_op := div_top;
     isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[27];
     isc_node_ptr_t(n1)^.xw[14] := isc_node_ptr_t(il)^.xw[28];
     p1_node_bytes_ptr_t(n1)^[30].b7 := p1_node_bytes_ptr_t(il)^[58].b7;
@@ -1977,7 +1977,7 @@ begin
     isc_node_ptr_t(n)^.xp[16] := isc_node_ptr_t(il)^.xp[16];
     isc_node_ptr_t(n)^.xp[17] := n1;
     isc_node_ptr_t(n)^.xp[3] := isc_node_ptr_t(il)^.xp[3];
-    isc_node_ptr_t(n)^.xw[38] := 0;
+    isc_node_ptr_t(n)^.as_op := scalar_aop;
     isc_node_ptr_t(n)^.xw[26] := isc_node_ptr_t(il)^.xw[26];
     isc_node_ptr_t(n)^.xl[12] := isc_readonly_tables.rlen_bits[isc_node_ptr_t(il)^.xw[26]] div 8;
     isc_node_ptr_t(n)^.st_l42 := (isc_node_ptr_t(n)^.st_l42 & 16#FF0000FF)
@@ -2046,7 +2046,7 @@ begin
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
-      isc_node_ptr_t(n)^.xw[18] := 59;
+      isc_node_ptr_t(n)^.tr_op := signed_div_top;
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
@@ -2060,7 +2060,7 @@ begin
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
-      isc_node_ptr_t(n)^.xw[18] := 60;
+      isc_node_ptr_t(n)^.tr_op := unsigned_div_top;
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
@@ -2089,17 +2089,17 @@ begin
     isc_node_ptr_t(n1)^.kind := tree_node;
     isc_node_ptr_t(n1)^.rewritten := true;
     isc_node_ptr_t(n1)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
-    isc_node_ptr_t(n1)^.xw[18] := 18;
+    isc_node_ptr_t(n1)^.tr_op := extend_top;
     isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
-    isc_node_ptr_t(n1)^.xw[12] := 4;
+    isc_node_ptr_t(n1)^.xw[12] := rlen_long;
     p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     n2 := mrh_$alloc(isc_preserve_heap, 44);
     isc_node_ptr_t(n2)^.kind := tree_node;
     isc_node_ptr_t(n2)^.rewritten := true;
     isc_node_ptr_t(n2)^.xp[10] := isc_node_ptr_t(il)^.xp[11];
-    isc_node_ptr_t(n2)^.xw[18] := 18;
+    isc_node_ptr_t(n2)^.tr_op := extend_top;
     isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
-    isc_node_ptr_t(n2)^.xw[12] := 4;
+    isc_node_ptr_t(n2)^.xw[12] := rlen_long;
     p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
     n := mrh_$alloc(isc_preserve_heap, 52);
     isc_node_ptr_t(n)^.kind := tree_node;
@@ -2168,7 +2168,7 @@ begin
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
-      isc_node_ptr_t(n)^.xw[18] := 61;
+      isc_node_ptr_t(n)^.tr_op := signed_mod_top;
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
@@ -2182,7 +2182,7 @@ begin
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := isc_node_ptr_t(il)^.xp[10];
       isc_node_ptr_t(n)^.xp[11] := isc_node_ptr_t(il)^.xp[11];
-      isc_node_ptr_t(n)^.xw[18] := 62;
+      isc_node_ptr_t(n)^.tr_op := unsigned_mod_top;
       isc_node_ptr_t(n)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
       isc_node_ptr_t(n)^.xw[14] := isc_node_ptr_t(il)^.xw[14];
       p1_node_bytes_ptr_t(n)^[30].b7 := p1_node_bytes_ptr_t(il)^[30].b7;
@@ -2225,7 +2225,7 @@ begin
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := v1;
       isc_node_ptr_t(n)^.xp[11] := m;
-      isc_node_ptr_t(n)^.xw[18] := 2;
+      isc_node_ptr_t(n)^.tr_op := sub_top;
       isc_node_ptr_t(n)^.xw[12] := isc_node_ptr_t(il)^.xw[12];
 @TAIL6
     end
@@ -2235,17 +2235,17 @@ begin
       isc_node_ptr_t(n1)^.kind := tree_node;
       isc_node_ptr_t(n1)^.rewritten := true;
       isc_node_ptr_t(n1)^.xp[10] := v1;
-      isc_node_ptr_t(n1)^.xw[18] := 18;
+      isc_node_ptr_t(n1)^.tr_op := extend_top;
       isc_node_ptr_t(n1)^.xw[13] := isc_node_ptr_t(il)^.xw[13];
-      isc_node_ptr_t(n1)^.xw[12] := 4;
+      isc_node_ptr_t(n1)^.xw[12] := rlen_long;
       p1_node_bytes_ptr_t(n1)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       n2 := mrh_$alloc(isc_preserve_heap, 44);
       isc_node_ptr_t(n2)^.kind := tree_node;
       isc_node_ptr_t(n2)^.rewritten := true;
       isc_node_ptr_t(n2)^.xp[10] := v2;
-      isc_node_ptr_t(n2)^.xw[18] := 18;
+      isc_node_ptr_t(n2)^.tr_op := extend_top;
       isc_node_ptr_t(n2)^.xw[13] := isc_node_ptr_t(il)^.xw[14];
-      isc_node_ptr_t(n2)^.xw[12] := 4;
+      isc_node_ptr_t(n2)^.xw[12] := rlen_long;
       p1_node_bytes_ptr_t(n2)^[30].b6 := p1_node_bytes_ptr_t(il)^[30].b6;
       q := mrh_$alloc(isc_preserve_heap, 52);
       isc_node_ptr_t(q)^.kind := tree_node;
@@ -2272,8 +2272,8 @@ begin
       isc_node_ptr_t(n)^.rewritten := true;
       isc_node_ptr_t(n)^.xp[10] := n1;
       isc_node_ptr_t(n)^.xp[11] := m;
-      isc_node_ptr_t(n)^.xw[18] := 2;
-      isc_node_ptr_t(n)^.xw[12] := 4;
+      isc_node_ptr_t(n)^.tr_op := sub_top;
+      isc_node_ptr_t(n)^.xw[12] := rlen_long;
 @TAIL6
     end;
   end;

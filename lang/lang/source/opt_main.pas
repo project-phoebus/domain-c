@@ -824,22 +824,22 @@ var
 begin
   ok := false;
   if (a^.kind = assign_node) and (a^.asg_op = fp_aop) and
-     ((a^.asg_rlen = 7) or (a^.asg_rlen = 6)) and
+     ((a^.asg_rlen = rlen_r8) or (a^.asg_rlen = rlen_r4)) and
      (om_complex_size[a^.asg_rlen] = size) then begin
     l := a^.asg_lhs;
     if (l^.kind = disp_node) and (l^.xl[8] = half)
         and (l^.xp[6] = s^.asg_rhs) then
       if (b^.kind = assign_node) and (b^.asg_op = fp_aop) and
-         ((b^.asg_rlen = 7) or (b^.asg_rlen = 6)) and
+         ((b^.asg_rlen = rlen_r8) or (b^.asg_rlen = rlen_r4)) and
          (om_complex_size[b^.asg_rlen] = size) and
          (b^.asg_lhs = s^.asg_rhs) then
         if (c^.kind = assign_node) and (c^.asg_op = fp_aop) and
-           ((c^.asg_rlen = 7) or (c^.asg_rlen = 6)) and
+           ((c^.asg_rlen = rlen_r8) or (c^.asg_rlen = rlen_r4)) and
            (om_complex_size[c^.asg_rlen] = size) and
            (c^.asg_lhs = a^.asg_rhs) then
           if assert_is_fortran_temp(c^.asg_lhs) then
             if (d^.kind = assign_node) and (d^.asg_op = fp_aop) and
-               ((d^.asg_rlen = 7) or (d^.asg_rlen = 6)) and
+               ((d^.asg_rlen = rlen_r8) or (d^.asg_rlen = rlen_r4)) and
                (om_complex_size[d^.asg_rlen] = size) and
                (d^.asg_lhs = b^.asg_rhs) then
               if assert_is_fortran_temp(d^.asg_lhs) then
@@ -869,13 +869,13 @@ var
 begin
   opt_main_$complex_intrinsic_decomposition := false;
   if (a^.kind = assign_node) and (a^.asg_op = fp_aop) and
-     ((a^.asg_rlen = 7) or (a^.asg_rlen = 6)) and
+     ((a^.asg_rlen = rlen_r8) or (a^.asg_rlen = rlen_r4)) and
      (om_complex_size[a^.asg_rlen] = size) then begin
     l := a^.asg_lhs;
     if (l^.kind = disp_node) and (l^.xl[8] = half)
         and (l^.xp[6] = s^.asg_rhs) then
       if (b^.kind = assign_node) and (b^.asg_op = fp_aop) and
-         ((b^.asg_rlen = 7) or (b^.asg_rlen = 6)) and
+         ((b^.asg_rlen = rlen_r8) or (b^.asg_rlen = rlen_r4)) and
          (om_complex_size[b^.asg_rlen] = size) and
          (b^.asg_lhs = s^.asg_rhs) then
         opt_main_$complex_intrinsic_decomposition := true;
@@ -1458,7 +1458,7 @@ begin
       if n^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                      dindex_node..disp_node, cs_node, cc_call, pf_call,
                      cse_use_ob, sym_disp_node] then
-        n^.flags := n^.flags - [5];
+        n^.flags := n^.flags - [phase_vis];
   end;
 end;
 
@@ -2165,7 +2165,7 @@ begin
       n := t;
       if (n^.kind = ptr_node) and ((n^.xl[1] & 30) = 0) then begin
         a := g_opt_tree_ptr_t(n^.xp[6]);
-        if (a^.kind = tree_node) and (a^.op = add_top) and (a^.rlen = 5) then begin
+        if (a^.kind = tree_node) and (a^.op = add_top) and (a^.rlen = rlen_addr) then begin
           x := a^.opnd[1];
           al := ord(n^.xc[22]);
           if al > 127 then
@@ -2407,7 +2407,7 @@ var
   begin
     no_enforce_parens_and_ucs_eq_1 := false;
     c := g_opt_tree_ptr_t(b^.opnd[1]);
-    if not (21 in b^.flags) and not (21 in c^.flags) then begin
+    if not (phase_enf_paren in b^.flags) and not (phase_enf_paren in c^.flags) then begin
       if f then begin
         x := b^.opnd[2];
         if x^.kind = disp_node then
@@ -2526,7 +2526,7 @@ var
     pb := possible_rlens_of_operand(t^.opnd[2], b, t^.dflags.signed);
     if (t^.rlen = rlen) and (a in pa) and (b in pb) and (t^.op = mul_top) then
       return;
-    if not ((rlen = 2) and (a = 2) and (b = 2)) then begin
+    if not ((rlen = rlen_word) and (a = 2) and (b = 2)) then begin
       crush_disp_2(t^.opnd[1], a);
       crush_disp_2(t^.opnd[2], b);
       convert_lshf_to_mul(t);
@@ -2555,7 +2555,7 @@ begin
       distrib_mul := r;
       return;
     end;
-  if m^.flags * [1..4, 21] <> [] then
+  if m^.flags * [phase_vol..phase_devwt, phase_enf_paren] <> [] then
     begin
       distrib_mul := r;
       return;
@@ -2656,11 +2656,11 @@ begin
                           ops[2] := m^.opnd[2];
                           b^.opnd[2] := buildtreenode(lshf_top, m^.size, ops, 2);
                           x := b^.opnd[2];
-                          if (g_opt_tree_ptr_t(x)^.rlen = 4) and
-                             (a^.rlen = 2) then begin
-                            a^.rlen := 4;
-                            if b^.rlen = 2 then
-                              b^.rlen := 4;
+                          if (g_opt_tree_ptr_t(x)^.rlen = rlen_long) and
+                             (a^.rlen = rlen_word) then begin
+                            a^.rlen := rlen_long;
+                            if b^.rlen = rlen_word then
+                              b^.rlen := rlen_long;
                           end;
                           r := il_$node_ptr_t(a);
                           done := true;
@@ -2684,7 +2684,7 @@ begin
                ((c^.kind = var_name) or (c^.kind = fortran_symbol)
                 or (c^.kind = sym_disp_node) or
                 (c^.kind = disp_node)) and
-               not (21 in m^.flags) and not (21 in a^.flags) and
+               not (phase_enf_paren in m^.flags) and not (phase_enf_paren in a^.flags) and
                (m^.uses = 1) and (a^.uses = 1) then
               if (b^.kind <> disp_node) or
                  (il_$node_ptr_t(b)^.xp[6]^.kind = fortran_symbol) then
@@ -2740,7 +2740,7 @@ begin
       return;
   if t^.uses <> 1 then
     return;
-  if 12 in t^.flags then
+  if phase_sd_eff in t^.flags then
     return;
   e := t^.opnd[2];
   if not (e^.kind in [blogical_ob..dpreal_ob, char16_ob, binteger_ob]) then
@@ -3815,13 +3815,13 @@ var
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if 5 in m^.flags then
+      if phase_vis in m^.flags then
         return;
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then begin
       m^.stmt := 0;
-      m^.flags := m^.flags + [5];
+      m^.flags := m^.flags + [phase_vis];
     end;
     case t^.kind of
       cmp_tree_node, tree_node: begin
@@ -3881,7 +3881,7 @@ var
               if c^.kind = cmp_tree_node then
                 c^.kind := tree_node
               else begin
-                d.rlen := 1;
+                d.rlen := rlen_byte;
                 if s^.br_sense then
                   d.w6 := 11
                 else
@@ -3970,9 +3970,9 @@ var
           for j := m^.count downto 1 do begin
             count_interior_nodes_for_postorder_node_list(m^.opnd[j], s);
             ph := getphase(m^.opnd[j]);
-            m^.flags := m^.flags + (ph - [21]);
-            if (1 in m^.flags) and (m^.op <> addr_top) then
-              m^.flags := m^.flags - [1] + [2];
+            m^.flags := m^.flags + (ph - [phase_enf_paren]);
+            if (phase_vol in m^.flags) and (m^.op <> addr_top) then
+              m^.flags := m^.flags - [phase_vol] + [phase_volexpr];
           end
         else begin
           if (target_properties.p_85 < chr(128)) and not opt_track_lines and
@@ -3993,7 +3993,7 @@ var
               m^.w26 := 2;
               m^.w28 := 2;
             end
-            else if m^.rlen = 4 then begin
+            else if m^.rlen = rlen_long then begin
               crush_undesired_extend(m^.dflags.signed, m^.opnd[1], m^.w26);
               crush_undesired_extend(m^.dflags.signed, m^.opnd[2], m^.w28);
             end;
@@ -4001,49 +4001,49 @@ var
           for j := 1 to m^.count do begin
             count_interior_nodes_for_postorder_node_list(m^.opnd[j], s);
             ph := getphase(m^.opnd[j]);
-            m^.flags := m^.flags + (ph - [6, 21]);
-            if (1 in m^.flags) and (m^.op <> addr_top) then
-              m^.flags := m^.flags - [1] + [2];
+            m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
+            if (phase_vol in m^.flags) and (m^.op <> addr_top) then
+              m^.flags := m^.flags - [phase_vol] + [phase_volexpr];
           end;
         end;
         if assert_is_call_tree(t) then
-          m^.flags := m^.flags - [1..4];
+          m^.flags := m^.flags - [phase_vol..phase_devwt];
       end;
       disp_node, sym_disp_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         ph := getphase(t^.xp[6]) + getphase(t^.xp[7]);
-        m^.flags := m^.flags + (ph - [6, 21]);
+        m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
         il_126 := il_126 + 1;
       end;
       ptr_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         ph := getphase(t^.xp[6]) + getphase(t^.xp[7]);
-        m^.flags := m^.flags + (ph - [6, 8, 17, 21]);
-        if 1 in m^.flags then
+        m^.flags := m^.flags + (ph - [phase_cse, phase_indx_lng, phase_nvr_invld, phase_enf_paren]);
+        if phase_vol in m^.flags then
           if not ((t^.xp[6]^.kind = var_name) and (t^.xp[6]^.xw[36] = 5)) then
-            m^.flags := m^.flags - [1] + [2];
+            m^.flags := m^.flags - [phase_vol] + [phase_volexpr];
         il_126 := il_126 + 1;
       end;
       dindex_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         count_interior_nodes_for_postorder_node_list(t^.xp[9], s);
         ph := getphase(t^.xp[6]) + getphase(t^.xp[9]) + getphase(t^.xp[7]);
-        m^.flags := m^.flags + (ph - [6, 17, 21]);
-        if 20 in getphase(t^.xp[9]) then
-          m^.flags := m^.flags - [20];
+        m^.flags := m^.flags + (ph - [phase_cse, phase_nvr_invld, phase_enf_paren]);
+        if phase_proc_reg in getphase(t^.xp[9]) then
+          m^.flags := m^.flags - [phase_proc_reg];
         il_126 := il_126 + 1;
       end;
       cs_node: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[5], s);
         count_interior_nodes_for_postorder_node_list(t^.xp[6], s);
         ph := getphase(t^.xp[5]) + getphase(t^.xp[6]);
-        m^.flags := m^.flags + (ph - [6, 21]);
+        m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
         il_126 := il_126 + 1;
       end;
       pf_call, cc_call: begin
         count_interior_nodes_for_postorder_node_list(t^.xp[4], s);
         ph := getphase(t^.xp[4]);
-        m^.flags := m^.flags + (ph - [6, 21]);
+        m^.flags := m^.flags + (ph - [phase_cse, phase_enf_paren]);
         il_126 := il_126 + 1;
       end;
       cse_use_ob, cse_parent_ob:
@@ -4213,7 +4213,7 @@ var
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if not (5 in m^.flags) then
+      if not (phase_vis in m^.flags) then
         return;
     case t^.kind of
       cmp_tree_node, tree_node: begin
@@ -4239,8 +4239,8 @@ var
           add_interior_node_to_postorder_node_list(m^.opnd[1]);
         end
         else begin
-          if (m^.rlen = 6) or (m^.rlen = 7) or (m^.rlen = 12) or
-             (m^.rlen = 8) then
+          if (m^.rlen = rlen_r4) or (m^.rlen = rlen_r8) or (m^.rlen = rlen_c16) or
+             (m^.rlen = rlen_c8) then
             e^.hdr.b4 := true;
           if m^.op in [sub_top, div_top..mod_top, bit_test_top, call_top..func_call_top, set_diff_top, f_sub_top, f_div_top] then
             for j := m^.count downto 1 do begin
@@ -4318,8 +4318,8 @@ var
     if t^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if 5 in m^.flags then begin
-        m^.flags := m^.flags - [5];
+      if phase_vis in m^.flags then begin
+        m^.flags := m^.flags - [phase_vis];
         m^.owner := opt_4009c[om_stmt_num];
         if t^.kind = cse_use_ob then
           m^.stmt := t^.xp[5]^.xw[5]

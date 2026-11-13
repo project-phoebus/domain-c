@@ -605,7 +605,7 @@ begin
       return;
   if n^.kind = char_string_ob then
     return;
-  if 1 in getphase(n) then
+  if phase_vol in getphase(n) then
     return;
   s := cg_stmt;
   repeat
@@ -967,9 +967,9 @@ begin
   a.f5 := 0;
   if m^.kind <> gen_tree_node then begin
     ph := getphase(m);
-    if ph * [1, 2] <> [] then
+    if ph * [phase_vol, phase_volexpr] <> [] then
       a.f5 := a.f5 ! 1;
-    if ph * [3, 4] <> [] then
+    if ph * [phase_devrd, phase_devwt] <> [] then
       a.f5 := a.f5 ! 4;
   end;
   a.x := integer32(m);
@@ -1057,11 +1057,11 @@ begin
           if alias_$related(ad, d) then
             obj := nil;
           ph := getphase(obj);
-          if (2 in ph) and (obj^.kind <> gen_tree_node) then
+          if (phase_volexpr in ph) and (obj^.kind <> gen_tree_node) then
             obj := nil
           else if obj <> nil then
             if obj^.kind = var_name then
-              if (obj^.xw[36] <> 5) and (1 in ph) then
+              if (obj^.xw[36] <> 5) and (phase_vol in ph) then
                 obj := nil;
         end;
       if (obj2 <> nil) and (obj2 <> cg_addr_cache[r].obj) then
@@ -1072,11 +1072,11 @@ begin
           if alias_$related(ad, d) then
             obj2 := nil;
           ph := getphase(obj2);
-          if (2 in ph) and (obj2^.kind <> gen_tree_node) then
+          if (phase_volexpr in ph) and (obj2^.kind <> gen_tree_node) then
             obj2 := nil
           else if obj2 <> nil then
             if obj2^.kind = var_name then
-              if (obj2^.xw[36] <> 5) and (1 in ph) then
+              if (obj2^.xw[36] <> 5) and (phase_vol in ph) then
                 obj2 := nil;
         end;
     end;
@@ -2166,7 +2166,7 @@ begin
       end;
     tree_node, gen_tree_node, cmp_tree_node: begin
       if n^.kind <> tree_node then begin
-        if (cg_tree_ptr_t(n)^.op = func_call_top) and (cg_tree_ptr_t(n)^.desc.rlen = 9) then begin
+        if (cg_tree_ptr_t(n)^.op = func_call_top) and (cg_tree_ptr_t(n)^.desc.rlen = rlen_cs) then begin
           address(cg_tree_ptr_t(n)^.opnd[2], 0, a);
           goto tail;
         end;
@@ -2298,11 +2298,11 @@ tail:
   if a.f2 > 7 then
     if not (a.f1 in [3, 7]) and (n^.kind <> gen_tree_node) then begin
       ph := getphase(n);
-      if 1 in ph then
+      if phase_vol in ph then
         a.f5 := a.f5 ! 1
-      else if 2 in ph then
+      else if phase_volexpr in ph then
         a.f5 := a.f5 ! 1;
-      if (3 in ph) or (4 in ph) then
+      if (phase_devrd in ph) or (phase_devwt in ph) then
         a.f5 := a.f5 ! 5;
     end;
   a.x := integer32(n);
@@ -2415,7 +2415,7 @@ chosen:
     sel := best
   else if cst <> 0 then begin
     if best <> 0 then begin
-      if (rlen <= 2) or (rlen = 5) then
+      if (rlen <= rlen_word) or (rlen = rlen_addr) then
         sel := best
       else if ((n^.xw[3] & 16#400) <> 0) and
           (peek(cg_tree_ptr_t(n)^.opnd[best], rlen) = n^.xw[5]) then
@@ -2443,9 +2443,9 @@ chosen:
   end;
   if sel < 0 then begin
     o := cg_tree_ptr_t(n)^.opnd[i];
-    if (rlen = 4) and (peek(o, 4) = 31) and (peek(o, 5) <> 31) then
+    if (rlen = rlen_long) and (peek(o, 4) = 31) and (peek(o, 5) <> 31) then
       address(o, 5, t)
-    else if (rlen = 5) and (peek(o, 5) = 31) and (peek(o, 4) <> 31) then
+    else if (rlen = rlen_addr) and (peek(o, 5) = 31) and (peek(o, 4) <> 31) then
       address(o, 4, t)
     else
       address(o, rlen, t);

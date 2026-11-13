@@ -266,7 +266,7 @@ begin
                   or (rr^.node^.kind = var_name) then
                 if il_utils_$is_strength_reduction_temp(rr^.node) then
                   if (st^.kind = assign_node) and (st^.asg_op = scalar_aop) and
-                     (st^.asg_rlen = 5) and (st^.asg_lhs = rr^.node) then
+                     (st^.asg_rlen = rlen_addr) and (st^.asg_lhs = rr^.node) then
                     rr^.flags := rr^.flags + [2];
             if not test_stmt(rr, 2 * s) then
               if not test_stmt(rr, 2 * s + 1) then
@@ -323,7 +323,7 @@ begin
                     rr^.prefer := rr^.prefer + [0];
                   end
                   else if opt_4009c[runbackend_16 - 1]^.kind = return_node then begin
-                    if opt_4009c[runbackend_16 - 1]^.asg_rlen = 5 then begin
+                    if opt_4009c[runbackend_16 - 1]^.asg_rlen = rlen_addr then begin
                       rr^.flags := rr^.flags + [2];
                       rr^.prefer := rr^.prefer + [8];
                     end
@@ -407,7 +407,7 @@ begin
                                     dindex_node..disp_node, cs_node, cc_call,
                                     pf_call,
                                     cse_use_ob, sym_disp_node] then
-                      if 6 in g_opt_tree_ptr_t(t2)^.flags then
+                      if phase_cse in g_opt_tree_ptr_t(t2)^.flags then
                         if g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t2)^.stmt] =
                            rr^.node then
                           exit;

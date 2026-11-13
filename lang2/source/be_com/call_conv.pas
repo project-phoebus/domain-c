@@ -197,7 +197,7 @@ var
   b: cc_blk_ptr_t;
   n: il_$node_ptr_t;
 begin
-  rlen := 0;
+  rlen := rlen_null;
   size := 0;
   case t^.kind of
     function_blk: begin
@@ -229,7 +229,7 @@ begin
       size := t^.xl[5];
     end;
     addr_con: begin
-      rlen := 5;
+      rlen := rlen_addr;
       size := 4;
     end;
     cse_use_ob:
@@ -237,48 +237,48 @@ begin
     cse_parent_ob:
       get_rlen_and_size(t^.xp[1], rlen, size);
     blogical_ob, ubinteger_ob, char_ob, binteger_ob: begin
-      rlen := 1;
+      rlen := rlen_byte;
       size := 1;
     end;
     llogical_ob, linteger_ob, ulinteger_ob: begin
-      rlen := 4;
+      rlen := rlen_long;
       size := 4;
     end;
     integer_ob, uinteger_ob:
       if cargs_$options.i_star_2 then begin
-        rlen := 2;
+        rlen := rlen_word;
         size := 2;
       end
       else begin
-        rlen := 4;
+        rlen := rlen_long;
         size := 4;
       end;
     slogical_ob, sinteger_ob, usinteger_ob: begin
-      rlen := 2;
+      rlen := rlen_word;
       size := 2;
     end;
     real_ob: begin
-      rlen := 6;
+      rlen := rlen_r4;
       size := 4;
     end;
     dpreal_ob: begin
-      rlen := 7;
+      rlen := rlen_r8;
       size := 8;
     end;
     complex_ob: begin
-      rlen := 8;
+      rlen := rlen_c8;
       size := 8;
     end;
     dpcomplex_ob: begin
-      rlen := 12;
+      rlen := rlen_c16;
       size := 16;
     end;
     varying_ob, char_string_ob, set_con_ob: begin
-      rlen := 11;
+      rlen := rlen_agg;
       size := t^.xw[8] & 16#FFFF;
     end;
     cs_node: begin
-      rlen := 9;
+      rlen := rlen_cs;
       n := t^.xp[6];
       if n^.kind = integer_ob then
         size := n^.int_value
@@ -286,7 +286,7 @@ begin
         size := 0;
     end;
     cs_temp: begin
-      rlen := 9;
+      rlen := rlen_cs;
       size := t^.xw[11];
     end;
     disp_node: begin
@@ -295,20 +295,20 @@ begin
         if size <= 4 then begin
           size := size - t^.xl[8];
           if size = 1 then begin
-            rlen := 1;
+            rlen := rlen_byte;
             return;
           end
           else if size = 2 then begin
-            rlen := 2;
+            rlen := rlen_word;
             return;
           end
           else if size = 4 then begin
-            rlen := 4;
+            rlen := rlen_long;
             return;
           end;
         end;
         size := 0;
-        rlen := 0;
+        rlen := rlen_null;
       end;
     end;
     otherwise
@@ -403,7 +403,7 @@ procedure ftn_param_vat_check(
 begin
   if n^.kind = fortran_symbol then
     if rshft(ord(n^.xc[11]) & 16#F0, 4) = 5 then begin
-      rlen := 5;
+      rlen := rlen_addr;
       size := 4;
     end;
 end;
@@ -498,28 +498,28 @@ begin
       case code of
         0: begin
           d.offset := d.offset + 3;
-          d.f16.rlen := 1;
+          d.f16.rlen := rlen_byte;
           size := 1;
         end;
         1: begin
           d.offset := d.offset + 2;
-          d.f16.rlen := 2;
+          d.f16.rlen := rlen_word;
           size := 2;
         end;
         2: begin
-          d.f16.rlen := 4;
+          d.f16.rlen := rlen_long;
           size := 4;
         end;
         4: begin
-          d.f16.rlen := 6;
+          d.f16.rlen := rlen_r4;
           size := 4;
         end;
         5: begin
-          d.f16.rlen := 7;
+          d.f16.rlen := rlen_r8;
           size := 8;
         end;
         3: begin
-          d.f16.rlen := 5;
+          d.f16.rlen := rlen_addr;
           size := 4;
         end;
       end;
@@ -528,11 +528,11 @@ begin
     end;
     7, 8: begin
       if code = 7 then begin
-        d.f16.rlen := 1;
+        d.f16.rlen := rlen_byte;
         size := 1;
       end
       else begin
-        d.f16.rlen := 2;
+        d.f16.rlen := rlen_word;
         size := 2;
       end;
       d.size := size;
@@ -540,7 +540,7 @@ begin
       mode := 2;
     end;
     9, 10, 11: begin
-      d.f16.rlen := 4;
+      d.f16.rlen := rlen_long;
       d.size := 4;
       d.by_value := false;
       case code of
@@ -669,7 +669,7 @@ begin
   offs := 0;
   blk := nil;
   link := nil;
-  rlen := 0;
+  rlen := rlen_null;
   nfixed := 0;
   heap := addr(lir_3f60);
   nested := false;
@@ -684,7 +684,7 @@ begin
     pas := lib_dsc_name_cmp(opr, pas_substr, 11) or pas;
     if pas then begin
       has_result := true;
-      rlen := 11;
+      rlen := rlen_agg;
       rsize := 32;
     end;
     n := opr^.xw[5] + ord(has_result);
@@ -745,7 +745,7 @@ begin
     if node^.xw[18] = 16 then begin
       get_rlen_and_size(node, rlen, sz);
       rsize := sz;
-      if rlen = 9 then
+      if rlen = rlen_cs then
         has_result := nested
       else
         has_result := true;
@@ -996,15 +996,15 @@ begin
     else
       d^.sym := nil;
     case rlen of
-      0: d^.f18.loc := 4;
-      1, 2, 4, 5: d^.f18.loc := 0;
-      6: d^.f18.loc := 1;
-      7: d^.f18.loc := 2;
+      rlen_null: d^.f18.loc := 4;
+      rlen_byte, rlen_word, rlen_long, rlen_addr: d^.f18.loc := 0;
+      rlen_r4: d^.f18.loc := 1;
+      rlen_r8: d^.f18.loc := 2;
       otherwise
-        if (blk <> nil) and (blk^.lev.level > 0) and (rlen = 8) then
+        if (blk <> nil) and (blk^.lev.level > 0) and (rlen = rlen_c8) then
           d^.f18.loc := 2
         else if (blk <> nil) and (blk^.lev.level > 0)
-                and (rlen = 12) then
+                and (rlen = rlen_c16) then
           d^.f18.loc := 3
         else begin
           d^.f18.loc := 0;
@@ -1067,7 +1067,7 @@ begin
   if (opr^.kind = param_name)
      or ((opr^.kind = param_list) and (blk^.lev.level > 0)) then begin
     { The parameters (121, chained) or a prototype's entries (168). }
-    if (opr^.kind = param_list) and (rlen = 9) then begin
+    if (opr^.kind = param_list) and (rlen = rlen_cs) then begin
       d := addr(props^.args[1]);
       d^.f18.loc := 4;
       d^.num := 1;
@@ -1075,7 +1075,7 @@ begin
       d^.f20.kind := 4;
       d^.by_value := false;
       d^.f22.mode := 3;
-      d^.f16.rlen := 9;
+      d^.f16.rlen := rlen_cs;
       if (node^.kind = program_blk) or (node^.kind = procedure_blk)
          or (node^.kind = entry_blk) or (node^.kind = function_blk) then begin
         d^.sym := unset396;
@@ -1089,14 +1089,14 @@ begin
       d^.offset := offs;
       offs := offs + 4;
     end;
-    r := ord((rlen = 9) or has_result);
+    r := ord((rlen = rlen_cs) or has_result);
     for k := 1 + r to n do begin
       d := addr(props^.args[k]);
       d^.f20.kind := 0;
       if opr^.kind = param_name then
         get_rlen_and_size(opr, rl, sz)
       else
-        get_rlen_and_size(opr^.xp[3 * (k - ord((rlen = 9) or has_result))],
+        get_rlen_and_size(opr^.xp[3 * (k - ord((rlen = rlen_cs) or has_result))],
                           rl, sz);
       d^.f18.loc := 4;
       d^.f16.rlen := rl;
@@ -1163,13 +1163,13 @@ begin
             if ord(opr^.xc[46]) >= 128 then begin
               a := node^.xp[10 + d^.num];
               if a^.kind = integer_ob then begin
-                if (d^.f16.rlen <> 2) and (d^.f16.rlen <> 1) then begin
-                  d^.f16.rlen := 4;
+                if (d^.f16.rlen <> rlen_word) and (d^.f16.rlen <> rlen_byte) then begin
+                  d^.f16.rlen := rlen_long;
                   d^.size := step;
                 end;
               end
               else if (a^.kind = var_name) and (a^.xw[36] = 5) then begin
-                d^.f16.rlen := 5;
+                d^.f16.rlen := rlen_addr;
                 d^.size := step;
               end
               else begin
@@ -1188,13 +1188,13 @@ begin
         end
         else
           case d^.f16.rlen of
-            1: d^.offset := offs + 3;
-            2: d^.offset := offs + 2;
-            7: begin
+            rlen_byte: d^.offset := offs + 3;
+            rlen_word: d^.offset := offs + 2;
+            rlen_r8: begin
               step := 8;
               d^.offset := offs;
             end;
-            4, 6: d^.offset := offs;
+            rlen_long, rlen_r4: d^.offset := offs;
             otherwise begin
               d^.offset := offs;
               step := (d^.size + 3) div 4 * 4;
@@ -1249,17 +1249,17 @@ begin
         d^.f22.mode := 2;
         if pass_char_len_diff(opr) then begin
           d^.by_value := true;
-          d^.f16.rlen := 4;
+          d^.f16.rlen := rlen_long;
           d^.size := 4;
-          if (rlen = 9) and (d^.num + r = lim + 1) then
+          if (rlen = rlen_cs) and (d^.num + r = lim + 1) then
             d^.f20.kind := 5
           else
             d^.f20.kind := 1;
         end
         else begin
-          d^.f16.rlen := 2;
+          d^.f16.rlen := rlen_word;
           d^.size := 2;
-          if (rlen = 9) and (d^.num + r = lim + 1) then
+          if (rlen = rlen_cs) and (d^.num + r = lim + 1) then
             d^.f20.kind := 6
           else
             d^.f20.kind := 2;
@@ -1341,7 +1341,7 @@ begin
           if pt^.count >= d^.num then
             if pt^.types[d^.num]^.kind <> label_ob then
               typed := true;
-        if typed and (d^.f16.rlen = 6) then begin
+        if typed and (d^.f16.rlen = rlen_r4) then begin
           if nfp <= 19 then begin
             d^.f18.loc := 1;
             d^.f22.reg := nfp;
@@ -1349,7 +1349,7 @@ begin
           end;
           next;
         end;
-        if (d^.f16.rlen = 7)
+        if (d^.f16.rlen = rlen_r8)
            and (typed or (node^.kind = function_blk)
                 or (node^.kind = procedure_blk)) then begin
           if odd(nfp) then
@@ -1365,7 +1365,7 @@ begin
             nint := nint + 1;
           next;
         end;
-        dbl := (d^.f16.rlen = 7) and (nfp + 1 <= 19);
+        dbl := (d^.f16.rlen = rlen_r8) and (nfp + 1 <= 19);
         if (nint > 9) and not dbl then
           next;
         if (d^.size <= 4) or not d^.by_value then begin
@@ -1411,11 +1411,11 @@ begin
           e^.offset := props^.args[i + j - 1].offset + 4;
           if (j = w) and (d^.size - 4 * w > 4) then begin
             e^.size := d^.size - 4 * w;
-            e^.f16.rlen := 11;
+            e^.f16.rlen := rlen_agg;
           end
           else begin
             e^.size := 4;
-            e^.f16.rlen := 4;
+            e^.f16.rlen := rlen_long;
           end;
           if nint > 9 then
             e^.f18.loc := 4
@@ -1437,7 +1437,7 @@ begin
         end;
         if w <> 0 then begin
           d^.size := 4;
-          d^.f16.rlen := 4;
+          d^.f16.rlen := rlen_long;
         end;
         props^.nargs := props^.nargs + ord(dbl) + w;
         extra := extra + ord(dbl) + w;
@@ -1452,9 +1452,9 @@ begin
     for k := 1 + ord(has_result) to n do begin
       d := addr(props^.args[k]);
       if d^.f18.loc = 4 then
-        if (d^.f16.rlen = 1) or (d^.f16.rlen = 2)
-           or (not d^.by_value or (d^.f16.rlen = 5))
-           or (d^.f16.rlen = 4) then begin
+        if (d^.f16.rlen = rlen_byte) or (d^.f16.rlen = rlen_word)
+           or (not d^.by_value or (d^.f16.rlen = rlen_addr))
+           or (d^.f16.rlen = rlen_long) then begin
           d^.f18.loc := 0;
           d^.f22.reg := nint;
           if nint = 9 then
@@ -1466,14 +1466,14 @@ begin
     for k := 1 + ord(has_result) to n do begin
       d := addr(props^.args[k]);
       if (d^.f18.loc = 4) and d^.by_value then
-        if d^.f16.rlen = 6 then begin
+        if d^.f16.rlen = rlen_r4 then begin
           if nfp > 19 then
             goto 80;
           d^.f18.loc := 1;
           d^.f22.reg := nfp;
           nfp := nfp + 1;
         end
-        else if d^.f16.rlen = 7 then begin
+        else if d^.f16.rlen = rlen_r8 then begin
           if odd(nfp) then
             nfp := nfp + 1;
           if nfp > 19 then
@@ -1521,7 +1521,7 @@ begin
           d^.num := props^.args[n - 1].num + 1;
           d^.w6 := 0;
           d^.size := 4;
-          d^.f16.rlen := 4;
+          d^.f16.rlen := rlen_long;
           d^.f18.loc := 0;
           d^.by_value := true;
           d^.f22.mode := 0;

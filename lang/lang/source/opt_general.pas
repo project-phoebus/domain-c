@@ -85,7 +85,7 @@ begin
     assert_is_scrutable_tree_not_used_elsewhere := false
   else if ((t^.kind = cmp_tree_node) or (t^.kind = tree_node))
       and (t^.uses = 1) then
-    assert_is_scrutable_tree_not_used_elsewhere := t^.flags * [3, 4, 12] = []
+    assert_is_scrutable_tree_not_used_elsewhere := t^.flags * [phase_devrd, phase_devwt, phase_sd_eff] = []
   else
     assert_is_scrutable_tree_not_used_elsewhere := false;
 end;
@@ -202,7 +202,7 @@ begin
     if cargs_$options.cpu * [5, 9, 10] = [] then
       if t^.kind = tree_node then
         if (t^.op = f_div_top) or (t^.op = f_mul_top) then
-          if (t^.rlen = 7) or (t^.rlen = 6) then begin
+          if (t^.rlen = rlen_r8) or (t^.rlen = rlen_r4) then begin
             c := t^.opnd[2];
             if (c^.kind = real_ob) or (c^.kind = dpreal_ob) then begin
               x.d := c^.real_value;
@@ -295,8 +295,8 @@ begin
     if (t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                     dindex_node..disp_node, cs_node, cc_call, pf_call,
                     cse_use_ob, sym_disp_node]) and
-       (6 in g_opt_tree_ptr_t(t)^.flags) then
-      while 6 in g_opt_tree_ptr_t(t)^.flags do begin
+       (phase_cse in g_opt_tree_ptr_t(t)^.flags) then
+      while phase_cse in g_opt_tree_ptr_t(t)^.flags do begin
         t := g_opt_nodes_ptr_t(il_120)^[g_opt_tree_ptr_t(t)^.stmt];
         if t^.kind = cse_parent_ob then
           exit;
@@ -347,7 +347,7 @@ begin
             end;
           p := st^.prev;
           if p^.kind = assign_node then
-            if (getphase(p^.asg_lhs) + getphase(p^.asg_rhs)) * [1, 2] = [] then
+            if (getphase(p^.asg_lhs) + getphase(p^.asg_rhs)) * [phase_vol, phase_volexpr] = [] then
               if (find_var(st^.asg_lhs) = 0) and
                  (find_var(p^.asg_lhs) = 0) then begin
                 a := st^.asg_lhs;

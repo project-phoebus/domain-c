@@ -111,7 +111,7 @@ attribute already_through_pass_2 +115.3 boolean;
   il_180.<field>.  A rewritten node's fields: nK.wN, nK.pN, nK.bN, nK.bN.B
   and nK.index (the statement index, 16 bits at bit 8 of +42); the
   attributes' values may be rlen_arith(X), rlen_bits(X) (isc_readonly_
-  tables by rlen) and a compare (il.w36 = 59). }
+  tables by rlen) and a compare (il.w36 = signed_div_top). }
 operator isc_unrecognized_il_node image 16#0DB51C;
   fixed;
 end;
@@ -339,7 +339,7 @@ operator isc_assign_node_isc_agg_zero_aop il isc_agg_zero_aop children 2 image 1
   n5.p68 <- n1;
   n5.p72 <- il.p72;
   n5.p12 <- il.p12;
-  n5.w76 <- 34;
+  n5.w76 <- isc_fill_aop;
   n5.w52 <- il.w52;
   n5.w20 <- inh.source_line_number;
   n5.index <- il.index;
@@ -1152,7 +1152,7 @@ operator isc_tree_node_add_top il add_top children 2 image 16#0E5F98;
     n2.b0 <- true;
     n2.p40 <- il.p44;
     n2.p44 <- il.p40;
-    n2.w36 <- 1;
+    n2.w36 <- add_top;
     n2.b30.7 <- il.b30.7;
     n2.w24 <- il.w24;
     child solutions n2 copy_all
@@ -1224,7 +1224,7 @@ operator isc_tree_node_and_top il and_top children 2 image 16#0E69B8;
     n2.b0 <- true;
     n2.p40 <- il.p44;
     n2.p44 <- il.p40;
-    n2.w36 <- 9;
+    n2.w36 <- and_top;
     n2.w24 <- il.w24;
     child solutions n2 copy_all
       il <- n2;
@@ -1361,7 +1361,7 @@ operator isc_tree_node_eor_top il eor_top children 2 image 16#0E855C;
     n2.b0 <- true;
     n2.p40 <- il.p44;
     n2.p44 <- il.p40;
-    n2.w36 <- 44;
+    n2.w36 <- eor_top;
     n2.w24 <- il.w24;
     child solutions n2 copy_all
       il <- n2;
@@ -1634,7 +1634,7 @@ operator isc_tree_node_isc_unsigned_mod_top il isc_unsigned_mod_top children 2 i
   n1.b0 <- true;
   n1.p40 <- il.p40;
   n1.p44 <- il.p44;
-  n1.w36 <- 6;
+  n1.w36 <- mod_top;
   n1.w26 <- il.w24;
   n1.w28 <- il.w24;
   n1.b30.7 <- il.b30.7;
@@ -1653,7 +1653,7 @@ operator isc_tree_node_isc_unsigned_rem_top il isc_unsigned_rem_top children 2 i
   n1.b0 <- true;
   n1.p40 <- il.p40;
   n1.p44 <- il.p44;
-  n1.w36 <- 74;
+  n1.w36 <- isc_signed_rem_top;
   n1.w26 <- il.w24;
   n1.b30.7 <- il.b30.7;
   child solutions n1 copy_all
@@ -1691,7 +1691,7 @@ operator isc_tree_node_max_top il max_top children 2 image 16#0EBD94;
     n2.b0 <- true;
     n2.p40 <- il.p44;
     n2.p44 <- il.p40;
-    n2.w36 <- 45;
+    n2.w36 <- max_top;
     n2.w24 <- il.w24;
     n2.b30.6 <- il.b30.6;
     child solutions n2 copy_all
@@ -1718,7 +1718,7 @@ operator isc_tree_node_min_top il min_top children 2 image 16#0EC0B6;
     n2.b0 <- true;
     n2.p40 <- il.p44;
     n2.p44 <- il.p40;
-    n2.w36 <- 46;
+    n2.w36 <- min_top;
     n2.w24 <- il.w24;
     n2.b30.6 <- il.b30.6;
     child solutions n2 copy_all
@@ -1771,7 +1771,7 @@ operator isc_tree_node_or_top il or_top children 2 image 16#0ED33C;
     n2.b0 <- true;
     n2.p40 <- il.p44;
     n2.p44 <- il.p40;
-    n2.w36 <- 10;
+    n2.w36 <- or_top;
     n2.w24 <- il.w24;
     child solutions n2 copy_all
       il <- n2;
@@ -1908,14 +1908,14 @@ operator isc_tree_node_signed_div_top il signed_div_top children 2 image 16#0EE9
     required_arithmetic <- rlen_arith(il.w28);
     required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 59;
+    immediate_parent_wants_signed <- il.w36 = signed_div_top;
     permissible derived;
   child 1 il.p40
     fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     required_arithmetic <- rlen_arith(il.w26);
     required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 59;
+    immediate_parent_wants_signed <- il.w36 = signed_div_top;
     permissible derived;
 end;
 operator isc_tree_node_signed_mod_top il signed_mod_top children 2 image 16#0EEB7A;
@@ -1924,14 +1924,14 @@ operator isc_tree_node_signed_mod_top il signed_mod_top children 2 image 16#0EEB
     required_arithmetic <- rlen_arith(il.w28);
     required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 61;
+    immediate_parent_wants_signed <- il.w36 = signed_mod_top;
     permissible derived;
   child 1 il.p40
     fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     required_arithmetic <- rlen_arith(il.w26);
     required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 61;
+    immediate_parent_wants_signed <- il.w36 = signed_mod_top;
     permissible derived;
 end;
 operator isc_tree_node_sr_top il sr_top children 2 image 16#0EEDBC;
@@ -2001,14 +2001,14 @@ operator isc_tree_node_unsigned_div_top il unsigned_div_top children 2 image 16#
     required_arithmetic <- rlen_arith(il.w28);
     required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 59;
+    immediate_parent_wants_signed <- il.w36 = signed_div_top;
     permissible derived;
   child 1 il.p40
     fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     required_arithmetic <- rlen_arith(il.w26);
     required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 59;
+    immediate_parent_wants_signed <- il.w36 = signed_div_top;
     permissible derived;
 end;
 operator isc_tree_node_unsigned_mod_top il unsigned_mod_top children 2 image 16#0EFA4E;
@@ -2017,14 +2017,14 @@ operator isc_tree_node_unsigned_mod_top il unsigned_mod_top children 2 image 16#
     required_arithmetic <- rlen_arith(il.w28);
     required_precision <- isc_$precision_from_rlen_and_size(il.w28, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 61;
+    immediate_parent_wants_signed <- il.w36 = signed_mod_top;
     permissible derived;
   child 1 il.p40
     fetch_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     required_arithmetic <- rlen_arith(il.w26);
     required_precision <- isc_$precision_from_rlen_and_size(il.w26, -1);
     immediate_parent_has_signed <- true;
-    immediate_parent_wants_signed <- il.w36 = 61;
+    immediate_parent_wants_signed <- il.w36 = signed_mod_top;
     permissible derived;
 end;
 operator isc_tree_node_value_top il value_top children 1 image 16#0EFC90;

@@ -115,10 +115,6 @@ type
     unused_12: integer32;               { +12 }
   end;
 
-  { A variable's attributes (+32 of a 109 node), named by print_variable:
-    0 var_$volatile .. 31 var_$withrecord. }
-  lt_vattr_t = set of 0..31;
-
   { The line being built: a length and 256 characters, 258 bytes (the
     image's countdown follows it at +0x11C; a varying [256] of char
     takes 262, language reference 3.11.4.1, as outbin's line does).
@@ -266,7 +262,7 @@ type
       4: (vr_name: lt_ptr_t;            { +4: its identifier }
           vr_x8: array [2..6] of integer32;         { +8 }
           vr_type: lt_ptr_t;            { +28 }
-          vr_attr: lt_vattr_t;          { +32 }
+          vr_attr: il_$var_attrs_t;     { +32 }
           vr_x36: array [9..13] of integer32;       { +36 }
           vr_disp: integer32;           { +56 }
           vr_x60: array [15..17] of integer32;      { +60 }
@@ -659,29 +655,29 @@ var
   first: boolean;
 begin
   first := false;
-  if 17 in ph then print_comma(first, 'nvr_invld', 9);
-  if 0 in ph then print_comma(first, 'ATM', 3);
-  if 1 in ph then print_comma(first, 'VOL', 3);
-  if 2 in ph then print_comma(first, 'VOLexpr', 7);
-  if 16 in ph then print_comma(first, 'VOLdecl', 7);
-  if 3 in ph then print_comma(first, 'DEVrd', 5);
-  if 4 in ph then print_comma(first, 'DEVwt', 5);
-  if 5 in ph then print_comma(first, 'vis', 3);
-  if 6 in ph then print_comma(first, 'cse', 3);
-  if 7 in ph then print_comma(first, 'algn_arg_lst', 12);
-  if 8 in ph then print_comma(first, 'indx_lng', 8);
-  if 9 in ph then print_comma(first, 'dly', 3);
-  if 10 in ph then print_comma(first, 'bnd', 3);
-  if 11 in ph then print_comma(first, 'wlkd', 4);
-  if 12 in ph then print_comma(first, 'sd_eff', 6);
-  if 13 in ph then print_comma(first, 'tgt_rt', 6);
-  if 14 in ph then print_comma(first, 'tgt_lft', 7);
-  if 15 in ph then print_comma(first, 'invar', 5);
-  if 18 in ph then print_comma(first, 'isc', 3);
-  if 19 in ph then print_comma(first, 'phys', 4);
-  if 20 in ph then print_comma(first, 'proc_reg', 8);
-  if 21 in ph then print_comma(first, 'enf_paren', 9);
-  if 22 in ph then print_comma(first, 'lcl_cse', 7);
+  if phase_nvr_invld in ph then print_comma(first, 'nvr_invld', 9);
+  if phase_atm in ph then print_comma(first, 'ATM', 3);
+  if phase_vol in ph then print_comma(first, 'VOL', 3);
+  if phase_volexpr in ph then print_comma(first, 'VOLexpr', 7);
+  if phase_voldecl in ph then print_comma(first, 'VOLdecl', 7);
+  if phase_devrd in ph then print_comma(first, 'DEVrd', 5);
+  if phase_devwt in ph then print_comma(first, 'DEVwt', 5);
+  if phase_vis in ph then print_comma(first, 'vis', 3);
+  if phase_cse in ph then print_comma(first, 'cse', 3);
+  if phase_algn_arg_lst in ph then print_comma(first, 'algn_arg_lst', 12);
+  if phase_indx_lng in ph then print_comma(first, 'indx_lng', 8);
+  if phase_dly in ph then print_comma(first, 'dly', 3);
+  if phase_bnd in ph then print_comma(first, 'bnd', 3);
+  if phase_wlkd in ph then print_comma(first, 'wlkd', 4);
+  if phase_sd_eff in ph then print_comma(first, 'sd_eff', 6);
+  if phase_tgt_rt in ph then print_comma(first, 'tgt_rt', 6);
+  if phase_tgt_lft in ph then print_comma(first, 'tgt_lft', 7);
+  if phase_invar in ph then print_comma(first, 'invar', 5);
+  if phase_isc in ph then print_comma(first, 'isc', 3);
+  if phase_phys in ph then print_comma(first, 'phys', 4);
+  if phase_proc_reg in ph then print_comma(first, 'proc_reg', 8);
+  if phase_enf_paren in ph then print_comma(first, 'enf_paren', 9);
+  if phase_lcl_cse in ph then print_comma(first, 'lcl_cse', 7);
 end;
 
 { print_uc_and_phase - ' [' the phase bits, ',' and 'uc=' the use count
@@ -717,18 +713,18 @@ procedure print_rlen(
     r: integer); internal; options(val_param);
 begin
   case r of
-    0: prtcats(s, '??-null-??', 10);
-    1: prtcats(s, 'byte', 4);
-    2: prtcats(s, 'word', 4);
-    4: prtcats(s, 'long', 4);
-    5: prtcats(s, 'addr', 4);
-    6: prtcats(s, 'r4', 2);
-    7: prtcats(s, 'r8', 2);
-    8: prtcats(s, 'c8', 2);
-    9: prtcats(s, 'cs', 2);
-    10: prtcats(s, 'vcs', 3);
-    11: prtcats(s, 'agg', 3);
-    12: prtcats(s, 'c16', 3);
+    rlen_null: prtcats(s, '??-null-??', 10);
+    rlen_byte: prtcats(s, 'byte', 4);
+    rlen_word: prtcats(s, 'word', 4);
+    rlen_long: prtcats(s, 'long', 4);
+    rlen_addr: prtcats(s, 'addr', 4);
+    rlen_r4: prtcats(s, 'r4', 2);
+    rlen_r8: prtcats(s, 'r8', 2);
+    rlen_c8: prtcats(s, 'c8', 2);
+    rlen_cs: prtcats(s, 'cs', 2);
+    rlen_vcs: prtcats(s, 'vcs', 3);
+    rlen_agg: prtcats(s, 'agg', 3);
+    rlen_c16: prtcats(s, 'c16', 3);
     otherwise begin
       prtcats(s, '?? ', 3);
       prtint(s, r, 10, false);
@@ -848,7 +844,7 @@ begin
     0: begin
       prtcats(s, '??NOT USED ', 11);
       prtint(s, v, 10, false);
-      if v <= 12 then begin
+      if v <= rlen_c16 then begin
         prtcatc(s, '/');
         print_rlen(s, v);
       end;
@@ -925,7 +921,7 @@ begin
     18: begin
       prtcats(s, '??USE ', 6);
       prtint(s, v, 10, false);
-      if v <= 12 then begin
+      if v <= rlen_c16 then begin
         prtcatc(s, '/');
         print_rlen(s, v);
       end;
@@ -953,7 +949,7 @@ procedure print_known_aux(
     ovfl: boolean); internal; options(val_param);
 begin
   prtcats(s, ' aux[rl=', 8);
-  if (aux.rlen = 0) and (aux.size = 0) then
+  if (aux.rlen = rlen_null) and (aux.size = 0) then
     prtcats(s, 'null', 4)
   else begin
     print_rlen(s, aux.rlen);
@@ -1393,7 +1389,7 @@ begin
         print_string(s.body, s.length);
         print_uc_and_phase(t^.uses, t^.phase);
         print_char(' ');
-        if 6 in t^.phase then begin
+        if phase_cse in t^.phase then begin
           print_string('cse_parent= Node', 16);
           print_integer(t^.cse_parent, 5, true);
         end
@@ -1708,38 +1704,38 @@ begin
         print_char(' ');
       end;
     end;
-  if 0 in vn^.vr_attr then print_string('var_$volatile ', 14);
-  if 1 in vn^.vr_attr then print_string('var_$atomic ', 12);
-  if 2 in vn^.vr_attr then print_string('var_$physical ', 14);
-  if 3 in vn^.vr_attr then print_string('var_$dev_read ', 14);
-  if 4 in vn^.vr_attr then print_string('var_$dev_write ', 15);
-  if 5 in vn^.vr_attr then print_string('var_$processor_reg ', 19);
-  if 6 in vn^.vr_attr then print_string('var_$initialized ', 17);
-  if 7 in vn^.vr_attr then print_string('var_$forloopindex ', 18);
-  if 8 in vn^.vr_attr then print_string('var_$uplevel ', 13);
-  if 9 in vn^.vr_attr then print_string('var_$loop_trip_count ', 21);
-  if 10 in vn^.vr_attr then print_string('var_$is_formal_parameter ', 25);
-  if 11 in vn^.vr_attr then print_string('var_$unique_value ', 18);
-  if 12 in vn^.vr_attr then print_string('var_$address_exposed ', 21);
-  if 13 in vn^.vr_attr then print_string('var_$passed_by_reference ', 25);
-  if 14 in vn^.vr_attr then print_string('var_$temporary ', 15);
-  if 15 in vn^.vr_attr then print_string('var_$register ', 14);
-  if 16 in vn^.vr_attr then print_string('var_$bss ', 9);
-  if 17 in vn^.vr_attr then print_string('var_$strength_reduction ', 24);
-  if 18 in vn^.vr_attr then print_string('var_$allocated ', 15);
-  if 19 in vn^.vr_attr then print_string('var_$already_seen_this_formal ', 30);
-  if 20 in vn^.vr_attr then print_string('var_$induction ', 15);
-  if 21 in vn^.vr_attr then print_string('var_$nooptimize ', 16);
-  if 22 in vn^.vr_attr then print_string('var_$force_to_memory', 20);
-  if 23 in vn^.vr_attr then print_string('var_$display_ptr ', 17);
-  if 24 in vn^.vr_attr then print_string('var_$wasbound ', 14);
-  if 25 in vn^.vr_attr then print_string('var_$isc_was_here ', 18);
-  if 26 in vn^.vr_attr then print_string('var_$is_a_register_candidate ', 29);
-  if 27 in vn^.vr_attr then print_string('var_$seen_in_ra ', 16);
-  if 28 in vn^.vr_attr then print_string('var_$mentioned_in_sym_disp ', 27);
-  if 29 in vn^.vr_attr then print_string('var_$spilled_to_memory ', 23);
-  if 30 in vn^.vr_attr then print_string('var_$local_copy ', 16);
-  if 31 in vn^.vr_attr then print_string('var_$withrecord ', 16);
+  if var_$volatile in vn^.vr_attr then print_string('var_$volatile ', 14);
+  if var_$atomic in vn^.vr_attr then print_string('var_$atomic ', 12);
+  if var_$physical in vn^.vr_attr then print_string('var_$physical ', 14);
+  if var_$dev_read in vn^.vr_attr then print_string('var_$dev_read ', 14);
+  if var_$dev_write in vn^.vr_attr then print_string('var_$dev_write ', 15);
+  if var_$processor_reg in vn^.vr_attr then print_string('var_$processor_reg ', 19);
+  if var_$initialized in vn^.vr_attr then print_string('var_$initialized ', 17);
+  if var_$forloopindex in vn^.vr_attr then print_string('var_$forloopindex ', 18);
+  if var_$uplevel in vn^.vr_attr then print_string('var_$uplevel ', 13);
+  if var_$loop_trip_count in vn^.vr_attr then print_string('var_$loop_trip_count ', 21);
+  if var_$is_formal_parameter in vn^.vr_attr then print_string('var_$is_formal_parameter ', 25);
+  if var_$unique_value in vn^.vr_attr then print_string('var_$unique_value ', 18);
+  if var_$address_exposed in vn^.vr_attr then print_string('var_$address_exposed ', 21);
+  if var_$passed_by_reference in vn^.vr_attr then print_string('var_$passed_by_reference ', 25);
+  if var_$temporary in vn^.vr_attr then print_string('var_$temporary ', 15);
+  if var_$register in vn^.vr_attr then print_string('var_$register ', 14);
+  if var_$bss in vn^.vr_attr then print_string('var_$bss ', 9);
+  if var_$strength_reduction in vn^.vr_attr then print_string('var_$strength_reduction ', 24);
+  if var_$allocated in vn^.vr_attr then print_string('var_$allocated ', 15);
+  if var_$already_seen_this_formal in vn^.vr_attr then print_string('var_$already_seen_this_formal ', 30);
+  if var_$induction in vn^.vr_attr then print_string('var_$induction ', 15);
+  if var_$nooptimize in vn^.vr_attr then print_string('var_$nooptimize ', 16);
+  if var_$force_to_memory in vn^.vr_attr then print_string('var_$force_to_memory', 20);
+  if var_$display_ptr in vn^.vr_attr then print_string('var_$display_ptr ', 17);
+  if var_$wasbound in vn^.vr_attr then print_string('var_$wasbound ', 14);
+  if var_$isc_was_here in vn^.vr_attr then print_string('var_$isc_was_here ', 18);
+  if var_$is_a_register_candidate in vn^.vr_attr then print_string('var_$is_a_register_candidate ', 29);
+  if var_$seen_in_ra in vn^.vr_attr then print_string('var_$seen_in_ra ', 16);
+  if var_$mentioned_in_sym_disp in vn^.vr_attr then print_string('var_$mentioned_in_sym_disp ', 27);
+  if var_$spilled_to_memory in vn^.vr_attr then print_string('var_$spilled_to_memory ', 23);
+  if var_$local_copy in vn^.vr_attr then print_string('var_$local_copy ', 16);
+  if var_$withrecord in vn^.vr_attr then print_string('var_$withrecord ', 16);
   fresh_ln(n);
 end;
 

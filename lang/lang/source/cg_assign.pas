@@ -483,7 +483,7 @@ begin
   if (s.desc.flags & 16#400) <> 0 then
     if unaligned(s.right) or unaligned(s.left) then
       unit := 1;
-  if s.desc.rlen = 9 then
+  if s.desc.rlen = rlen_cs then
     len := s.desc.size - s.desc.w8
   else
     len := s.desc.size;
@@ -538,7 +538,7 @@ begin
     cg_asn_$block_move(count1, unit, opb, opa, r1, r2);
   end
   else begin
-    if ((s.desc.rlen = 9) and (s.desc.w8 <> 0)) or
+    if ((s.desc.rlen = rlen_cs) and (s.desc.w8 <> 0)) or
         (s.left^.kind = dindex_node) then begin
       load_address(s.left, opa);
       kill_register(opa.f2);
@@ -572,7 +572,7 @@ begin
         unlock(opb);
         anyconst(v, unit, opb);
       end;
-      if (cnt = 0) and (rem = 0) and (s.desc.rlen <> 9) then begin
+      if (cnt = 0) and (rem = 0) and (s.desc.rlen <> rlen_cs) then begin
         remove_postincrement(opb);
         remove_postincrement(opa);
       end;
@@ -600,7 +600,7 @@ begin
       unlock(opb);
       anyconst(buf.w[(off + 2) div 2], 2, opb);
     end;
-    if (rem = 2) and (s.desc.rlen <> 9) then begin
+    if (rem = 2) and (s.desc.rlen <> rlen_cs) then begin
       remove_postincrement(opb);
       remove_postincrement(opa);
     end;
@@ -625,7 +625,7 @@ begin
       unlock(opb);
       anyconst(ord(buf.c[off + 1]), 1, opb);
     end;
-    if s.desc.rlen <> 9 then begin
+    if s.desc.rlen <> rlen_cs then begin
       remove_postincrement(opb);
       remove_postincrement(opa);
     end;
@@ -636,7 +636,7 @@ begin
   else
     release(opb);
 
-  if (s.desc.rlen = 9) and (s.desc.w8 <> 0) then begin
+  if (s.desc.rlen = rlen_cs) and (s.desc.w8 <> 0) then begin
     pad := s.desc.w8;
     if (unit = 1) or (pad = 1) then
       load_operand(smcontk(integer_ob, 16#20), unit, opb)
@@ -837,9 +837,9 @@ begin
     address(s.right, s.desc.rlen, opa);
     if opa.f1 in [2, 4..6, 8, 9, 11, 15] then
       case s.desc.rlen of
-        2: opa.y := opa.y + 1;
-        4: opa.y := opa.y + 3;
-        1: ;
+        rlen_word: opa.y := opa.y + 1;
+        rlen_long: opa.y := opa.y + 3;
+        rlen_byte: ;
         otherwise
           cgerr(28, il_d0, nil);
       end;
@@ -1024,12 +1024,12 @@ begin
       l := asn_reg_list_ptr_t(s.next);
       for i := 1 to l^.count do
         if l^.ents[i].w10 = 32 then
-          if not (l^.ents[i].reg in [0..7]) or (s.desc.rlen = 5) or
-              (s.desc.rlen = 4) or (s.desc.rlen = 2) or
-              (s.desc.rlen = 1) then
-            if not (l^.ents[i].reg in [8..15]) or (s.desc.rlen = 5) then
-              if not (l^.ents[i].reg in [16..23]) or (s.desc.rlen = 7) or
-                  (s.desc.rlen = 6) then
+          if not (l^.ents[i].reg in [0..7]) or (s.desc.rlen = rlen_addr) or
+              (s.desc.rlen = rlen_long) or (s.desc.rlen = rlen_word) or
+              (s.desc.rlen = rlen_byte) then
+            if not (l^.ents[i].reg in [8..15]) or (s.desc.rlen = rlen_addr) then
+              if not (l^.ents[i].reg in [16..23]) or (s.desc.rlen = rlen_r8) or
+                  (s.desc.rlen = rlen_r4) then
                 if (r = 31) or (r = l^.ents[i].reg) then begin
                   asn_target := cspe(l^.ents[i].obj);
                   if target(s.left) then
@@ -1059,7 +1059,7 @@ begin
   if s.extra <> nil then
     tree_walk(s.extra);
   updateregassign;
-  if s.desc.rlen = 0 then
+  if s.desc.rlen = rlen_null then
     return;
 
   if not (s.asnop in [0..5, 11, 13..16, 19..22]) then
@@ -1260,7 +1260,7 @@ begin
   end;
 
   { The register's new contents. }
-  if ((s.asnop = 11) or (s.asnop = 0)) and not (2 in getphase(s.right)) then
+  if ((s.asnop = 11) or (s.asnop = 0)) and not (phase_volexpr in getphase(s.right)) then
   begin
     if not ((s.right^.kind = disp_node) and
             (s.right^.xp[6] = cg_addr_regs[home].obj) and
@@ -1312,14 +1312,14 @@ begin
   { In memory. }
 memory:
   if (cg_fp_count <> 0) and
-      ((s.desc.rlen < 6) or (s.asnop = 11) or (s.asnop = 0)) then
+      ((s.desc.rlen < rlen_r4) or (s.asnop = 11) or (s.asnop = 0)) then
     purge_fp;
   rlen := s.desc.rlen;
   case s.asnop of
     0, 2:
       goto generic;
     1:
-      if (s.right = s.left) and (rlen = 2) then begin
+      if (s.right = s.left) and (rlen = rlen_word) then begin
         address(s.left, 0, opa);
         shift(opa, rlen, 1, 1);
         invalidate(opa, rlen);
@@ -1333,12 +1333,12 @@ memory:
       if not (s.right^.kind in [blogical_ob..char_ob, char16_ob,
                                 binteger_ob]) then
         goto generic;
-      if 4 in getphase(s.left) then
+      if phase_devwt in getphase(s.left) then
         goto generic;
       v := s.right^.xl[2];
-      if rlen = 1 then
+      if rlen = rlen_byte then
         v := v ! (-256)
-      else if rlen = 2 then
+      else if rlen = rlen_word then
         v := v ! (-65536);
       if v = -1 then
         return;
@@ -1348,7 +1348,7 @@ memory:
         return;
       end;
       off := 0;
-      if rlen = 4 then begin
+      if rlen = rlen_long then begin
         if v = 16#00FFFFFF then
           w := 1
         else if v = 16#0000FFFF then
@@ -1372,7 +1372,7 @@ memory:
         else
           goto generic;
       end
-      else if rlen = 2 then begin
+      else if rlen = rlen_word then begin
         if v = -65281 then
           w := 1
         else if v = -256 then begin
@@ -1402,12 +1402,12 @@ memory:
       if not (s.right^.kind in [blogical_ob..char_ob, char16_ob,
                                 binteger_ob]) then
         goto generic;
-      if 4 in getphase(s.left) then
+      if phase_devwt in getphase(s.left) then
         goto generic;
       v := s.right^.xl[2];
-      if rlen = 1 then
+      if rlen = rlen_byte then
         v := v & 16#FF
-      else if rlen = 2 then
+      else if rlen = rlen_word then
         v := v & 16#FFFF;
       if v = 0 then
         return;
@@ -1416,7 +1416,7 @@ memory:
         return;
       end;
       off := 0;
-      if rlen = 4 then begin
+      if rlen = rlen_long then begin
         if v = 16#0000FFFF then begin
           off := 2;
           w := 2;
@@ -1440,7 +1440,7 @@ memory:
         else
           goto generic;
       end
-      else if rlen = 2 then begin
+      else if rlen = rlen_word then begin
         if v = 16#FF00 then
           w := 1
         else if v = 16#00FF then begin
@@ -1487,7 +1487,7 @@ memory:
       low := lshft(1, lo);
       fld := lshft(1, lo + n) - low;
       if n = 1 then
-        direct := rlen = 1
+        direct := rlen = rlen_byte
       else begin
         if (fld & s.right^.xl[2]) <> fld then
           goto generic;
@@ -1500,7 +1500,7 @@ memory:
         direct := rshft(n, 3) = rlen;
       end;
       if not direct then
-        if 4 in getphase(s.left) then
+        if phase_devwt in getphase(s.left) then
           goto generic;
       address(s.left, 0, opa);
       if n = 1 then begin
@@ -1534,7 +1534,7 @@ memory:
           and (s.right^.xl[2] = 1) then
       begin
         address(s.left, 0, opa);
-        if rlen = 2 then
+        if rlen = rlen_word then
           shift(opa, rlen, s.right^.xw[5], 3)
         else begin
           address(s.left, rlen, t);
@@ -1570,7 +1570,7 @@ memory:
         goto done;
       end;
     16:
-      if (rlen = 2) and (s.right^.kind in [blogical_ob..char_ob, char16_ob,
+      if (rlen = rlen_word) and (s.right^.kind in [blogical_ob..char_ob, char16_ob,
                                            binteger_ob]) and
           (s.right^.xl[2] = 1) then begin
         address(s.left, 0, opa);
@@ -1603,7 +1603,7 @@ memory:
     { Aggregates, sets, bit fields, the floating operators. }
     6:
       if (cg_fp_count <> 0) and (s.desc.size = 8) then begin
-        s.desc.rlen := 7;
+        s.desc.rlen := rlen_r8;
         s.asnop := 11;
         goto floating;
       end
@@ -1617,7 +1617,7 @@ memory:
       goto floating;
     21, 19: begin
       if (cargs_$options.cpu * [2, 4] <> []) and
-          ((rlen = 6) or (rlen = 7)) and (cg_fp_count <> 0) then
+          ((rlen = rlen_r4) or (rlen = rlen_r8)) and (cg_fp_count <> 0) then
         purge_fp;
       load_modifiable(s.right, s.desc.rlen, opa);
       address(s.left, rlen, opb);
@@ -1635,7 +1635,7 @@ memory:
     end;
     22, 20: begin
       if ((2 in cargs_$options.cpu) or (4 in cargs_$options.cpu)) and
-          ((rlen = 6) or (rlen = 7)) and (cg_fp_count <> 0) then
+          ((rlen = rlen_r4) or (rlen = rlen_r8)) and (cg_fp_count <> 0) then
         purge_fp;
       r := peek(s.right, rlen);
       if (r <> 31) and (peek(s.left, rlen) = r) and
@@ -1679,10 +1679,10 @@ memory:
 floating:
   rlen := s.desc.rlen;
   if ((2 in cargs_$options.cpu) or (4 in cargs_$options.cpu)) and
-      ((rlen = 6) or (rlen = 7)) and (cg_fp_count <> 0) then
+      ((rlen = rlen_r4) or (rlen = rlen_r8)) and (cg_fp_count <> 0) then
     purge_fp;
   if (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
-      register_tickle(s.right, false) and ((rlen = 6) or (rlen = 7)) then
+      register_tickle(s.right, false) and ((rlen = rlen_r4) or (rlen = rlen_r8)) then
   begin
     load_operand(s.right, fp_rlen(s.desc, 2), opb);
     unlock(opb);
@@ -1693,9 +1693,9 @@ floating:
       (chk_assign(s.right, fp_rlen(s.desc, 2)) in [16..23]) or
       (chk_assign(s.left, fp_rlen(s.desc, 1)) in [16..23])) and
      (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
-     ((rlen = 6) or (rlen = 7)) then
+     ((rlen = rlen_r4) or (rlen = rlen_r8)) then
     use_reg := true
-  else if (8 in cargs_$options.cpu) and (rlen > 7) then
+  else if (8 in cargs_$options.cpu) and (rlen > rlen_r8) then
     use_reg := (chk_assign(s.left, fp_rlen(s.desc, 1)) in [16..23]) or
         (peek(s.right, fp_rlen(s.desc, 2)) in [16..23]) or
         (chk_assign(s.right, fp_rlen(s.desc, 2)) in [16..23])
@@ -1741,7 +1741,7 @@ floating:
   { Else moved, or through the floating stack or the FPA. }
   if (cg_fp_count = 0) and not check_use(cg_fp_last_store, s.right) then
   begin
-    if rlen > 6 then begin
+    if rlen > rlen_r4 then begin
       agg_assign_proc(s);
       return;
     end;
@@ -1789,7 +1789,7 @@ floating:
   { The other operators: the source loaded or addressed, the operation
     on the destination. }
 generic:
-  if (rlen = 5) and ((peek(s.right, 4) <> 31) or (s.asnop <> 0)) then
+  if (rlen = rlen_addr) and ((peek(s.right, 4) <> 31) or (s.asnop <> 0)) then
     size := 4
   else
     size := rlen;
@@ -1803,7 +1803,7 @@ generic:
   if s.right^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then begin
     skip := false;
     if (ord(s.right^.xc[11]) = 255) and (size = 1) then
-      skip := not (4 in getphase(s.left));
+      skip := not (phase_devwt in getphase(s.left));
     if not skip and not ((size <= 2) and (s.asnop = 0)) then begin
       v := s.right^.xl[2];
       if ((v >= -128) and (v < 0)) or ((v >= lim) and (v <= 127)) then
@@ -1836,7 +1836,7 @@ generic:
     emit(asn_ops[s.asnop], size, opa, opb, 0);
   invalidate(opa, s.desc.size);
   if (opb.f1 = 1) and ((s.asnop = 11) or (s.asnop = 0)) and
-      not (1 in getphase(s.left)) then
+      not (phase_vol in getphase(s.left)) then
     if chk_assign(cg_addr_regs[opb.f2].obj, cg_addr_regs[opb.f2].size) <>
         opb.f2 then
       if chk_assign(cg_addr_regs[opb.f2].obj2,

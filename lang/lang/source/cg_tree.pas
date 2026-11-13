@@ -248,7 +248,7 @@ procedure cg_tree_$fpa1_expon_inquire(
     out b: integer;
     out c: integer); options(val_param); internal;
 begin
-  if cg_tree_ptr_t(n)^.desc.rlen = 6 then begin
+  if cg_tree_ptr_t(n)^.desc.rlen = rlen_r4 then begin
     if cg_tree_ptr_t(n)^.desc.w8 <= 4 then begin
       a := 0;
       b := 94;
@@ -296,7 +296,7 @@ var
 begin
   n := cg_tree_ptr_t(t);
   rtn := 176;
-  if (n^.desc.rlen = 12) or (n^.desc.rlen = 8) or
+  if (n^.desc.rlen = rlen_c16) or (n^.desc.rlen = rlen_c8) or
       assert_is_f_math_op(t, 15) then
     rtn := 21
   else if (n^.op = f_extend_top) and ((n^.desc.w6 = 12) or (n^.desc.w6 = 8)) then
@@ -312,7 +312,7 @@ begin
       if not ((fn = 13) or (fn = 12) or (fn = 9) or (fn = 0)) and
           (fn in [0..21]) and tree_math[fn].ok then begin
         rtn := tree_math[fn].rtn;
-        if n^.desc.rlen = 7 then
+        if n^.desc.rlen = rlen_r8 then
           if not ((fn = 11) or (fn = 10)) then
             rtn := rtn + 1;
       end
@@ -320,20 +320,20 @@ begin
         rtn := 18;
     end
     else if n^.op = f_extend_top then begin
-      if n^.desc.rlen = 4 then begin
+      if n^.desc.rlen = rlen_long then begin
         if (n^.desc.flags & 16#4000) <> 0 then
           rtn := 143
         else
           rtn := 144;
       end
       else if ((n^.desc.flags & 16#4000) = 0) and (fn = 4) and
-          ((n^.desc.rlen = 7) or (n^.desc.rlen = 6)) then
+          ((n^.desc.rlen = rlen_r8) or (n^.desc.rlen = rlen_r4)) then
         rtn := 18
-      else if n^.desc.rlen < 4 then
+      else if n^.desc.rlen < rlen_long then
         rtn := 18;
     end
     else if n^.op = f_expon_top then begin
-      if n^.desc.rlen = 6 then begin
+      if n^.desc.rlen = rlen_r4 then begin
         if n^.desc.w8 <= 4 then
           rtn := 131
         else
@@ -355,10 +355,10 @@ begin
     fn := n^.desc.w6;
     if ((n^.op = f_extend_top) and ((n^.desc.flags & 16#4000) = 0) and (fn = 4)) or
         (((fn = 7) or (fn = 6)) and
-         ((n^.desc.rlen = 4) or (n^.desc.rlen = 2))) then
+         ((n^.desc.rlen = rlen_long) or (n^.desc.rlen = rlen_word))) then
       rtn := 18
     else if (n^.op = f_extend_top) and (10 in cargs_$options.cpu) and
-        ((n^.desc.rlen = 4) or (n^.desc.rlen = 2)) then
+        ((n^.desc.rlen = rlen_long) or (n^.desc.rlen = rlen_word)) then
       rtn := 18
     else if n^.op = f_math_top then begin
       if 10 in cargs_$options.cpu then
@@ -401,16 +401,16 @@ begin
       ((cg_tree_ptr_t(n)^.op = f_add_top) or (cg_tree_ptr_t(n)^.op = f_sub_top) or
        (cg_tree_ptr_t(n)^.op = f_div_top) or (cg_tree_ptr_t(n)^.op = f_mul_top)) then
     if cargs_$options.cpu * [2, 4, 8, 9, 10] <> [] then
-      if (cg_tree_ptr_t(n)^.desc.rlen = 7) or
-          (cg_tree_ptr_t(n)^.desc.rlen = 6) then begin
+      if (cg_tree_ptr_t(n)^.desc.rlen = rlen_r8) or
+          (cg_tree_ptr_t(n)^.desc.rlen = rlen_r4) then begin
         lib := r;
         r := true;
         if cargs_$options.cpu * [8, 9] = [] then begin
           for i := cg_tree_ptr_t(n)^.count downto 1 do begin
             m := cg_tree_ptr_t(n)^.opnd[i];
             if (m^.kind = gen_tree_node) or (m^.kind = tree_node) then
-              if (cg_tree_ptr_t(m)^.desc.rlen = 7) or
-                  (cg_tree_ptr_t(m)^.desc.rlen = 6) then
+              if (cg_tree_ptr_t(m)^.desc.rlen = rlen_r8) or
+                  (cg_tree_ptr_t(m)^.desc.rlen = rlen_r4) then
                 if cg_tree_$needs_lib_support(m, rtn) then
                   if rtn = 18 then begin
                     lib := true;
@@ -598,7 +598,7 @@ begin
   end;
   unlock(a);
   gen_call(nil, std_lib_rtns[rtn]);
-  if assert_is_f_math_op(n, 11) and (t^.desc.rlen <= 4) then begin
+  if assert_is_f_math_op(n, 11) and (t^.desc.rlen <= rlen_long) then begin
     kill_register(0);
     address_reg(16, a);
     address_reg(0, r2);
@@ -1229,7 +1229,7 @@ var
       if (bits <= 8) and (inst <> 13) then
         address(n^.opnd[2], il_$node_ptr_t(n)^.xw[11], ops)
       else if (inst = 18) and (peek(n^.opnd[2], il_$node_ptr_t(n)^.xw[11]) = 31) and
-          (not (3 in getphase(n^.opnd[2])) or (sz = n^.desc.size)) then begin
+          (not (phase_devrd in getphase(n^.opnd[2])) or (sz = n^.desc.size)) then begin
         address(n^.opnd[2], sz, ops);
         if ops.f1 <> 1 then
           ops.y := ops.y + (n^.desc.size - sz);
@@ -1491,7 +1491,7 @@ var
         opr.y := opr.y + 1;
       end;
     if cnst and (off = 0) and (n^.desc.w8 = 8) then begin
-      if ((n^.desc.flags & 16#4000) = 0) and (n^.desc.rlen > 1) then begin
+      if ((n^.desc.flags & 16#4000) = 0) and (n^.desc.rlen > rlen_byte) then begin
         anyconst(0, n^.desc.rlen, c);
         emit(0, n^.desc.rlen, ops, c, 0);
         unlock(c);
@@ -1863,7 +1863,7 @@ var
       end;
       0, 1: begin
         tree_rlen := n^.desc.rlen;
-        n^.desc.rlen := 2;
+        n^.desc.rlen := rlen_word;
         load_result(il_$node_ptr_t(n), 2, opr);
         ldsqr(2);
         emit(op, 2, opr, ops, 0);
@@ -1876,11 +1876,11 @@ var
         return;
       end;
       2, 4: begin
-        n^.desc.rlen := 4;
+        n^.desc.rlen := rlen_long;
         load_result(il_$node_ptr_t(n), -2, opr);
         address(n^.opnd[1], 2, ops);
         emit(7, 2, opr, ops, 0);
-        n^.desc.rlen := 2;
+        n^.desc.rlen := rlen_word;
         cg_addr_regs[opr.f2].size := 2;
         unlock(opr);
         release(ops);
@@ -1889,7 +1889,7 @@ var
         return;
       end;
       6: begin
-        n^.desc.rlen := 4;
+        n^.desc.rlen := rlen_long;
         load_result(il_$node_ptr_t(n), 2, opr);
         if n^.opnd[1] = n^.opnd[2] then begin
           ops := opr;
@@ -1898,7 +1898,7 @@ var
         else
           load_operand(n^.opnd[2], 4, ops);
         emit(7, 2, opr, ops, 0);
-        n^.desc.rlen := 2;
+        n^.desc.rlen := rlen_word;
         cg_addr_regs[opr.f2].size := 2;
         unlock(opr);
         release(ops);
@@ -2065,21 +2065,21 @@ var
         1:
           emit(29, 2, a, cg_null_ads, 0);
         2:
-          if n^.desc.rlen = 4 then begin
+          if n^.desc.rlen = rlen_long then begin
             anyconst(65535, 4, c);
             emit(3, 4, a, c, 0);
           end;
         3:
-          if n^.desc.rlen = 4 then
+          if n^.desc.rlen = rlen_long then
             emit(30, 4, a, cg_null_ads, 0);
         4: begin
-          if n^.desc.rlen >= 4 then
+          if n^.desc.rlen >= rlen_long then
             emit(3, 2, a, cg_zero_ads, 0);
           emit(29, 2, a, cg_null_ads, 0);
         end;
         5: begin
           emit(29, 2, a, cg_null_ads, 0);
-          if n^.desc.rlen = 4 then
+          if n^.desc.rlen = rlen_long then
             emit(30, 4, a, cg_null_ads, 0);
         end;
         otherwise ;
@@ -3071,7 +3071,7 @@ begin
     { A value as it is (0, 17, 63): a floating one on the floating
       stack without a floating unit. }
     nop_top, value_top, align_top:
-      if (n^.desc.rlen = 7) or (n^.desc.rlen = 6) then begin
+      if (n^.desc.rlen = rlen_r8) or (n^.desc.rlen = rlen_r4) then begin
         if cargs_$options.cpu * [2, 4, 8, 9, 10] = [] then begin
           if not check_use(cg_fp_result, n^.opnd[1]) then
             stack_fp(1, n^.desc.rlen, n^.opnd[1]);
@@ -3091,19 +3091,19 @@ begin
     add_top: begin
       if cg_fp_count <> 0 then
         purge_fp;
-      if (n^.desc.rlen = 5) and (peek(n^.opnd[2], 4) <> 31) then begin
+      if (n^.desc.rlen = rlen_addr) and (peek(n^.opnd[2], 4) <> 31) then begin
         load_result(il_$node_ptr_t(n), -1, opr);
         address(n^.opnd[2], 4, ops);
       end
-      else if (n^.desc.rlen = 5) and (peek(n^.opnd[1], 4) <> 31) then begin
+      else if (n^.desc.rlen = rlen_addr) and (peek(n^.opnd[1], 4) <> 31) then begin
         load_result(il_$node_ptr_t(n), -2, opr);
         address(n^.opnd[1], 4, ops);
       end
       else begin
         load_result(il_$node_ptr_t(n), 2, opr);
-        if (n^.desc.rlen = 4) and (peek(n^.opnd[2], 5) <> 31) then
+        if (n^.desc.rlen = rlen_long) and (peek(n^.opnd[2], 5) <> 31) then
           address(n^.opnd[2], 5, ops)
-        else if (n^.desc.rlen = 5) and (peek(n^.opnd[2], 4) <> 31) then
+        else if (n^.desc.rlen = rlen_addr) and (peek(n^.opnd[2], 4) <> 31) then
           address(n^.opnd[2], 4, ops)
         else
           address(n^.opnd[2], n^.desc.rlen, ops);
@@ -3121,7 +3121,7 @@ begin
         purge_fp;
       inst := tree_op_inst[2];
       if ((il_$node_ptr_t(n)^.xw[3] & 16#2000) <> 0) and
-          (n^.desc.rlen <> 5) then begin
+          (n^.desc.rlen <> rlen_addr) then begin
         load_result(il_$node_ptr_t(n), -2, opr);
         n^.opnd[1] := t2;
         n^.opnd[2] := t1;
@@ -3130,9 +3130,9 @@ begin
       end
       else
         load_result(il_$node_ptr_t(n), -1, opr);
-      if (n^.desc.rlen = 5) and (peek(n^.opnd[2], 4) <> 31) then
+      if (n^.desc.rlen = rlen_addr) and (peek(n^.opnd[2], 4) <> 31) then
         address(n^.opnd[2], 4, ops)
-      else if (n^.desc.rlen = 4) and (peek(n^.opnd[2], 5) <> 31) then
+      else if (n^.desc.rlen = rlen_long) and (peek(n^.opnd[2], 5) <> 31) then
         address(n^.opnd[2], 5, ops)
       else
         address(n^.opnd[2], n^.desc.rlen, ops);
@@ -3165,18 +3165,18 @@ begin
       if n^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                               binteger_ob] then
         if (n^.op = and_top) and (n^.opnd[2]^.xl[2] < 0) and
-            (tree_rlen = 4) then begin
+            (tree_rlen = rlen_long) then begin
           if n^.opnd[2]^.xl[2] >= -128 then
-            tree_rlen := 1
+            tree_rlen := rlen_byte
           else if n^.opnd[2]^.xl[2] >= -32767 then
-            tree_rlen := 2;
+            tree_rlen := rlen_word;
         end
         else if (n^.op = or_top) and (n^.opnd[2]^.xl[2] > 0) and
-            (tree_rlen = 4) then begin
+            (tree_rlen = rlen_long) then begin
           if n^.opnd[2]^.xl[2] <= 127 then
-            tree_rlen := 1
+            tree_rlen := rlen_byte
           else if n^.opnd[2]^.xl[2] <= 32767 then
-            tree_rlen := 2;
+            tree_rlen := rlen_word;
         end;
       address(n^.opnd[2], tree_rlen, ops);
       emit(tree_op_inst[ord(n^.op)], tree_rlen, opr, ops, 0);
@@ -3328,7 +3328,7 @@ begin
       if ((n^.opnd[1]^.kind = var_name) or (n^.opnd[1]^.kind = fortran_symbol)
           or
           (n^.opnd[1]^.kind = disp_node) or (n^.opnd[1]^.kind = ptr_node)) and
-          (n^.desc.rlen = 4) then begin
+          (n^.desc.rlen = rlen_long) then begin
         address(n^.opnd[1], 5, ops);
         if ops.f1 <> 2 then begin
           unlock(ops);
@@ -3392,7 +3392,7 @@ begin
       else if 8 in cargs_$options.cpu then begin
         fpa_fop_proc(il_$node_ptr_t(n), 10, 10);
         setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-        if n^.desc.rlen >= 8 then
+        if n^.desc.rlen >= rlen_c8 then
           setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
       end
       else begin
@@ -3437,7 +3437,7 @@ begin
       else if 8 in cargs_$options.cpu then begin
         fpa_fop_proc(il_$node_ptr_t(n), 19, 28);
         setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-        if n^.desc.rlen >= 8 then
+        if n^.desc.rlen >= rlen_c8 then
           setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
       end
       else begin
@@ -3465,9 +3465,9 @@ begin
             e := -(rshft(dv.hi & 16#7FF00000, 20) - 1023);
           end;
           if (e >= -128) and (e <= 127) then
-            tree_rlen := 1
+            tree_rlen := rlen_byte
           else
-            tree_rlen := 2;
+            tree_rlen := rlen_word;
           anyconst(e, tree_rlen, ops);
           inst := 69;
           if dv.d < 0.0 then
@@ -3493,7 +3493,7 @@ begin
       else if 8 in cargs_$options.cpu then begin
         fpa_fop_proc(il_$node_ptr_t(n), 37, 37);
         setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-        if n^.desc.rlen >= 8 then
+        if n^.desc.rlen >= rlen_c8 then
           setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
       end
       else begin
@@ -3531,9 +3531,9 @@ begin
             end;
             ops.x := integer32(smcontk(integer_ob, e));
             if (e >= -128) and (e <= 127) then
-              tree_rlen := 1
+              tree_rlen := rlen_byte
             else
-              tree_rlen := 2;
+              tree_rlen := rlen_word;
             anyconst(e, tree_rlen, ops);
             inst := 69;
             if dv.d < 0.0 then
@@ -3560,7 +3560,7 @@ begin
       else if 8 in cargs_$options.cpu then begin
         fpa_fop_proc(il_$node_ptr_t(n), 46, 55);
         setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-        if n^.desc.rlen >= 8 then
+        if n^.desc.rlen >= rlen_c8 then
           setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
       end
       else begin
@@ -3576,7 +3576,7 @@ begin
       tree_fn_rtn[14]; else fpa_fop_proc or fop_proc (83). }
     f_neg_top:
       if (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
-          ((n^.desc.rlen = 7) or (n^.desc.rlen = 6)) then begin
+          ((n^.desc.rlen = rlen_r8) or (n^.desc.rlen = rlen_r4)) then begin
         if cg_fp_count <> 0 then
           purge_fp;
         tree_rlen := fp_rlen(n^.desc, 1);
@@ -3596,14 +3596,14 @@ begin
           emit(49, n^.desc.rlen, opr, ops, tree_rlen);
         unlock(opr);
       end
-      else if (n^.desc.rlen = 12) or (n^.desc.rlen = 8) then begin
+      else if (n^.desc.rlen = rlen_c16) or (n^.desc.rlen = rlen_c8) then begin
         if 8 in cargs_$options.cpu then begin
           push_fpa_opr(n^.opnd[1], 1, n^.desc.rlen, 16);
           emit_jsr(83, n^.desc.rlen, 0);
           emit_jsr(tree_fn_rtn[14], n^.desc.rlen, 0);
           fpa_temp(il_$node_ptr_t(n), t1);
           setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-          if n^.desc.rlen >= 8 then
+          if n^.desc.rlen >= rlen_c8 then
             setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
         end
         else begin
@@ -3617,7 +3617,7 @@ begin
       else if 8 in cargs_$options.cpu then begin
         fpa_fop_proc(il_$node_ptr_t(n), 83, 83);
         setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-        if n^.desc.rlen >= 8 then
+        if n^.desc.rlen >= rlen_c8 then
           setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
       end
       else begin
@@ -3656,7 +3656,7 @@ begin
           emit_jsr(tree_fn_rtn[15], n^.desc.rlen, 0);
           fpa_temp(il_$node_ptr_t(n), t1);
           setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-          if n^.desc.rlen >= 8 then
+          if n^.desc.rlen >= rlen_c8 then
             setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
         end
         else begin
@@ -3673,14 +3673,14 @@ begin
           fp_temp(il_$node_ptr_t(n), t1);
         end;
       end
-      else if (9 in cargs_$options.cpu) and (n^.desc.rlen = 4) and
+      else if (9 in cargs_$options.cpu) and (n^.desc.rlen = rlen_long) and
           ((n^.desc.w6 = 7) or (n^.desc.w6 = 6)) then
         cg_tree_$call_fast_math_lib(il_$node_ptr_t(n))
       else if ((n^.desc.flags & 16#4000) = 0) and (n^.desc.w6 = 4) and
-          ((n^.desc.rlen = 7) or (n^.desc.rlen = 6)) then begin
+          ((n^.desc.rlen = rlen_r8) or (n^.desc.rlen = rlen_r4)) then begin
         if 8 in cargs_$options.cpu then begin
           push_fpa_opr(n^.opnd[1], 1, n^.desc.w6, 0);
-          if n^.desc.rlen = 7 then
+          if n^.desc.rlen = rlen_r8 then
             emit_jsr(156, n^.desc.w6, 0)
           else
             emit_jsr(155, n^.desc.w6, 0);
@@ -3688,7 +3688,7 @@ begin
           setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
         end
         else begin
-          if n^.desc.rlen = 7 then
+          if n^.desc.rlen = rlen_r8 then
             stack_fp(156, n^.desc.w6, n^.opnd[1])
           else
             stack_fp(155, n^.desc.w6, n^.opnd[1]);
@@ -3697,7 +3697,7 @@ begin
       end
       else if ((n^.desc.flags & 16#4000) = 0) and
           ((n^.desc.w6 = 7) or (n^.desc.w6 = 6)) and
-          (n^.desc.rlen = 4) then begin
+          (n^.desc.rlen = rlen_long) then begin
         if 8 in cargs_$options.cpu then begin
           push_fpa_opr(n^.opnd[1], 1, n^.desc.w6, 16);
           if n^.desc.w6 = 7 then
@@ -3715,19 +3715,19 @@ begin
         setresult(0, il_$node_ptr_t(n), n^.desc.rlen);
       end
       else if (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
-          not ((n^.desc.rlen = 12) or (n^.desc.rlen = 8)) and
+          not ((n^.desc.rlen = rlen_c16) or (n^.desc.rlen = rlen_c8)) and
           not ((cargs_$options.cpu * [9, 10] <> []) and
-               (n^.desc.rlen <= 4)) then begin
+               (n^.desc.rlen <= rlen_long)) then begin
         if cg_fp_count <> 0 then
           purge_fp;
         if n^.desc.w6 <= 4 then begin
-          if (n^.desc.rlen = 12) or (n^.desc.rlen = 8) then begin
+          if (n^.desc.rlen = rlen_c16) or (n^.desc.rlen = rlen_c8) then begin
             address_reg(16, opr);
             cg_addr_locks[16] := cg_addr_locks[16] + 1;
-            if n^.desc.rlen = 8 then
-              tree_rlen := 6
+            if n^.desc.rlen = rlen_c8 then
+              tree_rlen := rlen_r4
             else
-              tree_rlen := 7;
+              tree_rlen := rlen_r8;
           end
           else begin
             get_register(il_$node_ptr_t(n), n^.desc.rlen, opr);
@@ -3736,7 +3736,7 @@ begin
           address(n^.opnd[1], n^.desc.w6, ops);
           if (4 in cargs_$options.cpu) and
               (cargs_$options.cpu * [9, 10] = []) and
-              (n^.desc.rlen <= 4) then begin
+              (n^.desc.rlen <= rlen_long) then begin
             release(ops);
             get_temp_register(n^.opnd[1], n^.desc.w6, opu);
             emit(60, tree_rlen, opu, ops, 0);
@@ -3753,9 +3753,9 @@ begin
           end;
           unlock(opr);
         end
-        else if n^.desc.rlen <= 4 then begin
+        else if n^.desc.rlen <= rlen_long then begin
           if n^.desc.w6 = 8 then
-            tree_rlen := 6
+            tree_rlen := rlen_r4
           else
             tree_rlen := n^.desc.w6;
           if ((n^.desc.w6 = 12) or (n^.desc.w6 = 8)) and
@@ -3803,7 +3803,7 @@ begin
           unlock(opr);
         end
         else if ((n^.desc.w6 = 7) or (n^.desc.w6 = 6)) and
-            (8 in cargs_$options.cpu) and (n^.desc.rlen < 8) then begin
+            (8 in cargs_$options.cpu) and (n^.desc.rlen < rlen_c8) then begin
           get_register(il_$node_ptr_t(n), n^.desc.rlen, opr);
           address(n^.opnd[1], n^.desc.w6, ops);
           emit_extend(n^.desc.rlen, opr, ops, n^.desc.w6);
@@ -3812,7 +3812,7 @@ begin
         end
         else if (cargs_$options.frnd or
             (cargs_$options.xansi and cargs_$options.std)) and
-            (4 in cargs_$options.cpu) and (n^.desc.rlen = 6) and
+            (4 in cargs_$options.cpu) and (n^.desc.rlen = rlen_r4) and
             (n^.desc.w6 = 7) then begin
           load_fp_result(il_$node_ptr_t(n), -1, opr);
           t := il_$node_ptr_t(n);
@@ -3820,7 +3820,7 @@ begin
           setresult(opr.f2, il_$node_ptr_t(n), n^.desc.rlen);
           unlock(opr);
         end
-        else if (n^.desc.rlen = 12) or (n^.desc.rlen = 8) then begin
+        else if (n^.desc.rlen = rlen_c16) or (n^.desc.rlen = rlen_c8) then begin
           if peek(n^.opnd[1], n^.desc.w6) <> 16 then begin
             address_reg(16, opr);
             address(n^.opnd[1], n^.desc.w6, ops);
@@ -3833,7 +3833,7 @@ begin
         end
         else begin
           t := n^.opnd[1];
-          if (n^.desc.rlen = 7) and (n^.desc.w6 = 6) and
+          if (n^.desc.rlen = rlen_r8) and (n^.desc.w6 = 6) and
               ((t^.kind = gen_tree_node) or (t^.kind = tree_node)) and
               (cg_tree_ptr_t(t)^.op = f_extend_top) and
               (cg_tree_ptr_t(t)^.opnd[1]^.kind = fortran_symbol) and
@@ -3851,7 +3851,7 @@ begin
             n^.desc.w6 := 7;
           load_fp_result(il_$node_ptr_t(n), -1, opr);
           unlock(opr);
-          if (8 in cargs_$options.cpu) and (n^.desc.rlen = 7) and
+          if (8 in cargs_$options.cpu) and (n^.desc.rlen = rlen_r8) and
               (n^.desc.w6 = 6) then
             emit_extend(n^.desc.rlen, opr, opr, n^.desc.w6);
         end;
@@ -3860,12 +3860,12 @@ begin
         if n^.desc.w6 <= 4 then begin
           if 8 in cargs_$options.cpu then begin
             push_fpa_opr(n^.opnd[1], 1, n^.desc.w6, 16);
-            if n^.desc.rlen = 7 then
+            if n^.desc.rlen = rlen_r8 then
               emit_jsr(77, n^.desc.w6, 0)
             else
               emit_jsr(75, n^.desc.w6, 0);
           end
-          else if n^.desc.rlen = 7 then
+          else if n^.desc.rlen = rlen_r8 then
             stack_fp(77, n^.desc.w6, n^.opnd[1])
           else
             stack_fp(75, n^.desc.w6, n^.opnd[1]);
@@ -3876,13 +3876,13 @@ begin
           else if not check_use(cg_fp_result, n^.opnd[1]) then
             stack_fp(1, n^.desc.w6, n^.opnd[1]);
           case n^.desc.rlen of
-            2: inst := 71;
-            4: inst := 73;
-            6, 7, 8, 12: inst := 79;
+            rlen_word: inst := 71;
+            rlen_long: inst := 73;
+            rlen_r4, rlen_r8, rlen_c8, rlen_c16: inst := 79;
             otherwise ;
           end;
           if n^.desc.w6 = 8 then begin
-            if n^.desc.rlen = 12 then begin
+            if n^.desc.rlen = rlen_c16 then begin
               if 8 in cargs_$options.cpu then begin
                 emit_jsr(143, 6, 0);
                 emit_jsr(79, 6, 0);
@@ -3896,7 +3896,7 @@ begin
                 stack_fp(79, 6, nil);
               end;
             end
-            else if n^.desc.rlen <> 6 then begin
+            else if n^.desc.rlen <> rlen_r4 then begin
               if 8 in cargs_$options.cpu then begin
                 if inst = 79 then
                   emit_clr_fp1(6)
@@ -3908,7 +3908,7 @@ begin
             end;
           end
           else if n^.desc.w6 = 12 then begin
-            if n^.desc.rlen = 8 then begin
+            if n^.desc.rlen = rlen_c8 then begin
               if 8 in cargs_$options.cpu then begin
                 emit_jsr(143, 7, 0);
                 emit_jsr(79, 7, 0);
@@ -3922,15 +3922,15 @@ begin
                 stack_fp(79, 7, nil);
               end;
             end
-            else if n^.desc.rlen <> 7 then begin
+            else if n^.desc.rlen <> rlen_r8 then begin
               if 8 in cargs_$options.cpu then
                 emit_jsr(inst, 7, 0)
               else
                 stack_fp(inst, 7, nil);
             end;
           end
-          else if ((n^.desc.rlen <> 8) or (n^.desc.w6 <> 6)) and
-              not ((n^.desc.rlen = 12) and (n^.desc.w6 = 7)) then begin
+          else if ((n^.desc.rlen <> rlen_c8) or (n^.desc.w6 <> 6)) and
+              not ((n^.desc.rlen = rlen_c16) and (n^.desc.w6 = 7)) then begin
             if 8 in cargs_$options.cpu then begin
               if inst = 79 then
                 emit_clr_fp1(n^.desc.w6)
@@ -3941,14 +3941,14 @@ begin
               stack_fp(inst, n^.desc.w6, nil);
           end;
         end;
-        if ((n^.desc.rlen = 12) or (n^.desc.rlen = 8)) and
+        if ((n^.desc.rlen = rlen_c16) or (n^.desc.rlen = rlen_c8)) and
             not ((n^.desc.w6 = 12) or (n^.desc.w6 = 8)) then begin
           if 8 in cargs_$options.cpu then
             emit_clr_fp1(7)
           else
             stack_fp(79, n^.desc.rlen, nil);
         end;
-        if n^.desc.rlen <= 4 then begin
+        if n^.desc.rlen <= rlen_long then begin
           purge_fp;
           setresult(0, il_$node_ptr_t(n), n^.desc.rlen);
         end
@@ -3958,7 +3958,7 @@ begin
           fp_temp(il_$node_ptr_t(n), t1);
         if 8 in cargs_$options.cpu then begin
           setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-          if n^.desc.rlen >= 8 then
+          if n^.desc.rlen >= rlen_c8 then
             setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
         end;
       end;
@@ -4015,7 +4015,7 @@ begin
             (n^.desc.w6 = 12)) then
           inl := not (10 in cargs_$options.cpu) or (n^.desc.w6 = 13);
       if inl then
-        inl := (n^.desc.rlen = 7) or (n^.desc.rlen = 6);
+        inl := (n^.desc.rlen = rlen_r8) or (n^.desc.rlen = rlen_r4);
       if not inl then begin
         if (9 in cargs_$options.cpu) and tree_math[n^.desc.w6].ok then
           cg_tree_$call_fast_math_lib(il_$node_ptr_t(n))
@@ -4029,7 +4029,7 @@ begin
               opr := ops;
             end
             else begin
-              if n^.desc.rlen = 6 then
+              if n^.desc.rlen = rlen_r4 then
                 address(n^.opnd[1], 8, ops)
               else
                 address(n^.opnd[1], 12, ops);
@@ -4052,19 +4052,19 @@ begin
             unlock(opr);
           end
           else if 8 in cargs_$options.cpu then begin
-            if n^.desc.rlen = 6 then
+            if n^.desc.rlen = rlen_r4 then
               push_fpa_opr(n^.opnd[1], 1, 8, 16)
             else
               push_fpa_opr(n^.opnd[1], 1, 12, 16);
             emit_jsr(tree_fn_rtn[15], n^.desc.rlen, 0);
             fpa_temp(il_$node_ptr_t(n), t1);
             setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-            if n^.desc.rlen >= 8 then
+            if n^.desc.rlen >= rlen_c8 then
               setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
           end
           else begin
             if not check_use(cg_fp_result, n^.opnd[1]) then
-              if n^.desc.rlen = 6 then
+              if n^.desc.rlen = rlen_r4 then
                 stack_fp(1, 8, n^.opnd[1])
               else
                 stack_fp(1, 12, n^.opnd[1]);
@@ -4072,7 +4072,7 @@ begin
             fp_temp(il_$node_ptr_t(n), t1);
           end;
         end
-        else if (n^.desc.w6 = 11) and (n^.desc.rlen <= 7) and
+        else if (n^.desc.w6 = 11) and (n^.desc.rlen <= rlen_r8) and
             (4 in cargs_$options.cpu) and
             (cargs_$options.cpu * [5, 9, 10] = []) then begin
           sz := n^.desc.w8;
@@ -4082,7 +4082,7 @@ begin
             kill_register(opr.f2);
           end;
           emit(60, 6, opr, opr, 0);
-          if n^.desc.rlen > 4 then begin
+          if n^.desc.rlen > rlen_long then begin
             setresult(opr.f2, il_$node_ptr_t(n), n^.desc.rlen);
             unlock(opr);
           end
@@ -4104,7 +4104,7 @@ begin
             fpa_fop_proc(il_$node_ptr_t(n), tree_fn_rtn[n^.desc.w6],
                 tree_fn_rtn[n^.desc.w6]);
             setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-            if n^.desc.rlen >= 8 then
+            if n^.desc.rlen >= rlen_c8 then
               setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
           end
           else begin
@@ -4116,17 +4116,17 @@ begin
         end
         else begin
           if (cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
-              (n^.desc.rlen = 7) then
+              (n^.desc.rlen = rlen_r8) then
             for k := 1 to n^.count do
               cg_tree_$spill_fp_reg_contents_before_fpp(n^.opnd[k],
                   n^.desc.rlen);
           if 8 in cargs_$options.cpu then begin
             fpa_fop_proc(il_$node_ptr_t(n), tree_fn_rtn[n^.desc.w6], 104);
-            if (n^.desc.w6 = 11) and (n^.desc.rlen <= 4) then
+            if (n^.desc.w6 = 11) and (n^.desc.rlen <= rlen_long) then
               setresult(0, il_$node_ptr_t(n), n^.desc.rlen)
             else
               setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-            if n^.desc.rlen >= 8 then
+            if n^.desc.rlen >= rlen_c8 then
               setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
           end
           else begin
@@ -4238,7 +4238,7 @@ begin
         emit_jsr(eb, n^.desc.w8, 0);
         fpa_temp(il_$node_ptr_t(n), t1);
         setresult(16, il_$node_ptr_t(n), n^.desc.rlen);
-        if n^.desc.rlen >= 8 then
+        if n^.desc.rlen >= rlen_c8 then
           setresult(17, il_$node_ptr_t(n), n^.desc.rlen);
       end
       else if 9 in cargs_$options.cpu then
@@ -4249,7 +4249,7 @@ begin
               n^.desc.rlen);
         if not check_use(cg_fp_result, n^.opnd[1]) then
           stack_fp(1, n^.desc.rlen, n^.opnd[1]);
-        if n^.desc.rlen = 6 then begin
+        if n^.desc.rlen = rlen_r4 then begin
           if n^.desc.w8 <= 4 then
             eb := 94
           else
@@ -4265,7 +4265,7 @@ begin
 
     { The library's routines 14 and 15 (43, a word's and a long's). }
     expon_top:
-      if n^.desc.rlen = 2 then
+      if n^.desc.rlen = rlen_word then
         gen_call(il_$node_ptr_t(n), std_lib_rtns[14])
       else
         gen_call(il_$node_ptr_t(n), std_lib_rtns[15]);
@@ -4373,8 +4373,8 @@ begin
         purge_fp;
       load_result(il_$node_ptr_t(n), -1, opr);
       address(n^.opnd[2], n^.desc.rlen, ops);
-      if (n^.desc.rlen = 2) or
-          ((n^.desc.rlen = 4) and (3 in cargs_$options.cpu)) then
+      if (n^.desc.rlen = rlen_word) or
+          ((n^.desc.rlen = rlen_long) and (3 in cargs_$options.cpu)) then
         emit(38, n^.desc.rlen, opr, ops, 0)
       else begin
         emit(18, n^.desc.rlen, opr, ops, 0);
@@ -4438,9 +4438,9 @@ begin
     if at_backend_506 then
       if n^.w18 < 0 then
         if ((cargs_$options.cpu * [2, 4, 8, 9, 10] <> []) and
-            ((rlen = 7) or (rlen = 6)) and
+            ((rlen = rlen_r8) or (rlen = rlen_r4)) and
             (peek(il_$node_ptr_t(n), rlen) in [16..23])) or
-            (rlen <= 6) then
+            (rlen <= rlen_r4) then
           get_temp(il_$node_ptr_t(n), true);
   end;
 end;

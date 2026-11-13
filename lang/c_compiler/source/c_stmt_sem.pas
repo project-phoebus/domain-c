@@ -1249,7 +1249,7 @@ begin
     n := add_top_node(return_node, 56);
     c_top_ptr_t(n)^.hdr.ret := true;
     if cdef_50^.ret_var = nil then
-      c_top_ptr_t(n)^.ret_rlen := 11
+      c_top_ptr_t(n)^.ret_rlen := rlen_agg
     else begin
       type_exp(cdef_50^.ret_var^.var_type, addr(tt));
       c_top_ptr_t(n)^.ret_rlen := get_rlen(tt);
@@ -1443,7 +1443,7 @@ var
   tt: type_exp_t;
   r: c_tree_ptr_t;
 begin
-  if a.desc.rlen = 0 then
+  if a.desc.rlen = rlen_null then
     return;
   rhs := a.opnd[2];
   lhs := a.opnd[1];
@@ -1524,13 +1524,13 @@ function extend_boolean(
 var
   e: c_desc_t;
 begin
-  if d.rlen <> 1 then begin
+  if d.rlen <> rlen_byte then begin
     e := d;
     e.w6 := 1;
     e.flags.b6 := true;
-    if (d.rlen = 6) or (d.rlen = 7) then begin
+    if (d.rlen = rlen_r4) or (d.rlen = rlen_r8) then begin
       if cargs_$options.cpu * [0, 1] <> [] then begin
-        e.rlen := 2;
+        e.rlen := rlen_word;
         add_tn(extend_top, e, top, top);
         e.rlen := d.rlen;
         e.w6 := 2;
@@ -1740,15 +1740,15 @@ begin
   add_brn(elab);
   add_ldfn(flab, 0, true, true);
   case tr^.op of
-    cc_logand_ptop: if d.rlen = 7 then
+    cc_logand_ptop: if d.rlen = rlen_r8 then
           a.opnd[2] := dpcontk(0.0)
-        else if d.rlen = 6 then
+        else if d.rlen = rlen_r4 then
           a.opnd[2] := rlcontk(0.0)
         else
           a.opnd[2] := smcontk(integer_ob, 0);
-    cc_logor_ptop: if d.rlen = 7 then
+    cc_logor_ptop: if d.rlen = rlen_r8 then
           a.opnd[2] := dpcontk(1.0)
-        else if d.rlen = 6 then
+        else if d.rlen = rlen_r4 then
           a.opnd[2] := rlcontk(1.0)
         else
           a.opnd[2] := smcontk(integer_ob, 1);
@@ -2069,7 +2069,7 @@ begin
             add_or_update(a^.opnd[1], incr);
             if (incr < -32700) or (incr > 32700) then begin
               init_aux(aux, tt);
-              aux.rlen := 5;
+              aux.rlen := rlen_addr;
               aux.w6 := 4;
               aux.size := 0;
               cexs_23bc := cexs_23bc + 1;

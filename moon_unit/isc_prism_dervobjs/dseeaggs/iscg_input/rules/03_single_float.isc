@@ -12,7 +12,7 @@ transform 306  fp_reg <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1: fp_r
   pass_1 image 16#107A18 begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 6;
+    condition subject.il.w24 = rlen_r4;
     cycle_guard already_fp_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -48,7 +48,7 @@ transform 307  fp_reg_pair <- f_add_top | f_div_top | f_mul_top | f_sub_top ($1:
   pass_1 image 16#107C6E begin
     temp t2: integer;
     temp t3: integer;
-    condition subject.il.w24 = 7;
+    condition subject.il.w24 = rlen_r8;
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -98,18 +98,18 @@ end;
 
 transform 309  fp_reg <- f_math_top ($1: fp_reg, $2: void)
   pass_1 image 16#107FF2 begin
-    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 = 7);
+    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 = rlen_r8);
     cycle_guard already_fp_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
     else
       result.c136 <- 2;
     end;
-    if subject.il.w24 = 6 then
+    if subject.il.w24 = rlen_r4 then
       result.c137 <- 1;
     else
       result.c137 <- 2;
-      if subject.il.w24 = 5 or subject.il.b30 & 128 = 0 or subject.il.w24 = 4 then
+      if subject.il.w24 = rlen_addr or subject.il.b30 & 128 = 0 or subject.il.w24 = rlen_long then
         result.c138 <- 2;
       else
         result.c138 <- 1;
@@ -165,14 +165,14 @@ end;
 
 transform 310  fp_reg <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#108278 begin
-    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 <> rlen_addr and (subject.il.w24 <> rlen_long) and (subject.il.w24 <> rlen_byte and (subject.il.w24 <> rlen_word)));
     cycle_guard already_fp_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
     else
       result.c136 <- 2;
     end;
-    if subject.il.w24 = 5 or subject.il.b30 & 128 = 0 or subject.il.w24 = 4 then
+    if subject.il.w24 = rlen_addr or subject.il.b30 & 128 = 0 or subject.il.w24 = rlen_long then
       result.c137 <- 2;
     else
       result.c137 <- 1;
@@ -318,7 +318,7 @@ end;
 transform 313  ip_reg <- f_math_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#10891E begin
-    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> rlen_addr and (subject.il.w24 <> rlen_long) and (subject.il.w24 <> rlen_byte and (subject.il.w24 <> rlen_word)));
     cycle_guard already_ip_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -414,7 +414,7 @@ end;
 transform 314  fp_reg <- f_math_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#108B8C begin
-    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 6);
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> rlen_r4);
     cycle_guard already_fp_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -528,7 +528,7 @@ end;
 
 transform 316  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#108F9A begin
-    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 <> 7);
+    condition not (readonly_b424[subject.il.w26] & 128 = 0 or subject.il.w24 <> rlen_r8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -670,7 +670,7 @@ end;
 transform 319  ip_reg <- f_math_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#1095E8 begin
-    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 5 and (subject.il.w24 <> 4) and (subject.il.w24 <> 1 and (subject.il.w24 <> 2)));
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> rlen_addr and (subject.il.w24 <> rlen_long) and (subject.il.w24 <> rlen_byte and (subject.il.w24 <> rlen_word)));
     cycle_guard already_ip_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -774,7 +774,7 @@ end;
 transform 320  fp_reg_pair <- f_math_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#10986C begin
-    condition not (subject.il.w26 <> 11 or subject.il.w24 <> 7);
+    condition not (subject.il.w26 <> 11 or subject.il.w24 <> rlen_r8);
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -904,7 +904,7 @@ end;
 
 transform 322  fp_reg <- f_neg_top ($1: fp_reg)
   pass_1 image 16#109CB6 begin
-    condition subject.il.w24 = 6;
+    condition subject.il.w24 = rlen_r4;
     cycle_guard already_fp_reg;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;
@@ -927,7 +927,7 @@ end;
 
 transform 323  fp_reg_pair <- f_neg_top ($1: fp_reg_pair)
   pass_1 image 16#109E66 begin
-    condition subject.il.w24 = 7;
+    condition subject.il.w24 = rlen_r8;
     cycle_guard already_fp_reg_pair;
     if il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or 14 in cargs_$options.flags_286 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286)) then
       result.c136 <- 1;

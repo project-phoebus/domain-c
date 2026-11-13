@@ -153,7 +153,7 @@ transform 408  ip_reg <- extend_top ($1: ip_reg)
     t33 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 9, 0);
     t34 <- verify_bits($1.bits_known, $1.bits_trusted, 8, 24, 0);
     t35 <- verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 0);
-    condition not (subject.il.b30 & 128 = 0 or ((not t12 and not t11 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t10 and not t9 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t8 and not t7 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t6 and not t5 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t4 and not t3 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t2 and not t1 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (subject.il.w26 <> 1 or subject.il.w24 <> 1))) and (subject.il.w26 <> 2 or subject.il.w24 <> 2)))) and (subject.il.w26 <> 4 or subject.il.w24 <> 4) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t19 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t17 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and ((not t16 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t15 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t14 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t13 or (subject.il.w26 <> 1 or subject.il.w24 <> 1))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t27 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t26 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t24 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t23 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t22 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (subject.il.w26 <> 1 or subject.il.w24 <> 1))) and (subject.il.w26 <> 2 or subject.il.w24 <> 2)))) and (subject.il.w26 <> 4 or subject.il.w24 <> 4) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.w28 <> 0 or subject.il.b30 & 64 = 0 or (not t28 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and (not t29 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t30 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and (not t31 or (subject.il.w26 <> 2 or subject.il.w24 <> 4))) and ((not t32 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and (not t33 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t34 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and (not t35 or (subject.il.w26 <> 1 or subject.il.w24 <> 1)))) and (not verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0) or subject.il.w26 <> 1 or subject.il.w24 <> 2)));
+    condition not (subject.il.b30 & 128 = 0 or ((not t12 and not t11 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word)) and ((not t10 and not t9 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte)) and ((not t8 and not t7 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long)) and ((not t6 and not t5 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)) and ((not t4 and not t3 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_long)) and ((not t2 and not t1 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_word)) and (subject.il.w26 <> 1 or subject.il.w24 <> rlen_byte))) and (subject.il.w26 <> 2 or subject.il.w24 <> rlen_word)))) and (subject.il.w26 <> 4 or subject.il.w24 <> rlen_long) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_long)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word)) and ((not t19 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long)) and ((not t17 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_word)) and ((not t16 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)) and ((not t15 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_long)) and ((not t14 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_word)) and (not t13 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_byte))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t27 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word)) and ((not t26 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte)) and ((not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long)) and ((not t24 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)) and ((not t23 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_long)) and ((not t22 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_word)) and (subject.il.w26 <> 1 or subject.il.w24 <> rlen_byte))) and (subject.il.w26 <> 2 or subject.il.w24 <> rlen_word)))) and (subject.il.w26 <> 4 or subject.il.w24 <> rlen_long) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.w28 <> 0 or subject.il.b30 & 64 = 0 or (not t28 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_long)) and (not t29 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word)) and ((not t30 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte)) and (not t31 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long))) and ((not t32 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_word)) and (not t33 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)) and ((not t34 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_long)) and (not t35 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_byte)))) and (not verify_bits($1.bits_known, $1.bits_trusted, 8, 8, 0) or subject.il.w26 <> 1 or subject.il.w24 <> rlen_word)));
     cycle_guard already_ip_reg;
     copy code_bytes, memory_references, delay, advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
   end;
@@ -228,7 +228,7 @@ transform 409  ip_reg <- extend_top ($1: ip_reg)
     t27 <- verify_any_bits($1.bits_known, $1.bits_trusted, 7, 9, 1);
     t28 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 8, 1);
     t29 <- verify_any_bits($1.bits_known, $1.bits_trusted, 8, 24, 1);
-    condition not (subject.il.b30 & 128 = 0 or ((not t6 or (not t5 or (subject.il.w26 <> 4 or subject.il.w24 <> 2))) and ((not t4 or (not t3 or (subject.il.w26 <> 4 or subject.il.w24 <> 1))) and (not t2 or (not t1 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t15 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and ((not t14 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t13 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t12 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t11 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and ((not t10 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t9 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and ((not t8 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t7 or (subject.il.w26 <> 1 or subject.il.w24 <> 1))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and ((not t19 or (subject.il.w26 <> 2 or subject.il.w24 <> 4)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t17 or (subject.il.w26 <> 1 or subject.il.w24 <> 4)) and (not t16 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)))))) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.b30 & 64 = 0 or subject.il.w28 <> 0 or (not t22 or (subject.il.w26 <> 4 or subject.il.w24 <> 4)) and (not t23 or (subject.il.w26 <> 4 or subject.il.w24 <> 2)) and ((not t24 or (subject.il.w26 <> 4 or subject.il.w24 <> 1)) and (not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> 4))) and ((not t26 or (subject.il.w26 <> 2 or subject.il.w24 <> 2)) and (not t27 or (subject.il.w26 <> 2 or subject.il.w24 <> 1)) and ((not t28 or (subject.il.w26 <> 1 or subject.il.w24 <> 2)) and (not t29 or subject.il.w26 <> 1 or subject.il.w24 <> 4))) and (not verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 1) or subject.il.w26 <> 1 or subject.il.w24 <> 1)));
+    condition not (subject.il.b30 & 128 = 0 or ((not t6 or (not t5 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word))) and ((not t4 or (not t3 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte))) and (not t2 or (not t1 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 = 0)) and ((not t15 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_long)) and ((not t14 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word)) and ((not t13 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte)) and ((not t12 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long)) and ((not t11 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_word)) and ((not t10 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)) and ((not t9 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_long)) and ((not t8 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_word)) and (not t7 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_byte))))))))) or (subject.il.w28 <> 1 or subject.il.b30 & 64 <> 0)) and ((not t21 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word)) and ((not t20 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte)) and ((not t19 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long)) and ((not t18 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)) and ((not t17 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_long)) and (not t16 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_word)))))) or (subject.il.w28 <> 0 or subject.il.b30 & 64 <> 0)) and (subject.il.b30 & 64 = 0 or subject.il.w28 <> 0 or (not t22 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_long)) and (not t23 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_word)) and ((not t24 or (subject.il.w26 <> 4 or subject.il.w24 <> rlen_byte)) and (not t25 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long))) and ((not t26 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_word)) and (not t27 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_byte)) and ((not t28 or (subject.il.w26 <> 1 or subject.il.w24 <> rlen_word)) and (not t29 or subject.il.w26 <> 1 or subject.il.w24 <> rlen_long))) and (not verify_bits($1.bits_known, $1.bits_trusted, 7, 1, 1) or subject.il.w26 <> 1 or subject.il.w24 <> rlen_byte)));
     cycle_guard already_ip_reg;
     result.code_bytes <- $1.code_bytes + 4;
     copy memory_references, delay from $1;
@@ -281,7 +281,7 @@ transform 412  ip_reg <- extend_top ($1: lshf_top($1: ip_reg, $2: literal_32_bit
     temp t5: integer32;
     temp t6: integer32;
     temp t7: integer32;
-    condition not (subject.il.b30 & 128 <> 0 or subject.il.b30 & 64 <> 0 or (subject.il.w26 <> 2 or subject.il.w24 <> 4));
+    condition not (subject.il.b30 & 128 <> 0 or subject.il.b30 & 64 <> 0 or (subject.il.w26 <> 2 or subject.il.w24 <> rlen_long));
     cycle_guard already_ip_reg;
     if $1.$2.literal_32_bits_value <= 0 or $1.$2.literal_32_bits_value > 15 then
       result.l356 <- 15;
@@ -702,7 +702,7 @@ transform 418  ip_reg <- extend_top ($1: ip_reg)
           end;
         else
           result.c136 <- 3;
-          if subject.il.w24 = 1 then
+          if subject.il.w24 = rlen_byte then
             result.c138 <- 1;
             if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
               result.c139 <- 2;
@@ -1098,7 +1098,7 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
       if subject.il.b30 & 64 <> 0 or subject.il.w28 <> 0 then
         if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 0 then
           result.c136 <- 4;
-          if subject.il.w24 = 1 then
+          if subject.il.w24 = rlen_byte then
             result.c163 <- 1;
             if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
               result.c164 <- 2;
@@ -1147,14 +1147,14 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
               end;
             end;
           end;
-          if subject.il.w24 = 4 then
+          if subject.il.w24 = rlen_long then
             result.c172 <- 1;
           else
             result.c172 <- 2;
           end;
         else
           result.c136 <- 3;
-          if subject.il.w24 = 1 then
+          if subject.il.w24 = rlen_byte then
             result.c152 <- 1;
             if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
               result.c153 <- 2;
@@ -1203,7 +1203,7 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
               end;
             end;
           end;
-          if subject.il.w24 = 4 then
+          if subject.il.w24 = rlen_long then
             result.c161 <- 1;
             if $1.bit_15_was_sign_extended then
               result.c162 <- 1;
@@ -1216,7 +1216,7 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
         end;
       else
         result.c136 <- 2;
-        if subject.il.w24 = 1 then
+        if subject.il.w24 = rlen_byte then
           result.c147 <- 1;
           if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
             result.c148 <- 2;
@@ -1240,7 +1240,7 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
               result.c151 <- 2;
             end;
           end;
-        elsif subject.il.w24 = 4 then
+        elsif subject.il.w24 = rlen_long then
           result.c147 <- 2;
         else
           result.c147 <- 3;
@@ -1248,7 +1248,7 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
       end;
     else
       result.c136 <- 1;
-      if subject.il.w24 = 1 then
+      if subject.il.w24 = rlen_byte then
         result.c137 <- 1;
         if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
           result.c138 <- 2;
@@ -1294,7 +1294,7 @@ transform 422  ip_reg <- extend_top ($1: ip_reg)
             result.c145 <- 2;
           end;
         end;
-      elsif subject.il.w24 = 4 then
+      elsif subject.il.w24 = rlen_long then
         result.c137 <- 2;
         if $1.bit_15_was_sign_extended then
           result.c146 <- 1;
@@ -1646,7 +1646,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
       if subject.il.b30 & 64 <> 0 or subject.il.w28 <> 0 then
         if not (subject.il.b30 & 64 <> 0) or subject.il.w28 <> 0 then
           result.c136 <- 4;
-          if subject.il.w24 = 1 then
+          if subject.il.w24 = rlen_byte then
             result.c179 <- 1;
             if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
               result.c180 <- 2;
@@ -1672,7 +1672,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
             end;
           else
             result.c179 <- 2;
-            if subject.il.w24 = 2 then
+            if subject.il.w24 = rlen_word then
               result.c184 <- 1;
               if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
                 result.c185 <- 2;
@@ -1724,7 +1724,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         else
           result.c136 <- 3;
-          if subject.il.w24 = 1 then
+          if subject.il.w24 = rlen_byte then
             result.c165 <- 1;
             if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
               result.c166 <- 2;
@@ -1750,7 +1750,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
             end;
           else
             result.c165 <- 2;
-            if subject.il.w24 = 2 then
+            if subject.il.w24 = rlen_word then
               result.c170 <- 1;
               if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
                 result.c171 <- 2;
@@ -1803,7 +1803,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
         end;
       else
         result.c136 <- 2;
-        if subject.il.w24 = 1 then
+        if subject.il.w24 = rlen_byte then
           result.c155 <- 1;
           if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
             result.c156 <- 2;
@@ -1829,7 +1829,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
           end;
         else
           result.c155 <- 2;
-          if subject.il.w24 = 2 then
+          if subject.il.w24 = rlen_word then
             result.c160 <- 1;
             if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
               result.c161 <- 2;
@@ -1860,7 +1860,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
       end;
     else
       result.c136 <- 1;
-      if subject.il.w24 = 1 then
+      if subject.il.w24 = rlen_byte then
         result.c137 <- 1;
         if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
           result.c138 <- 2;
@@ -1908,7 +1908,7 @@ transform 423  ip_reg <- extend_top ($1: ip_reg)
         end;
       else
         result.c137 <- 2;
-        if subject.il.w24 = 2 then
+        if subject.il.w24 = rlen_word then
           result.c146 <- 1;
           if $1.physical_register_number <> isc_user_routines_31c.physical_register_number or not $1.physical_register or $1.kind <> 11 then
             result.c147 <- 2;
@@ -2452,7 +2452,7 @@ transform 424  fp_reg <- f_extend_top ($1: ip_reg, $2: void)
     temp t4: boolean;
     temp t5: boolean;
     temp t6: boolean;
-    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 6 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = rlen_r4 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
     cycle_guard already_fp_reg;
     t2 <- make_bit_mask_1(8, 0);
     t3 <- make_bit_mask_1(16, 0);
@@ -2611,7 +2611,7 @@ end;
 transform 425  fp_reg <- f_extend_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#139F90 begin
-    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg;
     if subject.il.b30 & 64 <> 0 then
       result.c136 <- 1;
@@ -2669,7 +2669,7 @@ end;
 transform 426  ip_reg <- f_extend_top ($1: fp_reg, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#13A1F2 begin
-    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
     cycle_guard already_ip_reg;
     if subject.il.b30 & 64 <> 0 then
       result.c136 <- 1;
@@ -2737,7 +2737,7 @@ end;
 
 transform 427  fp_reg_pair <- f_extend_top ($1: fp_reg, $2: void)
   pass_1 image 16#13A456 begin
-    condition not (subject.il.w26 <> 6 or subject.il.w24 <> 7 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    condition not (subject.il.w26 <> 6 or subject.il.w24 <> rlen_r8 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg_pair;
     if not isc_user_routines_358 then
       result.c136 <- 1;
@@ -2762,7 +2762,7 @@ end;
 
 transform 428  fp_reg <- f_extend_top ($1: f_extend_top($1: fp_reg, $2: void), $2: void)
   pass_1 image 16#13A63E begin
-    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 6 and (subject.il.b30 & 64 <> 0) and ($1.il.w26 = 6)) and (($1.il.w24 = 4 or $1.il.w24 = 1 or $1.il.w24 = 2) and ($1.il.b30 & 64 <> 0 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286)))));
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = rlen_r4 and (subject.il.b30 & 64 <> 0) and ($1.il.w26 = 6)) and (($1.il.w24 = rlen_long or $1.il.w24 = rlen_byte or $1.il.w24 = rlen_word) and ($1.il.b30 & 64 <> 0 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286)))));
     cycle_guard already_fp_reg;
     result.code_bytes <- $1.code_bytes + $2.code_bytes + 4;
     result.memory_references <- $1.memory_references + $2.memory_references;
@@ -2783,7 +2783,7 @@ transform 429  fp_reg_pair <- f_extend_top ($1: ip_reg, $2: void)
     temp t4: boolean;
     temp t5: boolean;
     temp t6: boolean;
-    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 7 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = rlen_r8 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286))));
     cycle_guard already_fp_reg_pair;
     t2 <- make_bit_mask_1(8, 0);
     t3 <- make_bit_mask_1(16, 0);
@@ -2950,7 +2950,7 @@ end;
 transform 430  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#13AC5C begin
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg;
     if not isc_user_routines_358 then
       result.c136 <- 1;
@@ -3018,7 +3018,7 @@ end;
 transform 431  ip_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   no_could_deadlock_child;
   pass_1 image 16#13AEE2 begin
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 4 and (subject.il.w24 <> 1) and (subject.il.w24 <> 2) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_long and (subject.il.w24 <> rlen_byte) and (subject.il.w24 <> rlen_word) or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
     cycle_guard already_ip_reg;
     if not isc_user_routines_358 then
       result.c136 <- 1;
@@ -3096,7 +3096,7 @@ end;
 
 transform 432  fp_reg <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#13B16A begin
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 6 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_r4 or (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (14 in cargs_$options.flags_286)));
     cycle_guard already_fp_reg;
     if not isc_user_routines_358 then
       result.c136 <- 1;
@@ -3121,7 +3121,7 @@ end;
 
 transform 433  fp_reg_pair <- f_extend_top ($1: fp_reg_pair, $2: void)
   pass_1 image 16#13B352 begin
-    condition not (subject.il.w26 <> 7 or subject.il.w24 <> 7);
+    condition not (subject.il.w26 <> 7 or subject.il.w24 <> rlen_r8);
     cycle_guard already_fp_reg_pair;
     sum code_bytes, memory_references, delay of $1, $2;
     copy advancing_displacement, all_zeroes_or_all_ones, arg_block_location, bit_7_was_sign_extended, bit_15_was_sign_extended, bit_position_of_lsb, bits_known, bits_trusted, bits_known_of_fetched_value, bits_trusted_of_fetched_value, bytes, dead_end, derived_from_literal, embedded_strength_reduction_temporary, field_precision, field_requires_sign_extend, fp_reg_max, fp_reg_result, fp_reg_pair_max, fp_reg_pair_result, fp_reg_quad_max, fp_reg_quad_result, has_a_symbolic_displacement, ip_reg_max, ip_reg_result, is_atomic, is_complex, is_destroyable, is_dynm_vat, is_entire_object, is_physical, is_set_temporary, is_volatile, literal_32_bits_value, literal_64_bits_value_is_zero, literal_derived_from_floating_constant, materialize_true_as_1, n_bytes_to_back_up, pass_1_size, physical_register, physical_register_from_function_call, physical_register_number, physical_register_is_no_modify, physical_register_user_declared, scale, slevel_attribute, uses_the_base_register, uses_the_displacement, uses_the_index_register from $1;
@@ -3139,7 +3139,7 @@ end;
 
 transform 434  fp_reg_pair <- f_extend_top ($1: f_extend_top($1: fp_reg_pair, $2: void), $2: void)
   pass_1 image 16#13B8B6 begin
-    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = 7 and (subject.il.b30 & 64 <> 0) and ($1.il.w26 = 7)) and (($1.il.w24 = 4 or $1.il.w24 = 1 or $1.il.w24 = 2) and ($1.il.b30 & 64 <> 0 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286)))));
+    condition (subject.il.w26 = 4 or subject.il.w26 = 1 or subject.il.w26 = 2) and (subject.il.w24 = rlen_r8 and (subject.il.b30 & 64 <> 0) and ($1.il.w26 = 7)) and (($1.il.w24 = rlen_long or $1.il.w24 = rlen_byte or $1.il.w24 = rlen_word) and ($1.il.b30 & 64 <> 0 and (il_180.b374 & 16 = 0 and not (13 in cargs_$options.flags_286) and (il_180.b374 & 16 <> 0 or 13 in cargs_$options.flags_286 or not (14 in cargs_$options.flags_286)))));
     cycle_guard already_fp_reg_pair;
     if not isc_user_routines_358 then
       result.c136 <- 1;

@@ -186,7 +186,7 @@ type
   g_opt_tree_t = record
     unused_0: integer;                  { +0 }
     kind: il_$kind_t;                   { +2 }
-    flags: set of 0..31;                { +4 }
+    flags: add_node_$phase_t;           { +4: the phase }
     unused_8: integer;                  { +8 }
     stmt: g_opt_num_t;                  { +10 }
     owner: g_opt_stmt_ptr_t;            { +12 }

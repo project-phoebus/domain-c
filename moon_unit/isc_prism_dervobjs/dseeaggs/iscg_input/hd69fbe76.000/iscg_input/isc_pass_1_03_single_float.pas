@@ -131,7 +131,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[12] = 6 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = rlen_r4 then begin
     if isc_user_routines_354 then begin
       write('Pattern 306 matched the semantics.');
       writeln;
@@ -196,7 +196,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[12] = 7 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = rlen_r8 then begin
     if isc_user_routines_354 then begin
       write('Pattern 307 matched the semantics.');
       writeln;
@@ -306,7 +306,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = 7)) then begin
+  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 309 matched the semantics.');
       writeln;
@@ -326,11 +326,11 @@ begin
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if p2_node_ptr_t(subject.il)^.w[12] = 6 then begin
+      if p2_node_ptr_t(subject.il)^.w[12] = rlen_r4 then begin
         solution^.space136[137] := chr(1);
       end else begin
         solution^.space136[137] := chr(2);
-        if (p2_node_ptr_t(subject.il)^.w[12] = 5) or (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = 4) then begin
+        if (p2_node_ptr_t(subject.il)^.w[12] = rlen_addr) or (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_long) then begin
           solution^.space136[138] := chr(2);
         end else begin
           solution^.space136[138] := chr(1);
@@ -374,7 +374,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
+  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 310 matched the semantics.');
       writeln;
@@ -394,7 +394,7 @@ begin
       end else begin
         solution^.space136[136] := chr(2);
       end;
-      if (p2_node_ptr_t(subject.il)^.w[12] = 5) or (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = 4) then begin
+      if (p2_node_ptr_t(subject.il)^.w[12] = rlen_addr) or (p2_node_ptr_t(subject.il)^.b[30] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] = rlen_long) then begin
         solution^.space136[137] := chr(2);
       end else begin
         solution^.space136[137] := chr(1);
@@ -567,7 +567,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 313 matched the semantics.');
       writeln;
@@ -634,7 +634,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 6)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r4)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 314 matched the semantics.');
       writeln;
@@ -749,7 +749,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> 7)) then begin
+  if not ((p1_readonly_ptr_t(addr(isc_readonly_tables))^.b[424 + p2_node_ptr_t(subject.il)^.w[13]] & 128 = 0) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 316 matched the semantics.');
       writeln;
@@ -946,7 +946,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 5) and (p2_node_ptr_t(subject.il)^.w[12] <> 4) and (p2_node_ptr_t(subject.il)^.w[12] <> 1) and (p2_node_ptr_t(subject.il)^.w[12] <> 2)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_addr) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_long) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_byte) and (p2_node_ptr_t(subject.il)^.w[12] <> rlen_word)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 319 matched the semantics.');
       writeln;
@@ -1018,7 +1018,7 @@ var
 begin
   result := nil;
   work := nil;
-  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> 7)) then begin
+  if not ((p2_node_ptr_t(subject.il)^.w[13] <> 11) or (p2_node_ptr_t(subject.il)^.w[12] <> rlen_r8)) then begin
     if isc_user_routines_354 then begin
       write('Pattern 320 matched the semantics.');
       writeln;
@@ -1142,7 +1142,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[12] = 6 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = rlen_r4 then begin
     if isc_user_routines_354 then begin
       write('Pattern 322 matched the semantics.');
       writeln;
@@ -1192,7 +1192,7 @@ var
 begin
   result := nil;
   work := nil;
-  if p2_node_ptr_t(subject.il)^.w[12] = 7 then begin
+  if p2_node_ptr_t(subject.il)^.w[12] = rlen_r8 then begin
     if isc_user_routines_354 then begin
       write('Pattern 323 matched the semantics.');
       writeln;

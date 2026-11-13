@@ -101,7 +101,7 @@ type
           set_words: array [1..2048] of integer);  { +18 }
       { A variable (109): its attributes at +32. }
       5: (va_unused: array [1..7] of integer32;  { +4 }
-          vattr: add_node_$phase_t);    { +32 }
+          vattr: il_$var_attrs_t);      { +32 }
       { By offset. }
       9: (xp: array [1..120] of il_$node_ptr_t);    { +4 }
       13: (xw: array [2..240] of integer);          { +4 }
@@ -388,7 +388,7 @@ begin { delay_$divide_attributes }
       k := div_table[dr, dd].uns;
     end;
     if (dr in [0, 2]) and (dd in [0..3]) and ((k = 4) or (k = 2)) then
-      if (desc.rlen <= 2) and (op = div_top) then
+      if (desc.rlen <= rlen_word) and (op = div_top) then
         k := k - 1
       else if delay_$value_guaranteed_between(opnd[1], -32767, 32767, true)
       then
@@ -670,7 +670,7 @@ begin
   if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then
-    x^.phase := dl_ptr_t(n)^.phase - [5, 8]
+    x^.phase := dl_ptr_t(n)^.phase - [phase_vis, phase_indx_lng]
   else
     x^.phase := [];
   delay_$splice := il_$node_ptr_t(x);
@@ -725,20 +725,20 @@ begin
     o := dl_ptr_t(dl_ptr_t(n)^.opnd[i]);
     case o^.kind of
       cmp_tree_node, tree_node: paramrlen := o^.desc.rlen;
-      dindex_node, sym_disp_node, disp_node, ptr_node: paramrlen := 0;
-      dpreal_ob: paramrlen := 7;
+      dindex_node, sym_disp_node, disp_node, ptr_node: paramrlen := rlen_null;
+      dpreal_ob: paramrlen := rlen_r8;
       otherwise begin
         w := f^.xw[6 + 2 * i];
         if odd(w) then
           w := w + 1;
         if w = 2 then
-          paramrlen := 2
+          paramrlen := rlen_word
         else if w = 4 then
-          paramrlen := 4
+          paramrlen := rlen_long
         else if w = 8 then
-          paramrlen := 7
+          paramrlen := rlen_r8
         else
-          paramrlen := 11;
+          paramrlen := rlen_agg;
       end;
     end;
     return;
@@ -779,7 +779,7 @@ begin
         entry_blk, function_blk, procedure_blk:
           if rshft(ord(f^.xc[377]) & 16#70, 4) = 4 then
             k := -1
-          else if dl_ptr_t(n)^.desc.rlen = 9 then
+          else if dl_ptr_t(n)^.desc.rlen = rlen_cs then
             if j = 2 then
               k := 11
             else
@@ -896,11 +896,11 @@ begin { delay_sets }
           ((x^.kind = var_name) or (x^.kind = disp_node)
            or (x^.kind = ptr_node)) then begin
     if x^.kind = var_name then
-      ok := not (0 in x^.vattr)
+      ok := not (var_$volatile in x^.vattr)
     else if x^.kind = disp_node then
-      ok := not (1 in x^.rf_phase)
+      ok := not (phase_vol in x^.rf_phase)
     else
-      ok := not (1 in x^.rf_phase) and not (2 in x^.rf_phase);
+      ok := not (phase_vol in x^.rf_phase) and not (phase_volexpr in x^.rf_phase);
     if ok then begin
       res := n;
       if doit then begin
@@ -1041,21 +1041,21 @@ var
 
 begin { delay_$propagate_index_long }
   if is_indexer(n) then
-    if 8 in getphase(n) then
+    if phase_indx_lng in getphase(n) then
       if n^.kind = dindex_node then begin
         if is_indexer(dl_ptr_t(n)^.base) then
           dl_ptr_t(dl_ptr_t(n)^.base)^.phase :=
-              dl_ptr_t(dl_ptr_t(n)^.base)^.phase + [8];
+              dl_ptr_t(dl_ptr_t(n)^.base)^.phase + [phase_indx_lng];
         if is_indexer(dl_ptr_t(n)^.index) then
           dl_ptr_t(dl_ptr_t(n)^.index)^.phase :=
-              dl_ptr_t(dl_ptr_t(n)^.index)^.phase + [8];
+              dl_ptr_t(dl_ptr_t(n)^.index)^.phase + [phase_indx_lng];
       end
       else if n^.kind = tree_node then
         if dl_ptr_t(n)^.op = index_top then
           for i := 1 to dl_ptr_t(n)^.count do
             if is_indexer(dl_ptr_t(n)^.opnd[i]) then
               dl_ptr_t(dl_ptr_t(n)^.opnd[i])^.phase :=
-                  dl_ptr_t(dl_ptr_t(n)^.opnd[i])^.phase + [8];
+                  dl_ptr_t(dl_ptr_t(n)^.opnd[i])^.phase + [phase_indx_lng];
 end;
 
 { delay_$shrink_tree_node - delay for a tree node: the class the
@@ -1378,14 +1378,14 @@ begin
     index_top: begin
       delay_$propagate_index_long(il_$node_ptr_t(n));
       discard(delay(n^.opnd[1], 5, 5, true));
-      if 8 in n^.phase then
+      if phase_indx_lng in n^.phase then
         w := n^.desc.w6
       else if not (n^.opnd[2]^.kind in [tree_node, gen_tree_node,
                                         cmp_tree_node, dindex_node..disp_node,
                                         cs_node, cc_call, pf_call, cse_use_ob,
                                         sym_disp_node]) then
         w := n^.desc.w6
-      else if 8 in (getphase(n^.opnd[1]) + getphase(n^.opnd[2])) then
+      else if phase_indx_lng in (getphase(n^.opnd[1]) + getphase(n^.opnd[2])) then
         w := n^.desc.w6
       else
         w := 2;
@@ -1426,7 +1426,7 @@ begin
       end;
     end;
     div_top, mod_top:
-      if n^.desc.rlen <= 4 then begin
+      if n^.desc.rlen <= rlen_long then begin
         if doit then begin
           if maxw < n^.desc.rlen then begin
             n^.desc.rlen := maxw;
@@ -1488,7 +1488,7 @@ begin
                               false));
           end;
           n^.desc.size := 2;
-          n^.desc.rlen := 2;
+          n^.desc.rlen := rlen_word;
         end;
         res := 2;
       end;
@@ -1650,9 +1650,9 @@ begin
   if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then begin
-    if 1 in n^.phase then
+    if phase_vol in n^.phase then
       maxw := want;
-    if (9 in n^.phase) and (n^.kind <> ptr_node) and (n^.kind <> disp_node) and
+    if (phase_dly in n^.phase) and (n^.kind <> ptr_node) and (n^.kind <> disp_node) and
        (n^.kind <> sym_disp_node) then begin
       if n^.kind = dindex_node then begin
         delay := want;
@@ -1703,8 +1703,8 @@ begin
               dl_ptr_t(n^.base)^.desc.rlen, doit))
       else
         discard(delay(n^.base, 4, 4, doit));
-      if (want > maxw) and (want < 5) and not (1 in n^.rf_phase) and
-         not (2 in n^.rf_phase) then begin
+      if (want > maxw) and (want < 5) and not (phase_vol in n^.rf_phase) and
+         not (phase_volexpr in n^.rf_phase) then begin
         if doit then begin
           il_utils_$adjust_uc(t, -1);
           if n^.kind = ptr_node then
@@ -1717,7 +1717,7 @@ begin
       end;
     end;
     var_name:
-      if (want > maxw) and (want < 5) and not (0 in n^.vattr) then begin
+      if (want > maxw) and (want < 5) and not (var_$volatile in n^.vattr) then begin
         if doit then begin
           il_utils_$adjust_uc(t, -1);
           t := add_dn(t, t, want - maxw);
@@ -1731,11 +1731,11 @@ begin
         return;
       end;
       delay_$propagate_index_long(t);
-      if (8 in n^.rf_phase) then
+      if (phase_indx_lng in n^.rf_phase) then
         w := n^.len
       else begin
         ph := getphase(n^.index) + getphase(n^.base);
-        if (8 in ph) or
+        if (phase_indx_lng in ph) or
            not (n^.index^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                                    dindex_node..disp_node, cs_node, cc_call,
                                    pf_call, cse_use_ob, sym_disp_node]) then
@@ -1801,7 +1801,7 @@ begin
                  sym_disp_node] then
     if doit then begin
       dl_ptr_t(t)^.regs := res;
-      dl_ptr_t(t)^.phase := dl_ptr_t(t)^.phase + [9];
+      dl_ptr_t(t)^.phase := dl_ptr_t(t)^.phase + [phase_dly];
     end;
   delay := res;
 end;

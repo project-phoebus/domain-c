@@ -301,7 +301,8 @@ def read_headings_of(path):
 # the abstract syntax
 #
 # expressions: ('num', v) ('nil',) ('bool', b) ('str', s) ('opc', name)
-# ('ilk', name)
+# ('ilk', name) ('cname', name, v) (a named constant: a register class,
+# tree or assignment operator, value v; il_names)
 #   ('path', base, [sel...])  base a parameter, '$K' or a name; sel an
 #   attribute name, '$K', cNNN ...
 #   ('call', name, [args]) ('addr', path) ('bin', op, a, b) ('un', op, a)
@@ -317,6 +318,12 @@ BUILTINS = {'lshft': 'i32', 'rshft': 'i32', 'arshft': 'i32'}
 
 def fmt_expr(e, prec=0):
     k = e[0]
+    if k == 'cname':
+        return e[1]
+    if k == 'bin' and e[1] in ('=', '<>', '<', '<=', '>', '>=', 'u<', 'u<=', 'u>', 'u>='):
+        a, b = named_operand(e[2], e[3]), named_operand(e[3], e[2])
+        if a is not e[2] or b is not e[3]:
+            e = ('bin', e[1], a, b)
     if k == 'num':
         v = e[1]
         return ('16#%X' % v if v >= 4096 else str(v)) if v >= 0 else (
@@ -367,7 +374,7 @@ def fmt_stmts(stmts, ind):
 def fmt_stmt(s, ind):
     k = s[0]
     if k == 'set':
-        return [ind + '%s <- %s;' % (fmt_expr(s[1]), fmt_expr(s[2]))]
+        return [ind + '%s <- %s;' % (fmt_expr(s[1]), fmt_expr(named_operand(s[2], s[1])))]
     if k == 'let':
         return [ind + 'let result <- %s line %d;' % (fmt_expr(s[1]), s[2])]
     if k == 'emit':
@@ -581,6 +588,8 @@ class Parser:
             return ('opc', t.lower())
         if t.lower() in il_kind_names():
             return ('ilk', t.lower())
+        if t.lower() in il_names():
+            return ('cname', t.lower(), il_names()[t.lower()][1])
         if t == 'addr':
             self.expect('(')
             p = self.primary()
@@ -635,6 +644,47 @@ def il_kind_names():
         m = re.search(r'\bil_\$kind_t = \((.*?)\);', open(p, encoding='latin1').read(), re.S)
         _IL_KINDS = frozenset(x.strip() for x in re.sub(r'\{[^}]*\}', '', m.group(1)).split(','))
     return _IL_KINDS
+
+
+# the register classes (il.ins.pas's rlen_ constants) and the tree and
+# assignment operators (il_$top_t, il_$aop_t) by name: an IL node's word at
+# +24 (a tree's register class), +36 (a tree's operator) or +76 (an
+# assignment's operator) compared with or set to a number is written with
+# the value's name ('cname', name, value)
+
+_IL_NAMES = None
+NAMED_WORDS = {'w24': 'rlen', 'w36': 'top', 'w76': 'aop'}
+
+
+def il_names():
+    """{name: (what, value)} of the named constants."""
+    global _IL_NAMES
+    if _IL_NAMES is None:
+        import os
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+                         'lang', 'lang', 'source', 'il.ins.pas')
+        text = open(p, encoding='latin1').read()
+        out = {}
+        for what, ty in (('top', 'il_$top_t'), ('aop', 'il_$aop_t')):
+            m = re.search(r'\b%s = \((.*?)\);' % re.escape(ty), text, re.S)
+            for v, x in enumerate(re.sub(r'\{[^}]*\}', '', m.group(1)).split(',')):
+                out[x.strip()] = (what, v)
+        for m in re.finditer(r'^  (rlen_\w+) = (\d+);', text, re.M):
+            out[m.group(1)] = ('rlen', int(m.group(2)))
+        _IL_NAMES = out
+    return _IL_NAMES
+
+
+def named_operand(x, other):
+    """x, a number, by name when other is an IL node's named word."""
+    if x[0] != 'num' or other[0] != 'path' or len(other[2]) < 2 or \
+            other[2][-2] != 'il' or other[2][-1] not in NAMED_WORDS:
+        return x
+    what = NAMED_WORDS[other[2][-1]]
+    for n, (w, v) in il_names().items():
+        if w == what and v == x[1]:
+            return ('cname', n, v)
+    return x
 
 
 # --------------------------------------------------------------------------
@@ -795,6 +845,12 @@ class Emitter:
             return 'ord(%s)' % e[1], 'num'
         if k == 'ilk':
             return e[1], 'ilk'
+        if k == 'cname':
+            # a register class is an integer constant; an operator is
+            # compared with the node's word as a number
+            if il_names()[e[1]][0] == 'rlen':
+                return e[1], 'num'
+            return 'ord(%s)' % e[1], 'num'
         if k == 'path':
             t, c = self.path(e)
             return t, c

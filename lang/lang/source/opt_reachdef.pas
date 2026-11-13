@@ -901,7 +901,7 @@ var
     if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      if not (5 in g_opt_tree_ptr_t(t)^.flags) then
+      if not (phase_vis in g_opt_tree_ptr_t(t)^.flags) then
         if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                        dindex_node..disp_node, cs_node, sym_disp_node] then
           if g_opt_tree_ptr_t(t)^.uses > 1 then
@@ -987,7 +987,7 @@ var
     if t^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                    dindex_node..disp_node, cs_node, cc_call, pf_call,
                    cse_use_ob, sym_disp_node] then
-      g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags - [5];
+      g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags - [phase_vis];
   end;
 
 begin
@@ -1133,10 +1133,10 @@ begin
                  dindex_node..disp_node, cs_node, cc_call, pf_call, cse_use_ob,
                  sym_disp_node] then begin
     if g_opt_tree_ptr_t(t)^.uses > 1 then
-      if 5 in g_opt_tree_ptr_t(t)^.flags then
+      if phase_vis in g_opt_tree_ptr_t(t)^.flags then
         if (t^.kind = cmp_tree_node) or (t^.kind = tree_node) then
           return;
-    if 5 in g_opt_tree_ptr_t(t)^.flags then
+    if phase_vis in g_opt_tree_ptr_t(t)^.flags then
       if not ((t^.kind = cmp_tree_node) or (t^.kind = tree_node)) then
         return;
   end;
@@ -1438,10 +1438,10 @@ done:
                  sym_disp_node] then
     if (t^.kind = cmp_tree_node) or (t^.kind = tree_node) then begin
       if g_opt_tree_ptr_t(t)^.uses > 1 then
-        g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags + [5];
+        g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags + [phase_vis];
     end
     else
-      g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags + [5];
+      g_opt_tree_ptr_t(t)^.flags := g_opt_tree_ptr_t(t)^.flags + [phase_vis];
 end;
 
 { assert_no_predecessors - b has no predecessor.
@@ -1993,7 +1993,7 @@ begin
                       if n^.kind in [tree_node, gen_tree_node, cmp_tree_node,
                                      dindex_node..disp_node, cs_node, cc_call,
                                      pf_call, cse_use_ob, sym_disp_node] then
-                        if 12 in g_opt_tree_ptr_t(n)^.flags then begin
+                        if phase_sd_eff in g_opt_tree_ptr_t(n)^.flags then begin
                           ok := false;
                           exit;
                         end;

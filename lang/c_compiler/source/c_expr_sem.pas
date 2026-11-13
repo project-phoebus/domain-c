@@ -567,8 +567,8 @@ end;
 procedure pointer_and_integer_or_enum;
 begin
   with cexs_stack[top] do begin
-    if desc.rlen = 5 then
-      desc.rlen := 4;
+    if desc.rlen = rlen_addr then
+      desc.rlen := rlen_long;
     if typ.size <> t.size then
       if node^.kind in [sinteger_ob..ubinteger_ob, binteger_ob] then
         typ.size := t.size
@@ -959,7 +959,7 @@ begin
         else begin
           init_aux(desc, typ);
           desc.size := 4;
-          desc.rlen := 5;
+          desc.rlen := rlen_addr;
           add_tn(addr_top, desc, cexs_23bc, cexs_23bc);
         end;
         if not fold then
@@ -981,7 +981,7 @@ begin
         else
           desc.w6 := 2;
         desc.size := 0;
-        desc.rlen := 5;
+        desc.rlen := rlen_addr;
         sub := n^.xp[8];
         node := n^.xp[6];
         cexs_23bc := cexs_23bc + 1;
@@ -1025,7 +1025,7 @@ begin
         else
           desc.w6 := 2;
         desc.size := 0;
-        desc.rlen := 5;
+        desc.rlen := rlen_addr;
         cexs_23bc := cexs_23bc + 1;
         cexs_stack[cexs_23bc].node := index;
         add_tn(index_top, desc, cexs_23bc - 1, cexs_23bc);
@@ -1043,7 +1043,7 @@ begin
     if mode <> 1 then begin
       if (offset < -32700) or (offset > 32700) then begin
         init_aux(desc, typ);
-        desc.rlen := 5;
+        desc.rlen := rlen_addr;
         desc.w6 := 4;
         desc.size := 0;
         cexs_23bc := cexs_23bc + 1;
@@ -1325,7 +1325,7 @@ begin
     typ.flags.b25_5 := q5 or typ.flags.b25_5;
     typ.flags.b25_4 := q4 or typ.flags.b25_4;
     if (0 in f^.flags) or (1 in f^.flags) or
-       (getphase(f^.ftype) * [0, 1] <> []) then
+       (getphase(f^.ftype) * [phase_atm, phase_vol] <> []) then
       bits.force_disp := true;
   end;
 end;
@@ -2297,7 +2297,7 @@ begin { build_builtin_tree }
       end;
       57: begin
         tnop := strcmp_top;
-        desc.rlen := 4;
+        desc.rlen := rlen_long;
         if cargs_$options.ansi or cargs_$options.xansi then
           desc.w6 := 0
         else
@@ -2305,7 +2305,7 @@ begin { build_builtin_tree }
       end;
       58: begin
         tnop := strncmp_top;
-        desc.rlen := 4;
+        desc.rlen := rlen_long;
         if cargs_$options.ansi or cargs_$options.xansi then
           desc.w6 := 0
         else
@@ -2313,7 +2313,7 @@ begin { build_builtin_tree }
       end;
       61: begin
         tnop := strlen_top;
-        desc.rlen := 4;
+        desc.rlen := rlen_long;
       end;
       otherwise ;
     end;
@@ -2617,7 +2617,7 @@ begin { expr_op }
       end;
       desc.w8 := desc.w6;
       desc.w6 := desc.rlen;
-      desc.rlen := 1;
+      desc.rlen := rlen_byte;
       boolean_result;
     end;
 
@@ -2834,7 +2834,7 @@ begin { expr_op }
               cexs_stack[bas + 1].typ.base^.signed,
               cexs_stack[bas + 1].typ.size, cargs_$options.xansi);
           mult_div_mod_prep;
-          desc.rlen := 2;
+          desc.rlen := rlen_word;
           if cexs_stack[bas].typ.size = 2 then begin
             type_exp(cexs_stack[bas].typ.base, addr(it));
             it.size := 4;
@@ -2863,17 +2863,17 @@ begin { expr_op }
           if desc.flags.b6 then begin
             w := -v;
             if v > 32767 then
-              desc.rlen := 4;
+              desc.rlen := rlen_long;
           end
           else begin
             w := 0;
             if v > 65535 then
-              desc.rlen := 4
+              desc.rlen := rlen_long
             else if x310 then
               if v > 32767 then
-                desc.rlen := 4;
+                desc.rlen := rlen_long;
           end;
-          if desc.rlen = 2 then begin
+          if desc.rlen = rlen_word then begin
             adjust_length(bas, 1, 2);
             adjust_length(bas + 1, 1, 2);
           end;
@@ -2881,7 +2881,7 @@ begin { expr_op }
           desc.w8 := cexs_stack[bas + 1].typ.size;
           if power_of_two then begin
             cexs_23bc := cexs_23bc - 1;
-            desc.rlen := 4;
+            desc.rlen := rlen_long;
             adjust_length(bas, 1, desc.rlen);
             if neg then
               expr_op(21, name, 1);
@@ -2944,7 +2944,7 @@ begin { expr_op }
           desc.w8 := cexs_stack[bas + 1].typ.size;
           adjust_length(bas, 1, 4);
           adjust_length(bas + 1, 1, 4);
-          desc.rlen := 4;
+          desc.rlen := rlen_long;
           desc.size := 4;
           desc.w6 := 4;
           desc.w8 := 4;
@@ -3416,11 +3416,11 @@ begin { expr_op }
               f := c_field_ptr_t(cexs_stack[ia].sym);
               if f^.bits.width + f^.bits.at > 16 then begin
                 k := 32;
-                desc.rlen := 4;
+                desc.rlen := rlen_long;
               end
               else begin
                 k := 16;
-                desc.rlen := 2;
+                desc.rlen := rlen_word;
               end;
               m := cexs_stack[ia].typ.size;
               cexs_stack[ia].typ.size := desc.rlen;
@@ -3433,7 +3433,7 @@ begin { expr_op }
                 v := lshft(1, f^.bits.at) - 1;
                 if (n^.int_value & v) = 0 then begin
                   x260 := 3;
-                  if desc.rlen = 2 then
+                  if desc.rlen = rlen_word then
                     w := 65535
                   else
                     w := -1;
@@ -3673,7 +3673,7 @@ begin
     end;
     desc.w6 := desc.rlen;
     desc.w8 := 6;
-    desc.rlen := 1;
+    desc.rlen := rlen_byte;
     add_tn(op, desc, cexs_23bc - 1, cexs_23bc);
     with cexs_stack[cexs_23bc] do begin
       typ.base := char_ptype;
@@ -3720,7 +3720,7 @@ begin
   end;
   if b^.result^.kind <> void_type then begin
     type_exp(b^.result, addr(tt));
-    big := get_rlen(tt) > 6;
+    big := get_rlen(tt) > rlen_r4;
     if big then
       r := b^.ret_var;
   end;

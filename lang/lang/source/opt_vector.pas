@@ -238,7 +238,7 @@ begin
   d := s^.prev^.asg_desc;
   unused := start^.xp[16];
   d.size := 4;
-  d.rlen := 4;
+  d.rlen := rlen_long;
 end;
 
 { epilog - after the call was made in the loop's mark m: the call kept
@@ -271,7 +271,7 @@ var
   p: ov_stmt_ptr_t;
 begin
   if m^.kind = eval_node then begin
-    ov_tree_ptr_t(m^.eval_opnd[1])^.desc.rlen := 0;
+    ov_tree_ptr_t(m^.eval_opnd[1])^.desc.rlen := rlen_null;
     ov_tree_ptr_t(m^.eval_opnd[1])^.flags :=
       ov_tree_ptr_t(m^.eval_opnd[1])^.flags + [12];
   end;
@@ -334,9 +334,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[46]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[47];
   ops[2] := body^.asg_rhs;
   ops[3] := body^.asg_lhs;
@@ -373,9 +373,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[48]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[49];
   ops[2] := body^.asg_lhs;
   ops[3] := delay_$splice(copy_tree(start), 4, true,
@@ -412,9 +412,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[52]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[53];
   ops[2] := body^.asg_lhs;
   ops[3] := delay_$splice(copy_tree(start), 4, true,
@@ -467,9 +467,9 @@ begin
   g^.next^.prev := g;
   g^.asg_lhs := body^.asg_lhs;
   g^.asg_desc := body^.asg_desc;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[42]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[43];
   acc := body^.asg_rhs;
   o2 := ov_tree_ptr_t(acc)^.opnd[2];
@@ -539,9 +539,9 @@ begin
   g^.next^.prev := g;
   g^.asg_lhs := body^.asg_lhs;
   g^.asg_desc := body^.asg_desc;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[44]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[45];
   mm := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[2] := ov_tree_ptr_t(mm)^.opnd[1];
@@ -588,13 +588,13 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then begin
+  if body^.asg_desc.rlen = rlen_r4 then begin
     if strided then
       ops[1] := std_lib_rtns[156]
     else
       ops[1] := std_lib_rtns[34];
   end
-  else if body^.asg_desc.rlen = 7 then begin
+  else if body^.asg_desc.rlen = rlen_r8 then begin
     if strided then
       ops[1] := std_lib_rtns[157]
     else
@@ -656,9 +656,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[26]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[27];
   r := body^.asg_rhs;
   o1 := ov_tree_ptr_t(r)^.opnd[1];
@@ -710,9 +710,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[38]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[39];
   r := body^.asg_rhs;
   o1 := ov_tree_ptr_t(r)^.opnd[1];
@@ -761,9 +761,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[30]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[31];
   ops[2] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[3] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[2];
@@ -801,9 +801,9 @@ begin
   prolog(body, lhs, s, x, a, step, start, xp, d);
   m := s^.next^.next;
   m^.eval_count := 1;
-  if body^.asg_desc.rlen = 6 then
+  if body^.asg_desc.rlen = rlen_r4 then
     ops[1] := std_lib_rtns[50]
-  else if body^.asg_desc.rlen = 7 then
+  else if body^.asg_desc.rlen = rlen_r8 then
     ops[1] := std_lib_rtns[51];
   ops[2] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[1];
   ops[3] := ov_tree_ptr_t(body^.asg_rhs)^.opnd[2];
@@ -1065,7 +1065,7 @@ begin
     return;
   if st^.asg_op <> fp_aop then
     return;
-  if not ((st^.asg_desc.rlen = 7) or (st^.asg_desc.rlen = 6)) then
+  if not ((st^.asg_desc.rlen = rlen_r8) or (st^.asg_desc.rlen = rlen_r4)) then
     return;
   body := st;
 

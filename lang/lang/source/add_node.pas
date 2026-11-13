@@ -133,11 +133,11 @@ type
         120: +20, its type +16) and a parameter's type (121, +16). }
       6: (at_unused_4: an_hdr_t;        { +4 }
           at_node: il_$node_ptr_t;      { +16 }
-          at_20: add_node_$phase_t;     { +20 }
-          at_24: add_node_$phase_t;     { +24 }
+          at_20: il_$var_attrs_t;       { +20 }
+          at_24: il_$var_attrs_t;       { +24 }
           at_unused_28: integer32;      { +28 }
-          at_32: add_node_$phase_t;     { +32 }
-          at_36: add_node_$phase_t);    { +36 }
+          at_32: il_$var_attrs_t;       { +32 }
+          at_36: il_$var_attrs_t);      { +36 }
       { By offset, as il.ins.pas's views. }
       9: (xp: array [1..94] of il_$node_ptr_t);     { +4 }
       11: (xl: array [1..94] of integer32);         { +4 }
@@ -304,30 +304,30 @@ end;
   5 adds 20, 8 adds 2, 12 adds 1 (`btst; beq; ori.l'); the result in D0.
 
   Not known from the original:
-  - the names; what the attributes are. }
+  - the names. }
 
 function phasefromvatt(
-    v: add_node_$phase_t): add_node_$phase_t; internal; options(val_param);
+    v: il_$var_attrs_t): add_node_$phase_t; internal; options(val_param);
 var
   p: add_node_$phase_t;
 begin
   p := [];
-  if 0 in v then
-    p := [1, 16];
-  if 3 in v then
-    p := p + [3];
-  if 4 in v then
-    p := p + [4];
-  if 1 in v then
-    p := p + [0];
-  if 2 in v then
-    p := p + [19];
-  if 5 in v then
-    p := p + [20];
-  if 8 in v then
-    p := p + [2];
-  if 12 in v then
-    p := p + [1];
+  if var_$volatile in v then
+    p := [phase_vol, phase_voldecl];
+  if var_$dev_read in v then
+    p := p + [phase_devrd];
+  if var_$dev_write in v then
+    p := p + [phase_devwt];
+  if var_$atomic in v then
+    p := p + [phase_atm];
+  if var_$physical in v then
+    p := p + [phase_phys];
+  if var_$processor_reg in v then
+    p := p + [phase_proc_reg];
+  if var_$uplevel in v then
+    p := p + [phase_volexpr];
+  if var_$address_exposed in v then
+    p := p + [phase_vol];
   phasefromvatt := p;
 end;
 
@@ -856,9 +856,9 @@ var
   ph: add_node_$phase_t;
   x: an_ptr_t;
 begin
-  ph := (getphase(base) + getphase(sym)) - [5, 8, 9];
+  ph := (getphase(base) + getphase(sym)) - [phase_vis, phase_indx_lng, phase_dly];
   if (base^.kind = disp_node)
-      and not (5 in an_ptr_t(base)^.rf_phase) then begin
+      and not (phase_vis in an_ptr_t(base)^.rf_phase) then begin
     disp := disp + an_ptr_t(base)^.disp;
     base := an_ptr_t(base)^.base;
   end;
@@ -869,9 +869,9 @@ begin
   x := gspace(36);
   x^.kind := disp_node;
   x^.rf_phase := ph;
-  if 2 in x^.rf_phase then
-    x^.rf_phase := x^.rf_phase + [1];
-  x^.rf_phase := (getphase(base) + getphase(sym)) - [5, 8, 9];
+  if phase_volexpr in x^.rf_phase then
+    x^.rf_phase := x^.rf_phase + [phase_vol];
+  x^.rf_phase := (getphase(base) + getphase(sym)) - [phase_vis, phase_indx_lng, phase_dly];
   x^.xl2[2] := 0;
   x^.xl2[3] := 0;
   x^.base := base;
@@ -925,13 +925,13 @@ begin
     dn := nil;
     b := base;
   end;
-  ph := (getphase(b) + getphase(sym)) - [5, 8, 9];
+  ph := (getphase(b) + getphase(sym)) - [phase_vis, phase_indx_lng, phase_dly];
   x := gspace(36);
   res := il_$node_ptr_t(x);
   x^.kind := sym_disp_node;
-  x^.rf_phase := (getphase(b) + getphase(sym)) - [5, 8, 9];
-  if 2 in x^.rf_phase then
-    x^.rf_phase := x^.rf_phase + [1];
+  x^.rf_phase := (getphase(b) + getphase(sym)) - [phase_vis, phase_indx_lng, phase_dly];
+  if phase_volexpr in x^.rf_phase then
+    x^.rf_phase := x^.rf_phase + [phase_vol];
   x^.xl2[2] := 0;
   x^.xl2[3] := 0;
   x^.base := b;
@@ -941,9 +941,9 @@ begin
   x^.b23 := chr(0);
   vv := v;
   if vv^.kind = fortran_symbol then
-    vv^.at_24 := vv^.at_24 + [28]
+    vv^.at_24 := vv^.at_24 + [var_$mentioned_in_sym_disp]
   else if (vv^.kind = var_name) and (vv^.xp[5] = il_180) then
-    vv^.at_32 := vv^.at_32 + [28];
+    vv^.at_32 := vv^.at_32 + [var_$mentioned_in_sym_disp];
   if dn <> nil then
     res := add_dn(res, dn^.sym, dn^.disp);
   add_sdn := res;
@@ -973,17 +973,17 @@ var
   te: type_exp_t;                       { -32 }
   res: il_$node_ptr_t;
 begin
-  ph := (getphase(base) + getphase(item)) - [5, 9];
+  ph := (getphase(base) + getphase(item)) - [phase_vis, phase_dly];
   x := gspace(44);
   x^.kind := dindex_node;
-  x^.rf_phase := (getphase(base) + getphase(item)) - [5, 9];
-  if 2 in ph then
-    x^.rf_phase := x^.rf_phase + [1];
+  x^.rf_phase := (getphase(base) + getphase(item)) - [phase_vis, phase_dly];
+  if phase_volexpr in ph then
+    x^.rf_phase := x^.rf_phase + [phase_vol];
   x^.xl[3] := 0;
   type_exp(item, addr(te));
   if (te.size > 32767) or cargs_$options.indexl or
      (6 in cargs_$options.cpu) then
-    x^.rf_phase := x^.rf_phase + [8];
+    x^.rf_phase := x^.rf_phase + [phase_indx_lng];
   x^.rf_w10 := 1;
   x^.rf_w16 := 0;
   x^.align := chr(align);
@@ -1004,9 +1004,9 @@ begin
     res := il_$node_ptr_t(x);
   if index <> nil then
     if index^.kind = tree_node then
-      if (an_ptr_t(index)^.desc.rlen = 5) or
-         (an_ptr_t(index)^.desc.rlen = 4) then begin
-        x^.rf_phase := x^.rf_phase + [8];
+      if (an_ptr_t(index)^.desc.rlen = rlen_addr) or
+         (an_ptr_t(index)^.desc.rlen = rlen_long) then begin
+        x^.rf_phase := x^.rf_phase + [phase_indx_lng];
         x^.len := 4;
       end;
   add_dindexn := res;
@@ -1045,11 +1045,11 @@ begin
     add_pn := add_disp_node(b^.opnd[1], item, 0, true);
     return;
   end;
-  ph := (getphase(base) + getphase(item)) - [5, 8, 9];
+  ph := (getphase(base) + getphase(item)) - [phase_vis, phase_indx_lng, phase_dly];
   done := false;
   if base <> nil then
     if base^.kind = tree_node then
-      if ((b^.op = index_top) or (b^.op = add_top)) and (b^.desc.rlen = 5) then begin
+      if ((b^.op = index_top) or (b^.op = add_top)) and (b^.desc.rlen = rlen_addr) then begin
         o1 := b^.opnd[1];
         o2 := b^.opnd[2];
         if (o1^.kind in [var_name, fortran_symbol, tree_node, ptr_node,
@@ -1063,20 +1063,20 @@ begin
             if o2^.kind in [blogical_ob..char_ob, char16_ob,
                             binteger_ob] then begin
               x := an_ptr_t(add_dindexn(o1, item, o2, 0, 4, align, b23));
-              x^.rf_phase := x^.rf_phase + [8];
+              x^.rf_phase := x^.rf_phase + [phase_indx_lng];
               x^.len := 4;
             end
             else if o1^.kind = tree_node then begin
               x := an_ptr_t(add_dindexn(o2, item, o1, 0,
                                         an_ptr_t(o1)^.desc.rlen, align,
                                         b23));
-              x^.rf_phase := x^.rf_phase + [8];
+              x^.rf_phase := x^.rf_phase + [phase_indx_lng];
             end
             else begin
               x := an_ptr_t(add_dindexn(o1, item, o2, 0,
                                         an_ptr_t(o2)^.desc.rlen, align,
                                         b23));
-              x^.rf_phase := x^.rf_phase + [8];
+              x^.rf_phase := x^.rf_phase + [phase_indx_lng];
               x^.len := 4;
             end;
             done := true;
@@ -1085,10 +1085,10 @@ begin
   if not done then begin
     x := gspace(32);
     x^.kind := ptr_node;
-    ph := (getphase(base) + getphase(item)) - [5, 8, 9];
-    if 1 in ph then
+    ph := (getphase(base) + getphase(item)) - [phase_vis, phase_indx_lng, phase_dly];
+    if phase_vol in ph then
       if (base^.kind <> var_name) or (base^.xw[36] <> 5) then
-        ph := ph - [1] + [2];
+        ph := ph - [phase_vol] + [phase_volexpr];
     x^.rf_phase := ph;
     x^.xl2[2] := 0;
     x^.xl2[3] := 0;
@@ -1224,9 +1224,9 @@ var
     p := an_ptr_t(cexs_stack[l].node);
     q := an_ptr_t(cexs_stack[r].node);
     flag := false;
-    if 21 in p^.phase then
+    if phase_enf_paren in p^.phase then
       flag := true
-    else if 21 in q^.phase then
+    else if phase_enf_paren in q^.phase then
       flag := true;
     if flag then
       return;
@@ -1281,9 +1281,9 @@ begin { add_tn }
   if op in [add_top, mul_top, and_top, or_top, set_and_top, set_or_top, f_add_top, f_mul_top] then begin
     x := an_ptr_t(cexs_stack[l].node);
     y := an_ptr_t(cexs_stack[r].node);
-    if (x^.kind = tree_node) and (21 in x^.phase) then
+    if (x^.kind = tree_node) and (phase_enf_paren in x^.phase) then
       flag := true
-    else if (y^.kind = tree_node) and (21 in y^.phase) then
+    else if (y^.kind = tree_node) and (phase_enf_paren in y^.phase) then
       flag := true;
     if not flag then
       if (op <> mul_top) or ((d.rlen = d.w6) and (d.rlen = d.w8)) then
@@ -1342,9 +1342,9 @@ begin { add_tn }
     flag := false;
     x := an_ptr_t(cexs_stack[l].node);
     y := an_ptr_t(cexs_stack[r].node);
-    if (x^.kind = tree_node) and (21 in x^.phase) then
+    if (x^.kind = tree_node) and (phase_enf_paren in x^.phase) then
       flag := true
-    else if (y^.kind = tree_node) and (21 in y^.phase) then
+    else if (y^.kind = tree_node) and (phase_enf_paren in y^.phase) then
       flag := true;
     if not flag and (x^.kind = tree_node) and
        (y^.kind in [blogical_ob..dpreal_ob, char16_ob, set_con_ob,
@@ -1440,7 +1440,7 @@ begin { add_tn }
       dd := x^.desc;
       cexs_23bc := cexs_23bc + 1;
       cexs_stack[cexs_23bc].node := x^.opnd[1];
-      dd.rlen := 0;
+      dd.rlen := rlen_null;
       add_tn(addr_top, dd, cexs_23bc, cexs_23bc);
       an_ptr_t(cexs_stack[cexs_23bc].node)^.desc.rlen := x^.desc.rlen;
       res := cexs_stack[cexs_23bc].node;
@@ -1477,7 +1477,7 @@ begin { add_tn }
   end;
 
   { A real constant to an integer. }
-  if (op = f_extend_top) and (d.rlen <= 4) then
+  if (op = f_extend_top) and (d.rlen <= rlen_long) then
     with cexs_stack[l] do begin
       if node^.kind in [blogical_ob..char_ob, char16_ob,
                         binteger_ob] then begin
@@ -1514,7 +1514,7 @@ begin { add_tn }
     end;
 
   { A complex constant to a complex. }
-  if (op = f_extend_top) and ((d.rlen = 12) or (d.rlen = 8)) then
+  if (op = f_extend_top) and ((d.rlen = rlen_c16) or (d.rlen = rlen_c8)) then
     if (cexs_stack[l].node^.kind = dpcomplex_ob) or
        (cexs_stack[l].node^.kind = complex_ob) then begin
       res := cexs_stack[l].node;
@@ -1639,9 +1639,9 @@ begin { add_tn }
         return;
       if d.flags.signed then rr := v1 else if v1 < 0 then rr := v1 + 4294967296.0 else rr := v1;
       a := rr;
-      if d.rlen = 7 then
+      if d.rlen = rlen_r8 then
         res := dpcontk(a)
-      else if d.rlen = 6 then
+      else if d.rlen = rlen_r4 then
         res := rlcontk(a)
       else
         goto 50;
@@ -1665,7 +1665,7 @@ begin { add_tn }
   end;
   if k2 > k1 then
     k1 := k2;
-  if (d.rlen = 4) or (v1 < -32768) or (v1 > 32767) then
+  if (d.rlen = rlen_long) or (v1 < -32768) or (v1 > 32767) then
     k1 := linteger_ob;
   res := smcontk(k1, v1);
   goto 40;
@@ -1776,7 +1776,7 @@ begin { add_tn }
                                             dindex_node..disp_node, cs_node,
                                             cc_call, pf_call, cse_use_ob,
                                             sym_disp_node]) and
-              (an_ptr_t(cexs_stack[l].node)^.phase * [2, 12] <> [])) then
+              (an_ptr_t(cexs_stack[l].node)^.phase * [phase_volexpr, phase_sd_eff] <> [])) then
         if (cexs_stack[r].node^.kind in [blogical_ob..char_ob, char16_ob,
                                          binteger_ob]) and
            (cexs_stack[r].node^.int_value = 0) then
@@ -1924,7 +1924,7 @@ begin { add_tn }
       end
       else if res^.int_value <> 0 then
         goto 10
-      else if 12 in getphase(cexs_stack[l].node) then
+      else if phase_sd_eff in getphase(cexs_stack[l].node) then
         goto 10
       else
         goto 40;
@@ -1936,13 +1936,13 @@ begin { add_tn }
         cexs_23bc := l;
         return;
       end
-      else if d.rlen = 1 then begin
+      else if d.rlen = rlen_byte then begin
         if (res^.int_value < 256) and (res^.int_value >= -128) then
           goto 20;
         res := smcontk(integer_ob, 0);
         goto 40;
       end
-      else if d.rlen = 2 then begin
+      else if d.rlen = rlen_word then begin
         if (res^.int_value < 65536) and (res^.int_value >= -32768) then
           goto 20;
         res := smcontk(integer_ob, 0);
@@ -1952,7 +1952,7 @@ begin { add_tn }
         goto 20;
     and_top: begin
       if res^.int_value = 0 then
-        if not (12 in getphase(cexs_stack[l].node)) then
+        if not (phase_sd_eff in getphase(cexs_stack[l].node)) then
           goto 40;
       if res^.int_value <> -1 then
         goto 10;
@@ -1975,7 +1975,7 @@ begin { add_tn }
         goto 61;
     or_top: begin
       if res^.int_value = -1 then
-        if not (12 in getphase(cexs_stack[l].node)) then
+        if not (phase_sd_eff in getphase(cexs_stack[l].node)) then
           goto 40;
       if res^.int_value <> 0 then
         goto 10;
@@ -2055,14 +2055,14 @@ begin { add_tn }
         case d.w6 of
           0: a := abs(a);
           11: begin
-            if d.rlen >= 6 then begin
+            if d.rlen >= rlen_r4 then begin
               pfm_$rls_cleanup(crec, status);
               goto 20;
             end;
             v1 := round(a);
           end;
           10: begin
-            if d.rlen >= 6 then begin
+            if d.rlen >= rlen_r4 then begin
               pfm_$rls_cleanup(crec, status);
               goto 20;
             end;
@@ -2084,7 +2084,7 @@ begin { add_tn }
     end;
     if (op = f_compare_top) or ((op = f_math_top) and ((d.w6 = 11) or (d.w6 = 10))) then
       res := smcontk(integer_ob, v1)
-    else if d.rlen = 7 then
+    else if d.rlen = rlen_r8 then
       res := dpcontk(a)
     else
       res := rlcontk(a);
@@ -2317,7 +2317,7 @@ begin { add_tn }
       res := smcontk(integer_ob, v1);
       goto 40;
     end;
-    if (d.rlen < d.w6) and not (1 in getphase(res)) and
+    if (d.rlen < d.w6) and not (phase_vol in getphase(res)) and
        (cexs_stack[l].node^.kind <> reloc_absolute_addr_con) then begin
       if (18 in cargs_$options.opt_on) and (cexs_stack[l].node <> nil) then
       begin
@@ -2408,13 +2408,13 @@ begin { add_tn }
     ph := ph + getphase(x^.opnd[w]);
     w := w + 1;
   end;
-  ph := ph - [5, 8, 9];
+  ph := ph - [phase_vis, phase_indx_lng, phase_dly];
   if (op = func_call_top) or (op = call_top) then
-    ph := ph - [0..4, 16, 19];
-  if (1 in ph) and (op <> addr_top) then
-    ph := ph - [1] + [2];
+    ph := ph - [phase_atm..phase_devwt, phase_voldecl, phase_phys];
+  if (phase_vol in ph) and (op <> addr_top) then
+    ph := ph - [phase_vol] + [phase_volexpr];
   if op in [call_top, func_call_top, sr_top, chk_top, cc_assign_ptop, cc_post_id_ptop] then
-    ph := ph + [12];
+    ph := ph + [phase_sd_eff];
   x^.phase := ph;
   x^.regs := 0;
   x^.regs := regs;
@@ -2438,15 +2438,15 @@ begin { add_tn }
         typ.low := node^.int_value;
         typ.high := node^.int_value;
         if typ.base^.signed then begin
-          if (d.rlen <> 4) and (typ.low >= -128) and (typ.low <= 127) then
+          if (d.rlen <> rlen_long) and (typ.low >= -128) and (typ.low <= 127) then
             typ.size := 1
-          else if (d.rlen <> 4) and (typ.low >= -32768) and
+          else if (d.rlen <> rlen_long) and (typ.low >= -32768) and
                   (typ.low <= 32767) then
             typ.size := 2;
         end
-        else if ((typ.low & 16#FF) = typ.low) and (d.rlen <> 4) then
+        else if ((typ.low & 16#FF) = typ.low) and (d.rlen <> rlen_long) then
           typ.size := 1
-        else if ((typ.low & 16#FFFF) = typ.low) and (d.rlen <> 4) then
+        else if ((typ.low & 16#FFFF) = typ.low) and (d.rlen <> rlen_long) then
           typ.size := 2;
       end;
   end;
@@ -2482,13 +2482,13 @@ begin
     x^.opnd[i] := ops[i];
     ph := ph + getphase(x^.opnd[i]);
   end;
-  ph := ph - [5, 8, 9];
+  ph := ph - [phase_vis, phase_indx_lng, phase_dly];
   if (op = func_call_top) or (op = call_top) then
-    ph := ph - [0..4, 16, 19];
-  if (1 in ph) and (op <> addr_top) then
-    ph := ph - [1] + [2];
+    ph := ph - [phase_atm..phase_devwt, phase_voldecl, phase_phys];
+  if (phase_vol in ph) and (op <> addr_top) then
+    ph := ph - [phase_vol] + [phase_volexpr];
   if op in [call_top, func_call_top, sr_top, chk_top, cc_assign_ptop, cc_post_id_ptop] then
-    ph := ph + [12];
+    ph := ph + [phase_sd_eff];
   x^.phase := ph;
   x^.xl2[2] := 0;
   x^.xw[7] := 0;
