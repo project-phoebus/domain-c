@@ -910,7 +910,7 @@ var
               return;
     case t^.kind of
       cmp_tree_node, tree_node:
-        if (g_opt_tree_ptr_t(t)^.op = 16) or (g_opt_tree_ptr_t(t)^.op = 15) then begin
+        if (g_opt_tree_ptr_t(t)^.op = func_call_top) or (g_opt_tree_ptr_t(t)^.op = call_top) then begin
           first := 2;
           if g_opt_tree_ptr_t(t)^.opnd[1]^.kind = pf_call then
             first := 1;
@@ -1024,7 +1024,7 @@ begin
           on_lhs := true;
           walk_tree(s, s^.asg_lhs);
           on_lhs := false;
-          if s^.asg_op in [1..5, 7..9, 13..24] then begin
+          if s^.asg_op in [add_to_aop..eor_to_aop, set_and_to_aop..set_diff_from_aop, not_to_aop..div_by_aop] then begin
             v := s^.hdr.vnum;
             if v <> 0 then begin
               opt_main_$ensure_var_set(s^.vset);
@@ -1268,7 +1268,7 @@ begin
         if depth <= 0 then
           value^[v] := nil
         else if value^[v] <> asg_rhs then
-          if ((asg_op = 11) or (asg_op = 0)) and
+          if ((asg_op = fp_aop) or (asg_op = scalar_aop)) and
              (asg_rhs^.kind in [blogical_ob..complex_ob, char_string_ob,
                                 char32_string_ob, char16_ob, set_con_ob,
                                 rec_const_ob, dpcomplex_ob, binteger_ob]) then
@@ -1279,7 +1279,7 @@ begin
       end;
     known:
       seen^[v] := true;
-      if not ((asg_op = 11) or (asg_op = 0)) then
+      if not ((asg_op = fp_aop) or (asg_op = scalar_aop)) then
         value^[v] := nil
       else if asg_rhs^.kind in [blogical_ob..complex_ob, char_string_ob,
                                 char32_string_ob, char16_ob, set_con_ob,
@@ -1287,7 +1287,7 @@ begin
                                 binteger_ob] then begin
         if depth > 0 then
           add_def_stmt(v);
-        if (asg_op = 0) and (asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
+        if (asg_op = scalar_aop) and (asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
                                                binteger_ob]) then begin
           k := asg_rhs^.int_value;
           vt := opt_var_types;
@@ -1322,15 +1322,15 @@ begin
     cmp_tree_node, tree_node: begin
       s := t;
       case g_opt_tree_ptr_t(s)^.op of
-        26:
+        addr_top:
           if find_var(g_opt_tree_ptr_t(s)^.opnd[1]) = 0 then
             evalforeffect(g_opt_tree_ptr_t(s)^.opnd[1], depth - 1);
-        47:
+        sr_top:
           for v := 1 to nvars do begin
             seen^[v] := true;
             value^[v] := nil;
           end;
-        16, 15: begin
+        func_call_top, call_top: begin
           for i := 2 to g_opt_tree_ptr_t(s)^.count do begin
             j := find_var(g_opt_tree_ptr_t(s)^.opnd[i]);
             if j = 0 then begin
@@ -1363,7 +1363,7 @@ begin
               if a^.kind = tree_node then
                 if find_var(g_opt_tree_ptr_t(s)^.opnd[i]) <> 0 then
                   g_opt_tree_ptr_t(s)^.opnd[i] :=
-                    buildtreenode(17, g_opt_tree_ptr_t(a)^.size,
+                    buildtreenode(value_top, g_opt_tree_ptr_t(a)^.size,
                                   g_opt_tree_ptr_t(s)^.opnd[i], 1);
             end
             else if paramclass(t, i - 1) <> 2 then begin
@@ -1381,7 +1381,7 @@ begin
               end;
             end;
         end;
-        11: begin
+        bit_test_top: begin
           evalforeffect(g_opt_tree_ptr_t(s)^.opnd[1], depth - 1);
           evalforeffect(g_opt_tree_ptr_t(s)^.opnd[2], depth - 1);
         end;
@@ -1400,7 +1400,7 @@ begin
         kfold(t, br_cond);
       if br_cond <> nil then
         if br_cond^.kind = tree_node then
-          if g_opt_tree_ptr_t(br_cond)^.op = 40 then
+          if g_opt_tree_ptr_t(br_cond)^.op = f_compare_top then
             if g_opt_tree_ptr_t(br_cond)^.uses = 1 then
               br_cond^.kind := cmp_tree_node;
       if br_cond <> nil then
@@ -1645,7 +1645,7 @@ var
               vv := s^.hdr.vnum;
               if vv <> 0 then begin
                 if (s^.kind = assign_node) and
-                   not (s^.asg_op in [1..5, 7..9, 13..24]) and
+                   not (s^.asg_op in [add_to_aop..eor_to_aop, set_and_to_aop..set_diff_from_aop, not_to_aop..div_by_aop]) and
                    (s^.asg_rhs^.kind in [blogical_ob..complex_ob,
                                          char_string_ob, char32_string_ob,
                                          char16_ob, set_con_ob, rec_const_ob,
@@ -1835,7 +1835,7 @@ begin
       end;
       if d^.hdr.vnum <> 0 then begin
         v := d^.hdr.vnum;
-        if (d^.kind = assign_node) and ((d^.asg_op = 11) or (d^.asg_op = 0))
+        if (d^.kind = assign_node) and ((d^.asg_op = fp_aop) or (d^.asg_op = scalar_aop))
             and
            ((d^.asg_lhs^.kind = var_name) or (d^.asg_lhs^.kind = ptr_node) or
             (d^.asg_lhs^.kind = fortran_symbol)) and

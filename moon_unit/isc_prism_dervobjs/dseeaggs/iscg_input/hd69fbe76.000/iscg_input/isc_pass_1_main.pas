@@ -318,41 +318,6 @@ type
     rlen_arith: array [0..25] of integer;   { +0x140 }
   end;
 
-  { The tree and assignment operators, as the image names them
-    (isc_unrecognized_il_node writes them and the IL node kinds,
-    il.ins.pas's il_$kind_t: the name tables at 0x0DB7E6, 0x0DC290,
-    0x0DC7B0; isc_user_routines' ur_top_t and ur_aop_t). }
-  p1_top_t = (
-    nop_top, add_top, sub_top, mul_top, div_top, divide_top, mod_top,
-    neg_top, not_top, and_top, or_top, bit_test_top, compare_top, index_top,
-    unpack_top, call_top, func_call_top, value_top, extend_top, set_and_top,
-    set_or_top, set_diff_top, set_extend_top, set_compare_top,
-    agg_compare_top, bit_set_top, addr_top, lshf_top, rshf_top, abs_top,
-    isc_call_top, isc_func_call_top, isc_func_call_hidden_temp_top,
-    isc_mul_top, f_add_top, f_sub_top, f_mul_top, f_div_top, f_neg_top,
-    f_extend_top, f_compare_top, f_math_top, f_expon_top, expon_top, eor_top,
-    max_top, min_top, sr_top, chk_top, alshf_top, arshf_top, cc_c3expr_ptop,
-    cc_logor_ptop, cc_logand_ptop, cc_assign_ptop, cc_post_id_ptop,
-    cc_comma_ptop, cc_lognot_ptop, ref_expr_top, signed_div_top,
-    unsigned_div_top, signed_mod_top, unsigned_mod_top, align_top,
-    isc_addr_top, allocate_dynamic_space_top, cache_top, isc_fio_init,
-    strcmp_top, strlen_top, strncmp_top, isc_select, set_bit_in_set_top,
-    set_range_in_set_top, isc_signed_rem_top, isc_unsigned_rem_top,
-    isc_signed_mod_top, isc_unsigned_mod_top, isc_agg_cmp_top,
-    isc_agg_lex_cmp_top, range_check_top, f_range_check_top,
-    mark_dynamic_space_top, extract_bit_field_top, bit_field_cmp_top,
-    physical_top, ada_expon_top, f_ada_expon_top, pas_get_chk_ptop,
-    illegal_top);
-  p1_aop_t = (
-    scalar_aop, add_to_aop, sub_from_aop, and_to_aop, or_to_aop, eor_to_aop,
-    agg_aop, set_and_to_aop, set_or_to_aop, set_diff_from_aop, pack_aop,
-    fp_aop, field_aop, not_to_aop, neg_to_aop, lshft_to_aop, rshft_to_aop,
-    bset_to_aop, bclr_to_aop, f_add_to_aop, f_sub_from_aop, f_mul_to_aop,
-    f_div_by_aop, mul_to_aop, div_by_aop, agg_len_aop, isc_mul_to_aop,
-    strcat_aop, strcpy_aop, strncat_aop, strncpy_aop, isc_agg_aop,
-    isc_slice_aop, isc_agg_zero_aop, isc_fill_aop, range_check_to_aop,
-    f_range_check_to_aop, illegal_aop);
-
 { Routines of other units the operator routines call that no insert
   declares. }
 procedure pattern_matcher(
@@ -449,11 +414,11 @@ begin
   writeln;
   case isc_node_ptr_t(il)^.kind of
     assign_node:
-      write('ISC: The unsupported IL node kind is: ', p1_aop_t(isc_node_ptr_t(il)^.as_op), '.');
+      write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.as_op, '.');
     cmp_tree_node:
-      write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
+      write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.tr_op, '.');
     tree_node:
-      write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
+      write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.tr_op, '.');
     otherwise
       write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.kind, '.');
   end;
@@ -2882,7 +2847,7 @@ procedure isc_assign_node(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param);
 begin
-  p1_assign_op[isc_node_ptr_t(il)^.as_op]^(il, inh, depth, permissible, il_kind,
+  p1_assign_op[ord(isc_node_ptr_t(il)^.as_op)]^(il, inh, depth, permissible, il_kind,
       number_of_children, solutions, children, solutions_made, no_solutions);
 end;
 
@@ -3970,7 +3935,7 @@ procedure isc_cmp_tree_node(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param);
 begin
-  p1_cmp_op[isc_node_ptr_t(il)^.tr_op]^(il, inh, depth, permissible, il_kind,
+  p1_cmp_op[ord(isc_node_ptr_t(il)^.tr_op)]^(il, inh, depth, permissible, il_kind,
       number_of_children, solutions, children, solutions_made, no_solutions);
 end;
 
@@ -10408,7 +10373,7 @@ procedure isc_tree_node(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param);
 begin
-  p1_tree_op[isc_node_ptr_t(il)^.tr_op]^(il, inh, depth, permissible, il_kind,
+  p1_tree_op[ord(isc_node_ptr_t(il)^.tr_op)]^(il, inh, depth, permissible, il_kind,
       number_of_children, solutions, children, solutions_made, no_solutions);
 end;
 

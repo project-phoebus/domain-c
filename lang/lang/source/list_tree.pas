@@ -232,7 +232,7 @@ type
           uses: integer;                { +16 }
           w18: integer;                 { +18 }
           aux: lt_aux_t;                { +20 }
-          op: 0..65535;                 { +36: the operator }
+          op: il_$top_t;                { +36: the operator }
           count: integer;               { +38: the operands }
           opnd: lt_ptr_array_t);        { +40 }
       { A reference (145 DINDEX_NODE, 146 PTR_NODE, 147 DISP_NODE, 205
@@ -342,7 +342,7 @@ type
           st_dst: lt_ptr_t;             { +64 }
           st_src: lt_ptr_t;             { +68 }
           st_len: lt_ptr_t;             { +72 }
-          st_aop: 0..65535);            { +76: the assignment operator }
+          st_aop: il_$aop_t);           { +76: the assignment operator }
       18: (sl_x4: array [1..11] of integer32;       { +4 }
            st_serial: 0..65535;         { +48: a label's (144) serial }
            st_count: 0..65535;          { +50: an evaluation's (139)
@@ -1216,180 +1216,180 @@ begin
         u1 := 0;
         u2 := 0;
         case t^.op of
-          0: print_string('NOP', 3);
-          17: print_string('VALUE', 5);
-          63: begin
+          nop_top: print_string('NOP', 3);
+          value_top: print_string('VALUE', 5);
+          align_top: begin
             print_string('ALIGN', 5);
             u1 := 13;
           end;
-          18: begin
+          extend_top: begin
             print_string('EXTEND', 6);
             u1 := 1;
           end;
-          29: print_string('ABS', 3);
-          7: print_string('NEG', 3);
-          8: print_string('NOT', 3);
-          1: print_string('ADD', 3);
-          2: print_string('SUB', 3);
-          9: print_string('AND', 3);
-          10: print_string('OR', 2);
-          44: print_string('EOR', 3);
-          45: print_string('MAX', 3);
-          46: print_string('MIN', 3);
-          27: begin print_string('LSHFT', 5); u1 := 1; u2 := 2; end;
-          28: begin print_string('RSHFT', 5); u1 := 1; u2 := 2; end;
-          49: begin print_string('ALSHFT', 6); u1 := 1; u2 := 2; end;
-          50: begin print_string('ARSHFT', 6); u1 := 1; u2 := 2; end;
-          3: begin print_string('MUL', 3); u1 := 1; u2 := 2; end;
-          33: begin print_string('ISC_MUL', 7); u1 := 1; u2 := 2; end;
-          5: begin print_string('DIVIDE', 6); u1 := 1; u2 := 2; end;
-          4: begin print_string('DIV', 3); u1 := 1; u2 := 2; end;
-          59: begin print_string('SIGNED_DIV', 10); u1 := 1; u2 := 2; end;
-          60: begin print_string('UNSIGNED_DIV', 12); u1 := 1; u2 := 2; end;
-          6: begin print_string('MOD', 3); u1 := 1; u2 := 2; end;
-          61: begin print_string('SIGNED_MOD', 10); u1 := 1; u2 := 2; end;
-          62: begin print_string('UNSIGNED_MOD', 12); u1 := 1; u2 := 2; end;
-          76: begin print_string('ISC_SIGNED_MOD', 14); u1 := 1; u2 := 2; end;
-          77: begin print_string('ISC_UNSIGNED_MOD', 16); u1 := 1; u2 := 2; end;
-          74: begin print_string('ISC_SIGNED_REM', 14); u1 := 1; u2 := 2; end;
-          75: begin print_string('ISC_UNSIGNED_REM', 16); u1 := 1; u2 := 2; end;
-          43: print_string('EXPON', 5);
-          86: print_string('ADA_EXPON', 9);
-          84: begin
+          abs_top: print_string('ABS', 3);
+          neg_top: print_string('NEG', 3);
+          not_top: print_string('NOT', 3);
+          add_top: print_string('ADD', 3);
+          sub_top: print_string('SUB', 3);
+          and_top: print_string('AND', 3);
+          or_top: print_string('OR', 2);
+          eor_top: print_string('EOR', 3);
+          max_top: print_string('MAX', 3);
+          min_top: print_string('MIN', 3);
+          lshf_top: begin print_string('LSHFT', 5); u1 := 1; u2 := 2; end;
+          rshf_top: begin print_string('RSHFT', 5); u1 := 1; u2 := 2; end;
+          alshf_top: begin print_string('ALSHFT', 6); u1 := 1; u2 := 2; end;
+          arshf_top: begin print_string('ARSHFT', 6); u1 := 1; u2 := 2; end;
+          mul_top: begin print_string('MUL', 3); u1 := 1; u2 := 2; end;
+          isc_mul_top: begin print_string('ISC_MUL', 7); u1 := 1; u2 := 2; end;
+          divide_top: begin print_string('DIVIDE', 6); u1 := 1; u2 := 2; end;
+          div_top: begin print_string('DIV', 3); u1 := 1; u2 := 2; end;
+          signed_div_top: begin print_string('SIGNED_DIV', 10); u1 := 1; u2 := 2; end;
+          unsigned_div_top: begin print_string('UNSIGNED_DIV', 12); u1 := 1; u2 := 2; end;
+          mod_top: begin print_string('MOD', 3); u1 := 1; u2 := 2; end;
+          signed_mod_top: begin print_string('SIGNED_MOD', 10); u1 := 1; u2 := 2; end;
+          unsigned_mod_top: begin print_string('UNSIGNED_MOD', 12); u1 := 1; u2 := 2; end;
+          isc_signed_mod_top: begin print_string('ISC_SIGNED_MOD', 14); u1 := 1; u2 := 2; end;
+          isc_unsigned_mod_top: begin print_string('ISC_UNSIGNED_MOD', 16); u1 := 1; u2 := 2; end;
+          isc_signed_rem_top: begin print_string('ISC_SIGNED_REM', 14); u1 := 1; u2 := 2; end;
+          isc_unsigned_rem_top: begin print_string('ISC_UNSIGNED_REM', 16); u1 := 1; u2 := 2; end;
+          expon_top: print_string('EXPON', 5);
+          ada_expon_top: print_string('ADA_EXPON', 9);
+          bit_field_cmp_top: begin
             print_string('BIT_FIELD_CMP', 13);
             u1 := 3;
             if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
-          12: begin
+          compare_top: begin
             print_string('COMPARE', 7);
             u1 := 3;
             if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
-          40: begin
+          f_compare_top: begin
             print_string('F_COMPARE', 9);
             u1 := 3;
             if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
-          23: begin
+          set_compare_top: begin
             print_string('SET_CMP', 7);
             u1 := 3;
             if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
-          24: begin
+          agg_compare_top: begin
             print_string('AGG_CMP', 7);
             u1 := 3;
             if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
-          78: begin
+          isc_agg_cmp_top: begin
             print_string('ISC_AGG_CMP', 11);
             u1 := 3;
             if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
-          79: begin
+          isc_agg_lex_cmp_top: begin
             print_string('ISC_AGG_LEX_CMP', 15);
             u1 := 3;
             if (t^.kind = cmp_tree_node) or (t^.aux.opmod2 <> 0) then u2 := 7;
           end;
-          70: print_string('STRNCMP', 7);
-          68: print_string('STRCMP', 6);
-          69: print_string('STRLEN', 6);
-          11: begin
+          strncmp_top: print_string('STRNCMP', 7);
+          strcmp_top: print_string('STRCMP', 6);
+          strlen_top: print_string('STRLEN', 6);
+          bit_test_top: begin
             print_string('BIT_TEST', 8);
             if t^.kind = cmp_tree_node then u2 := 7;
             if t^.count = 2 then u1 := 2 else u1 := 4;
           end;
-          25: begin
+          bit_set_top: begin
             print_string('BIT_SET', 7);
             if t^.count = 2 then u1 := 2 else u1 := 4;
           end;
-          13: begin
+          index_top: begin
             print_string('INDEX', 5);
             u1 := 2;
           end;
-          14: begin
+          unpack_top: begin
             print_string('UNPACK', 6);
             u1 := 1;
             u2 := 10;
           end;
-          83: begin
+          extract_bit_field_top: begin
             print_string('EXTRACT_BIT_FIELD', 17);
             u1 := 10;
           end;
-          15: print_string('CALL', 4);
-          30: begin print_string('ISC_CALL', 8); u1 := 17; end;
-          16: print_string('FUNC_CALL', 9);
-          31: begin print_string('ISC_FUNC_CALL', 13); u1 := 17; end;
-          32: begin print_string('ISC_FUNC_CALL_HIDDEN_TEMP', 25); u1 := 17; end;
-          26: print_string('ADDR', 4);
-          64: begin
+          call_top: print_string('CALL', 4);
+          isc_call_top: begin print_string('ISC_CALL', 8); u1 := 17; end;
+          func_call_top: print_string('FUNC_CALL', 9);
+          isc_func_call_top: begin print_string('ISC_FUNC_CALL', 13); u1 := 17; end;
+          isc_func_call_hidden_temp_top: begin print_string('ISC_FUNC_CALL_HIDDEN_TEMP', 25); u1 := 17; end;
+          addr_top: print_string('ADDR', 4);
+          isc_addr_top: begin
             print_string('ISC_ADDR', 8);
             u1 := 1;
             u2 := 8;
           end;
-          38: print_string('F_NEG', 5);
-          34: print_string('F_ADD', 5);
-          35: print_string('F_SUB', 5);
-          36: print_string('F_MUL', 5);
-          37: print_string('F_DIV', 5);
-          39: begin
+          f_neg_top: print_string('F_NEG', 5);
+          f_add_top: print_string('F_ADD', 5);
+          f_sub_top: print_string('F_SUB', 5);
+          f_mul_top: print_string('F_MUL', 5);
+          f_div_top: print_string('F_DIV', 5);
+          f_extend_top: begin
             print_string('F_EXTEND', 8);
             if t^.count = 1 then u1 := 1 else u1 := 3;
             u2 := 0;
           end;
-          41: begin
+          f_math_top: begin
             print_string('F_MATH', 6);
             u1 := 11;
             if t^.count = 1 then u2 := 1 else u2 := 3;
           end;
-          42: begin
+          f_expon_top: begin
             print_string('F_EXPON', 7);
             u2 := 1;
           end;
-          87: print_string('F_ADA_EXPON', 11);
-          47:
+          f_ada_expon_top: print_string('F_ADA_EXPON', 11);
+          sr_top:
             if t^.opnd[1]^.xl[2] < 0 then
               print_string('AND-to-SR', 9)
             else
               print_string('OR-to-SR', 8);
-          85: print_string('PHYSICAL', 8);
-          66: print_string('CACHE', 5);
-          51: print_string('p_C3EXPR', 8);
-          52: print_string('p_LOGOR', 7);
-          53: print_string('p_LOGAND', 8);
-          54: print_string('p_ASSIGN', 8);
-          55: print_string('p_POST_ID', 9);
-          56: print_string('p_COMMA', 7);
-          57: print_string('p_LOGNOT', 8);
-          88: print_string('p_PAS_GET_CHK', 13);
-          58: print_string('REF_EXPRp_', 10);
-          65: print_string('ALLOC_DYNM', 10);
-          67: print_string('ISC_FIO_INIT', 12);
-          71: print_string('ISC_SELECT', 10);
-          72: begin
+          physical_top: print_string('PHYSICAL', 8);
+          cache_top: print_string('CACHE', 5);
+          cc_c3expr_ptop: print_string('p_C3EXPR', 8);
+          cc_logor_ptop: print_string('p_LOGOR', 7);
+          cc_logand_ptop: print_string('p_LOGAND', 8);
+          cc_assign_ptop: print_string('p_ASSIGN', 8);
+          cc_post_id_ptop: print_string('p_POST_ID', 9);
+          cc_comma_ptop: print_string('p_COMMA', 7);
+          cc_lognot_ptop: print_string('p_LOGNOT', 8);
+          pas_get_chk_ptop: print_string('p_PAS_GET_CHK', 13);
+          ref_expr_top: print_string('REF_EXPRp_', 10);
+          allocate_dynamic_space_top: print_string('ALLOC_DYNM', 10);
+          isc_fio_init: print_string('ISC_FIO_INIT', 12);
+          isc_select: print_string('ISC_SELECT', 10);
+          set_bit_in_set_top: begin
             print_string('SET_BIT_IN_SET', 14);
             u1 := 2;
           end;
-          73: begin
+          set_range_in_set_top: begin
             print_string('SET_RANGE_IN_SET', 16);
             u1 := 4;
           end;
-          19: print_string('SET_AND', 7);
-          20: print_string('SET_OR', 6);
-          21: print_string('SET_DIFF', 8);
-          22: print_string('SET_EXTEND', 10);
-          48: print_string('CHK', 3);
-          80: print_string('RANGE_CHECK', 11);
-          81: print_string('F_RANGE_CHECK', 13);
-          82: print_string('MARK_DYNAMIC_SPACE', 18);
-          89: print_string('ILLEGAL', 7);
+          set_and_top: print_string('SET_AND', 7);
+          set_or_top: print_string('SET_OR', 6);
+          set_diff_top: print_string('SET_DIFF', 8);
+          set_extend_top: print_string('SET_EXTEND', 10);
+          chk_top: print_string('CHK', 3);
+          range_check_top: print_string('RANGE_CHECK', 11);
+          f_range_check_top: print_string('F_RANGE_CHECK', 13);
+          mark_dynamic_space_top: print_string('MARK_DYNAMIC_SPACE', 18);
+          illegal_top: print_string('ILLEGAL', 7);
           otherwise begin
             print_string('<ORD(TOP)=', 10);
-            print_integer(t^.op, 2, true);
+            print_integer(ord(t^.op), 2, true);
             print_char('>');
           end;
         end;
         s.length := 0;
-        print_known_aux(s, t^.aux, u1, u2, t^.op in [0, 3..4, 6, 14, 17..18, 41, 43, 45..46, 86], t^.op in [1..4, 6..7, 18, 29, 33, 43, 59..62, 74..77, 86]);
+        print_known_aux(s, t^.aux, u1, u2, t^.op in [nop_top, mul_top..div_top, mod_top, unpack_top, value_top..extend_top, f_math_top, expon_top, max_top..min_top, ada_expon_top], t^.op in [add_top..div_top, mod_top..neg_top, extend_top, abs_top, isc_mul_top, expon_top, signed_div_top..unsigned_mod_top, isc_signed_rem_top..isc_unsigned_mod_top, ada_expon_top]);
         print_string(s.body, s.length);
         print_uc_and_phase(t^.uses, t^.phase);
         print_char(' ');
@@ -2278,57 +2278,57 @@ begin
       u1 := 0;
       u2 := 0;
       case t^.st_aop of
-        0: print_string('SCALAR', 6);
-        11: print_string('FP', 2);
-        6: begin
+        scalar_aop: print_string('SCALAR', 6);
+        fp_aop: print_string('FP', 2);
+        agg_aop: begin
           print_string('AGG', 3);
           u2 := 12;
         end;
-        13: print_string('NOT TO', 6);
-        14: print_string('NEG TO', 6);
-        1: print_string('ADD TO', 6);
-        2: print_string('SUB FROM', 8);
-        3: print_string('AND TO', 6);
-        4: print_string('OR TO', 5);
-        5: print_string('EOR TO', 6);
-        23: print_string('MUL TO', 6);
-        24: begin print_string('DIV_BY', 6); u2 := 5; end;
-        15: begin print_string('LSHFT TO', 8); u2 := 5; end;
-        16: begin print_string('RSHFT TO', 8); u2 := 5; end;
-        17: print_string('BSET TO', 7);
-        18: print_string('BCLR TO', 7);
-        19: print_string('F_ADD TO', 8);
-        20: print_string('F_SUB FROM', 10);
-        21: print_string('F_MUL TO', 8);
-        22: print_string('F_DIV BY', 8);
-        25: print_string('AGG_LEN', 7);
-        31: print_string('ISC_AGG', 7);
-        33: print_string('ISC_AGG_0', 9);
-        32: print_string('ISC_SLICE', 9);
-        7: print_string('SET AND TO', 10);
-        8: print_string('SET OR TO', 10);
-        9: print_string('SET DIFF', 9);
-        27: print_string('STRCAT', 6);
-        28: print_string('STRCPY', 6);
-        29: print_string('STRNCAT', 7);
-        30: print_string('STRNCPY', 7);
-        10: begin print_string('PACK', 4); u1 := 9; u2 := 10; end;
-        12: begin print_string('FIELD', 5); u1 := 9; u2 := 10; end;
-        35: print_string('RANGE_CHECK_TO', 14);
-        36: print_string('F_RANGE_CHECK_TO', 16);
-        37: print_string('ILLEGAL', 7);
+        not_to_aop: print_string('NOT TO', 6);
+        neg_to_aop: print_string('NEG TO', 6);
+        add_to_aop: print_string('ADD TO', 6);
+        sub_from_aop: print_string('SUB FROM', 8);
+        and_to_aop: print_string('AND TO', 6);
+        or_to_aop: print_string('OR TO', 5);
+        eor_to_aop: print_string('EOR TO', 6);
+        mul_to_aop: print_string('MUL TO', 6);
+        div_by_aop: begin print_string('DIV_BY', 6); u2 := 5; end;
+        lshft_to_aop: begin print_string('LSHFT TO', 8); u2 := 5; end;
+        rshft_to_aop: begin print_string('RSHFT TO', 8); u2 := 5; end;
+        bset_to_aop: print_string('BSET TO', 7);
+        bclr_to_aop: print_string('BCLR TO', 7);
+        f_add_to_aop: print_string('F_ADD TO', 8);
+        f_sub_from_aop: print_string('F_SUB FROM', 10);
+        f_mul_to_aop: print_string('F_MUL TO', 8);
+        f_div_by_aop: print_string('F_DIV BY', 8);
+        agg_len_aop: print_string('AGG_LEN', 7);
+        isc_agg_aop: print_string('ISC_AGG', 7);
+        isc_agg_zero_aop: print_string('ISC_AGG_0', 9);
+        isc_slice_aop: print_string('ISC_SLICE', 9);
+        set_and_to_aop: print_string('SET AND TO', 10);
+        set_or_to_aop: print_string('SET OR TO', 10);
+        set_diff_from_aop: print_string('SET DIFF', 9);
+        strcat_aop: print_string('STRCAT', 6);
+        strcpy_aop: print_string('STRCPY', 6);
+        strncat_aop: print_string('STRNCAT', 7);
+        strncpy_aop: print_string('STRNCPY', 7);
+        pack_aop: begin print_string('PACK', 4); u1 := 9; u2 := 10; end;
+        field_aop: begin print_string('FIELD', 5); u1 := 9; u2 := 10; end;
+        range_check_to_aop: print_string('RANGE_CHECK_TO', 14);
+        f_range_check_to_aop: print_string('F_RANGE_CHECK_TO', 16);
+        illegal_aop: print_string('ILLEGAL', 7);
         otherwise begin
           print_string('ORD(AOP)=', 9);
-          print_integer(t^.st_aop, 4, false);
+          print_integer(ord(t^.st_aop), 4, false);
         end;
       end;
       print_string(' ASSIGN', 7);
       s.length := 0;
-      print_known_aux(s, t^.st_aux, u1, u2, t^.st_aop in [23..24, 35..36], (t^.st_aop <= 31) and (t^.st_aop in [1..2, 14, 19..24, 26]));
+      print_known_aux(s, t^.st_aux, u1, u2, t^.st_aop in [mul_to_aop..div_by_aop, range_check_to_aop..f_range_check_to_aop], (t^.st_aop <= isc_agg_aop) and (t^.st_aop in [add_to_aop..sub_from_aop, neg_to_aop, f_add_to_aop..div_by_aop, isc_mul_to_aop]));
       print_string(s.body, s.length);
       print_char(' ');
       print_tree_ref(t^.st_dst, false);
-      if t^.st_aop in [36, 35] then begin
+      if t^.st_aop in [f_range_check_to_aop, range_check_to_aop] then begin
         print_string(' IN ', 4);
         print_tree_ref(t^.st_src, false);
         print_string(' .. ', 4);
@@ -2346,7 +2346,7 @@ begin
       print_tree_exp(t^.st_src, n + 2);
       if t^.st_len <> nil then
         print_tree_exp(t^.st_len, n + 2);
-      if t^.st_aop = 0 then
+      if t^.st_aop = scalar_aop then
         if il_utils_$is_strength_reduction_temp(il_$node_ptr_t(t^.st_dst)) then begin
           fresh_ln(2);
           print_string('Strength reduction temp:', 24);
@@ -2461,7 +2461,7 @@ begin
             else if e^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                                 dindex_node..disp_node] then
               num := e^.cse_parent;
-            if (num = 0) and (e^.kind = tree_node) and (e^.op = 26) then
+            if (num = 0) and (e^.kind = tree_node) and (e^.op = addr_top) then
               num := e^.opnd[1]^.cse_parent;
             print_integer(num, 5, false);
           end
@@ -2864,7 +2864,7 @@ begin
         if x^.kind in [tree_node..gen_tree_node, cmp_tree_node,
                        dindex_node..disp_node] then begin
           num := x^.cse_parent;
-          if (num = 0) and (x^.kind = tree_node) and (x^.op = 26) then
+          if (num = 0) and (x^.kind = tree_node) and (x^.op = addr_top) then
             num := x^.opnd[1]^.cse_parent;
           print_string('Node', 4);
           print_integer(num, 5, true);

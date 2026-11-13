@@ -80,7 +80,7 @@ type
           uses: integer;                { +16 }
           w18: integer;                 { +18 }
           desc: add_node_$desc_t;       { +20 }
-          op: integer;                  { +36 }
+          op: il_$top_t;                { +36 }
           count: integer;               { +38 }
           opnd: array [1..64] of il_$node_ptr_t);  { +40 }
       { A reference: 145, 146, 147, 205. }
@@ -236,7 +236,7 @@ begin
                                               sgn);
       gen_tree_node, tree_node: begin
         leaf := n;
-        if t^.op = 18 then begin
+        if t^.op = extend_top then begin
           if narrow then begin
             if t^.desc.w6 <= size then
               size := t^.desc.w6;
@@ -246,7 +246,7 @@ begin
             size := t^.desc.rlen;
           sgn := t^.desc.flags.signed;
         end
-        else if (t^.op = 0) or (t^.op = 18) or (t^.op = 17) then begin
+        else if (t^.op = nop_top) or (t^.op = extend_top) or (t^.op = value_top) then begin
           if narrow then begin
             if t^.desc.rlen <= size then
               size := t^.desc.rlen;
@@ -263,7 +263,7 @@ begin
           end
           else
             size := t^.desc.rlen;
-          if t^.op in [0, 3, 4, 6, 14, 17, 18, 41, 43, 45, 46, 86] then
+          if t^.op in [nop_top, mul_top, div_top, mod_top, unpack_top, value_top, extend_top, f_math_top, expon_top, max_top, min_top, ada_expon_top] then
             sgn := t^.desc.flags.signed;
         end;
       end;
@@ -388,7 +388,7 @@ begin { delay_$divide_attributes }
       k := div_table[dr, dd].uns;
     end;
     if (dr in [0, 2]) and (dd in [0..3]) and ((k = 4) or (k = 2)) then
-      if (desc.rlen <= 2) and (op = 4) then
+      if (desc.rlen <= 2) and (op = div_top) then
         k := k - 1
       else if delay_$value_guaranteed_between(opnd[1], -32767, 32767, true)
       then
@@ -405,8 +405,8 @@ begin { delay_$divide_attributes }
         k := 3;
     with div_strategies[k] do
       if (3 in cargs_$options.cpu) or
-         ((w[0] = 8) and (2 in cargs_$options.cpu) and (op = 4)) then begin
-        if op = 4 then begin
+         ((w[0] = 8) and (2 in cargs_$options.cpu) and (op = div_top)) then begin
+        if op = div_top then begin
           w18 := w[0];
           w38 := w[20];
           w42 := w[24];
@@ -428,7 +428,7 @@ begin { delay_$divide_attributes }
         w34 := w[19];
       end
       else if target_properties.p_85 >= chr(128) then begin
-        if op = 4 then begin
+        if op = div_top then begin
           w66 := w[22];
           w70 := w[23];
         end
@@ -444,7 +444,7 @@ begin { delay_$divide_attributes }
         w42 := w[29];
       end
       else begin
-        if op = 4 then begin
+        if op = div_top then begin
           w18 := w[0];
           w38 := w[6];
           w46 := w[30];
@@ -506,7 +506,7 @@ begin { delay_$divide_attributes }
     b54 := div_strategies[k].b66;
     b58 := div_strategies[k].b67;
     strategy := k;
-    if op = 4 then
+    if op = div_top then
       if opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                            binteger_ob] then begin
         v := dl_ptr_t(opnd[2])^.int_value;
@@ -559,29 +559,29 @@ var
 begin
   t := dl_ptr_t(n);
   case t^.op of
-    6, 4: begin
+    mod_top, div_top: begin
       delay_$divide_attributes(n, true, strategy, w18, lsize, w26, rsize,
                                w34, w38, w42, w46, shift, b54, b58, w62,
                                w66, w70);
       o := dl_ptr_t(t^.opnd[1]);
       if o^.kind = tree_node then
-        if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
+        if (o^.op = nop_top) or (o^.op = extend_top) or (o^.op = value_top) then begin
           o^.desc.size := lsize;
           o^.desc.rlen := lsize;
-          o^.op := 18;
+          o^.op := extend_top;
           t^.desc.w6 := lsize;
         end;
       o := dl_ptr_t(t^.opnd[2]);
       if o^.kind = tree_node then
-        if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
+        if (o^.op = nop_top) or (o^.op = extend_top) or (o^.op = value_top) then begin
           o^.desc.size := rsize;
           o^.desc.rlen := rsize;
-          o^.op := 18;
+          o^.op := extend_top;
           t^.desc.w8 := rsize;
         end;
       delay_$tailor_operands_to_hardware := w66;
     end;
-    3: begin
+    mul_top: begin
       w := t^.desc.w6;
       if w <= t^.desc.w8 then
         w := t^.desc.w8;
@@ -590,33 +590,33 @@ begin
       o := dl_ptr_t(t^.opnd[1]);
       if w > t^.desc.w6 then
         if o^.kind = tree_node then
-          if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
+          if (o^.op = nop_top) or (o^.op = extend_top) or (o^.op = value_top) then begin
             o^.desc.size := w;
             o^.desc.rlen := w;
-            o^.op := 18;
+            o^.op := extend_top;
             t^.desc.w6 := w;
           end;
       o := dl_ptr_t(t^.opnd[2]);
       if t^.desc.w8 < w then
         if o^.kind = tree_node then
-          if (o^.op = 0) or (o^.op = 18) or (o^.op = 17) then begin
+          if (o^.op = nop_top) or (o^.op = extend_top) or (o^.op = value_top) then begin
             o^.desc.size := w;
             o^.desc.rlen := w;
-            o^.op := 18;
+            o^.op := extend_top;
             t^.desc.w8 := w;
           end;
       delay_$tailor_operands_to_hardware := 4;
     end;
-    18: begin
+    extend_top: begin
       o := dl_ptr_t(t^.opnd[1]);
       if o^.kind = tree_node then begin
-        if (o^.op = 6) or (o^.op = 4) then begin
+        if (o^.op = mod_top) or (o^.op = div_top) then begin
           delay_$divide_attributes(il_$node_ptr_t(o), true, strategy, w18,
                                    lsize, w26, rsize, w34, w38, w42, w46,
                                    shift, b54, b58, w62, w66, w70);
           w := w70;
         end
-        else if o^.op = 3 then
+        else if o^.op = mul_top then
           w := delay_$tailor_operands_to_hardware(il_$node_ptr_t(o))
         else
           bug_check('delay_$tailor_operand_to_hardware: bad tree node op%$');
@@ -657,7 +657,7 @@ begin
   end;
   x := gspace(44);
   x^.kind := tree_node;
-  x^.op := 18;
+  x^.op := extend_top;
   x^.desc.rlen := size;
   x^.desc.w6 := srcsize;
   x^.desc.w8 := 0;
@@ -914,10 +914,10 @@ begin { delay_sets }
     end;
   end
   else if x^.kind = tree_node then
-    if x^.op in [19..22, 72, 73] then begin
+    if x^.op in [set_and_top..set_extend_top, set_bit_in_set_top, set_range_in_set_top] then begin
       sz := x^.desc.size;
       case x^.op of
-        73, 72:
+        set_range_in_set_top, set_bit_in_set_top:
           if delay_sets(x^.opnd[1], sz, n, false) = n then begin
             res := n;
             if doit then
@@ -926,12 +926,12 @@ begin { delay_sets }
             if n < want then
               dl_ptr_t(t)^.desc.flags.b2 := true;
           end;
-        22: begin
+        set_extend_top: begin
           res := n;
           if doit then
             x^.desc.size := n;
         end;
-        20, 19, 21:
+        set_or_top, set_and_top, set_diff_top:
           if delay_sets(x^.opnd[1], sz, n, false) = n then
             if delay_sets(x^.opnd[2], sz, n, false) = n then begin
               res := n;
@@ -998,7 +998,7 @@ begin
     return;
   if (r = w) and (size = r) and (o^.kind = tree_node) then
     return;
-  if (o^.kind = tree_node) and (dl_ptr_t(o)^.op = 18) and
+  if (o^.kind = tree_node) and (dl_ptr_t(o)^.op = extend_top) and
      (dl_ptr_t(o)^.desc.w6 <= dl_ptr_t(o)^.desc.rlen) and
      (dl_ptr_t(o)^.desc.w6 <= size) then begin
     dl_ptr_t(o)^.desc.rlen := size;
@@ -1036,7 +1036,7 @@ var
       n: il_$node_ptr_t): boolean; options(val_param);
   begin
     is_indexer := (n^.kind = dindex_node) or
-                  ((n^.kind = tree_node) and (dl_ptr_t(n)^.op = 13));
+                  ((n^.kind = tree_node) and (dl_ptr_t(n)^.op = index_top));
   end;
 
 begin { delay_$propagate_index_long }
@@ -1051,7 +1051,7 @@ begin { delay_$propagate_index_long }
               dl_ptr_t(dl_ptr_t(n)^.index)^.phase + [8];
       end
       else if n^.kind = tree_node then
-        if dl_ptr_t(n)^.op = 13 then
+        if dl_ptr_t(n)^.op = index_top then
           for i := 1 to dl_ptr_t(n)^.count do
             if is_indexer(dl_ptr_t(n)^.opnd[i]) then
               dl_ptr_t(dl_ptr_t(n)^.opnd[i])^.phase :=
@@ -1127,7 +1127,7 @@ begin
       maxw := res;
   end;
   case n^.op of
-    1, 2, 9, 10, 44: begin
+    add_top, sub_top, and_top, or_top, eor_top: begin
 10:
       a := delay(n^.opnd[1], n^.desc.rlen, maxw, false);
       b := delay(n^.opnd[2], n^.desc.rlen, maxw, false);
@@ -1171,9 +1171,9 @@ begin
       n^.desc.size := class_size[n^.desc.rlen];
       res := b;
     end;
-    12: begin
+    compare_top: begin
       o := dl_ptr_t(n^.opnd[1]);
-      if (o^.kind = tree_node) and (o^.op = 14) and
+      if (o^.kind = tree_node) and (o^.op = unpack_top) and
          (o^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                binteger_ob]) then
         if (dl_ptr_t(o^.opnd[2])^.int_value mod 8 = 0) and
@@ -1184,7 +1184,7 @@ begin
             (n^.desc.w8 = 7) or (n^.desc.w8 = 6)) then
           if delay(n^.opnd[1], n^.desc.w6, 1, false) = 1 then begin
             o := dl_ptr_t(n^.opnd[2]);
-            if (o^.kind = tree_node) and (o^.op = 14) and
+            if (o^.kind = tree_node) and (o^.op = unpack_top) and
                (o^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                      binteger_ob]) and
                (dl_ptr_t(o^.opnd[2])^.int_value mod 8 = 0) and
@@ -1216,7 +1216,7 @@ begin
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, true));
       discard(delay(n^.opnd[2], n^.desc.w6, n^.desc.w6, true));
     end;
-    27, 49: begin
+    lshf_top, alshf_top: begin
       x := maxw;
       if maxw = 5 then
         x := 4;
@@ -1239,12 +1239,12 @@ begin
         n^.desc.size := x;
       end;
     end;
-    28, 50: begin
+    rshf_top, arshf_top: begin
       repeat
         x := delay(n^.opnd[1], n^.desc.rlen, maxw, false);
         o := dl_ptr_t(n^.opnd[1]);
-        if (x >= maxw) and (x < n^.desc.rlen) and (n^.op = 28) and
-           (o^.kind = tree_node) and (o^.op = 18) and (x >= o^.desc.w6) and
+        if (x >= maxw) and (x < n^.desc.rlen) and (n^.op = rshf_top) and
+           (o^.kind = tree_node) and (o^.op = extend_top) and (x >= o^.desc.w6) and
            not o^.desc.flags.signed then begin
           res := x;
           if doit then begin
@@ -1269,7 +1269,7 @@ begin
       else
         discard(delay(n^.opnd[2], n^.desc.w8, n^.desc.w8, doit));
     end;
-    18: begin
+    extend_top: begin
       if n^.desc.rlen < n^.desc.w6 then
         b := n^.desc.rlen
       else if maxw < n^.desc.w6 then
@@ -1299,14 +1299,14 @@ begin
         end;
       end;
     end;
-    15, 16: begin
+    call_top, func_call_top: begin
       for i := 2 to n^.count do begin
         w := paramrlen(t, i, sg);
         o := dl_ptr_t(n^.opnd[i]);
         if o^.kind = tree_node then begin
           w := o^.desc.rlen;
           sg := true;
-          if o^.op = 63 then
+          if o^.op = align_top then
             o^.desc.w8 := 1;
         end
         else if (o^.kind = ptr_node) or (o^.kind = sym_disp_node)
@@ -1318,7 +1318,7 @@ begin
           end;
         discard(delay(n^.opnd[i], w, w, doit and sg));
       end;
-      if n^.op = 16 then begin
+      if n^.op = func_call_top then begin
         res := n^.desc.rlen;
         if (maxw < res) and (res <= 4) then begin
           res := maxw;
@@ -1329,11 +1329,11 @@ begin
       else
         res := 0;
     end;
-    17, 29: begin
+    value_top, abs_top: begin
       discard(delay(n^.opnd[1], n^.desc.rlen, n^.desc.rlen, doit));
       res := want;
     end;
-    0, 7, 8: begin
+    nop_top, neg_top, not_top: begin
       x := delay(n^.opnd[1], n^.desc.rlen, maxw, false);
       if doit then
         if maxw = x then begin
@@ -1345,7 +1345,7 @@ begin
           x := delay(n^.opnd[1], n^.desc.rlen, n^.desc.rlen, doit);
       res := x;
     end;
-    63:
+    align_top:
       if target_properties.p_84 or (n^.desc.w8 = 0) then begin
         il_utils_$adjust_uc(il_$node_ptr_t(n), -1);
         t := n^.opnd[1];
@@ -1364,18 +1364,18 @@ begin
             x := delay(n^.opnd[1], n^.desc.rlen, n^.desc.rlen, doit);
         res := x;
       end;
-    26: begin
+    addr_top: begin
       w := n^.desc.rlen;
       o := dl_ptr_t(n^.opnd[1]);
       if (o^.kind = cmp_tree_node) or (o^.kind = tree_node) then begin
         w := o^.desc.rlen;
-        if o^.op = 63 then
+        if o^.op = align_top then
           o^.desc.w8 := 1;
       end;
       discard(delay(n^.opnd[1], w, w, doit));
       res := want;
     end;
-    13: begin
+    index_top: begin
       delay_$propagate_index_long(il_$node_ptr_t(n));
       discard(delay(n^.opnd[1], 5, 5, true));
       if 8 in n^.phase then
@@ -1394,7 +1394,7 @@ begin
         n^.desc.w6 := x;
       res := want;
     end;
-    3: begin
+    mul_top: begin
       b := delay(n^.opnd[1], n^.desc.w6, maxw, false);
       o := dl_ptr_t(n^.opnd[2]);
       if (o^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob])
@@ -1425,7 +1425,7 @@ begin
         discard(delay(n^.opnd[2], n^.desc.w8, n^.desc.w8, true));
       end;
     end;
-    4, 6:
+    div_top, mod_top:
       if n^.desc.rlen <= 4 then begin
         if doit then begin
           if maxw < n^.desc.rlen then begin
@@ -1442,7 +1442,7 @@ begin
         if not doit then
           res := w66;
       end;
-    43: begin
+    expon_top: begin
       a := delay(n^.opnd[1], n^.desc.w6, maxw, false);
       if target_properties.p_10 = 0 then begin
         x := delay(n^.opnd[2], n^.desc.w8, maxw, false);
@@ -1493,22 +1493,22 @@ begin
         res := 2;
       end;
     end;
-    72, 73: begin
+    set_bit_in_set_top, set_range_in_set_top: begin
       discard(delay(n^.opnd[1], 4, 4, doit));
       for i := 2 to n^.count do
         discard(delay(n^.opnd[i], n^.desc.w6, n^.desc.w6, doit));
     end;
-    19, 20, 21, 23, 24:
+    set_and_top, set_or_top, set_diff_top, set_compare_top, agg_compare_top:
       for i := 1 to n^.count do
         discard(delay(n^.opnd[i], 4, 4, doit));
-    25: begin
+    bit_set_top: begin
       discard(delay(n^.opnd[2], n^.desc.w6, n^.desc.w6, doit));
       if n^.count = 3 then
         discard(delay(n^.opnd[3], n^.desc.w6, n^.desc.w6, doit));
       discard(delay(n^.opnd[1], n^.desc.rlen, n^.desc.rlen, doit));
       res := n^.desc.rlen;
     end;
-    11: begin
+    bit_test_top: begin
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, doit));
       if n^.xw[11] > 4 then
         discard(delay(n^.opnd[2], 5, 5, doit))
@@ -1532,7 +1532,7 @@ begin
             discard(delay(n^.opnd[2], n^.xw[11], n^.xw[11], true));
       end;
     end;
-    14: begin
+    unpack_top: begin
       discard(delay(n^.opnd[1], n^.desc.rlen, n^.desc.rlen, true));
       if (3 in cargs_$options.cpu) and
          not (n^.opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
@@ -1577,15 +1577,15 @@ begin
         res := w;
       end;
     end;
-    39: begin
+    f_extend_top: begin
       o := dl_ptr_t(n^.opnd[1]);
       if (n^.desc.w6 = 4) and not n^.desc.flags.signed and
-         (o^.kind = tree_node) and (o^.op = 18) and
+         (o^.kind = tree_node) and (o^.op = extend_top) and
          (o^.desc.rlen > o^.desc.w6) and not o^.desc.flags.signed then
         n^.desc.flags.signed := true;
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, doit));
     end;
-    22: begin
+    set_extend_top: begin
       if doit then
         if delay_sets(n^.opnd[1], n^.desc.w6, n^.desc.size, false) =
            n^.desc.size then begin
@@ -1596,14 +1596,14 @@ begin
         end;
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, doit));
     end;
-    42: begin
+    f_expon_top: begin
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, doit));
       discard(delay(n^.opnd[2], n^.desc.w8, n^.desc.w8, doit));
     end;
-    34, 35, 36, 37, 38, 41, 45, 46, 48:
+    f_add_top, f_sub_top, f_mul_top, f_div_top, f_neg_top, f_math_top, max_top, min_top, chk_top:
       for i := 1 to n^.count do
         discard(delay(n^.opnd[i], n^.desc.rlen, n^.desc.rlen, doit));
-    40: begin
+    f_compare_top: begin
       discard(delay(n^.opnd[1], n^.desc.w6, n^.desc.w6, doit));
       discard(delay(n^.opnd[2], n^.desc.w6, n^.desc.w6, doit));
     end;

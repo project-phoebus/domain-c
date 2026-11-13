@@ -166,7 +166,7 @@ begin
       nonlocal := request$may_cause_non_local_return
     else
       nonlocal := 0;
-    if node^.tr_op = 31 then begin
+    if node^.tr_op = isc_func_call_top then begin
       if rclass = 3 then
         extra := 4
       else if rclass = 2 then
@@ -211,7 +211,7 @@ begin
     node^.cl_solution := sol;
 
     { the hidden temporary }
-    if node^.tr_op = 32 then begin
+    if node^.tr_op = isc_func_call_hidden_temp_top then begin
       inh2 := new_inherited_attributes(isc_heap, node^.cl_temp);
       inh2^.call_instruction_ptr := call;
       inh2^.exception_frame := inh^.exception_frame;
@@ -312,7 +312,7 @@ begin
   end;
   debug_lir_$emit_call_or_svc(inh, node, node^.cl_call, requests,
       node^.cl_solution, lir_3e60[node^.tr_opmod1]);
-  if node^.tr_op = 32 then begin
+  if node^.tr_op = isc_func_call_hidden_temp_top then begin
     temp := node^.cl_temp_solution;
     pass_2(temp, depth1);
     if isc_user_routines_356 or isc_user_routines_354 then begin

@@ -294,7 +294,7 @@ begin
         n^.xw[38] := 3;
         n^.xw[26] := n^.xw[25];
         tmp := x;
-        x := buildtreenode(8, n^.xl[12], tmp, 1);
+        x := buildtreenode(not_top, n^.xl[12], tmp, 1);
         x^.xw[8] := 0;
       end;
     27: begin

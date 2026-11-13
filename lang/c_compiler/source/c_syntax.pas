@@ -3276,7 +3276,7 @@ begin
     return;
   end;
   orig := cx.value;
-  if (orig^.kind = tree_node) and (c_tree_ptr_t(orig)^.op = 26) then begin
+  if (orig^.kind = tree_node) and (c_tree_ptr_t(orig)^.op = addr_top) then begin
     a := c_tree_ptr_t(orig)^.opnd[1];
     if (a^.kind = var_name) and
        (c_sym_ptr_t(a)^.var_vat in [vat_local, vat_dynm, vat_param,
@@ -4095,14 +4095,14 @@ begin
         cc_walk_it(c_top_ptr_t(t)^.eval_opnd[i], walker, pre);
     tree_node, cmp_tree_node, gen_tree_node:
       with c_tree_ptr_t(t)^ do
-        if (op = 51) or (op = 53) or (op = 52) then begin
+        if (op = cc_c3expr_ptop) or (op = cc_logand_ptop) or (op = cc_logor_ptop) then begin
           cc_walk_it(opnd[1], walker, pre);
           if (opnd[1]^.kind = char_string_ob) and (opnd[1]^.str_len = 1) then
             opnd[1] := smcontk(integer_ob, ord(opnd[1]^.str_chars[1]));
           t1 := opnd[1];
           if t1^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob] then
             case op of
-              53:
+              cc_logand_ptop:
                 if t1^.int_value = 0 then
                   t := smcontk(integer_ob, 0)
                 else begin
@@ -4111,7 +4111,7 @@ begin
                       and (opnd[2]^.str_len = 2) then
                     opnd[2] := smcontk(integer_ob, ord(opnd[2]^.str_chars[2]));
                 end;
-              52: begin
+              cc_logor_ptop: begin
                 v := t1^.int_value;
                 if (v = -1) or (v = 1) or (v = 255) then
                   t := smcontk(integer_ob, 1)
@@ -4122,7 +4122,7 @@ begin
                     opnd[2] := smcontk(integer_ob, ord(opnd[2]^.str_chars[2]));
                 end;
               end;
-              51: begin
+              cc_c3expr_ptop: begin
                 v := t1^.int_value;
                 if v = 0 then
                   t := opnd[3]
@@ -4227,13 +4227,13 @@ begin
     goto done;
   if n^.kind = tree_node then begin
     with c_tree_ptr_t(n)^ do
-      if ((op = 2) or (op = 1)) and
+      if ((op = sub_top) or (op = add_top)) and
          (opnd[2]^.kind in [blogical_ob..char_ob, char16_ob, binteger_ob]) and
          (opnd[1]^.kind = tree_node) and
          (c_tree_ptr_t(opnd[1])^.opnd[1]^.kind = var_name) then begin
         cexs_23bc := cexs_23bc + 1;
         v := opnd[2]^.int_value;
-        if op = 2 then
+        if op = sub_top then
           v := -v;
         cexs_stack[cexs_23bc].node :=
           add_dn(c_tree_ptr_t(opnd[1])^.opnd[1],
@@ -4245,9 +4245,9 @@ begin
         cexs_23bc := cexs_23bc - 1;
         goto done;
       end;
-      while c_tree_ptr_t(n)^.op in [13, 17, 39, 26] do
+      while c_tree_ptr_t(n)^.op in [index_top, value_top, f_extend_top, addr_top] do
         with c_tree_ptr_t(n)^ do begin
-          if op = 26 then begin
+          if op = addr_top then begin
             if opnd[1]^.kind = dindex_node then
               if (opnd[1]^.xp[7]^.kind = var_name) and
                  (opnd[1]^.xp[9]^.kind = integer_ob) then
@@ -4256,11 +4256,11 @@ begin
                                   opnd[1]^.xp[9]^.int_value);
             goto done;
           end;
-          if op = 17 then begin
+          if op = value_top then begin
             n := opnd[1];
             exit;
           end;
-          if op = 13 then begin
+          if op = index_top then begin
             if not (opnd[2]^.kind in [blogical_ob..char_ob, char16_ob,
                                       binteger_ob]) then
               exit;
@@ -4277,7 +4277,7 @@ begin
               goto done;
             end;
           end;
-          if op = 39 then
+          if op = f_extend_top then
             n := opnd[1];
         end;
     end;
@@ -4413,7 +4413,7 @@ begin
       walk_tree(cexs_stack[cexs_23bc].node, nil, nil);
     with cexs_stack[cexs_23bc] do
       if node^.kind = tree_node then
-        if c_tree_ptr_t(node)^.op = 16 then
+        if c_tree_ptr_t(node)^.op = func_call_top then
           call_s;
     cexs_23bc := cexs_23bc - 1;
   end;

@@ -68,7 +68,7 @@ procedure il_utils_$do_substitution(
 { IL_UTILS_$TREE_NODE_OPERAND_IS_SPINE - whether operand i of operator op
   is on the spine (operands 2 and 3 of operators 30..32).  0x07E184. }
 function il_utils_$tree_node_operand_is_spine(
-    op: integer;
+    op: il_$top_t;
     i: integer): boolean; options(val_param); extern;
 
 { IL_UTILS_$IS_STRENGTH_REDUCTION_TEMP - 0x07E1CA. }

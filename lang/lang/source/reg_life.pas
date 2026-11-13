@@ -585,12 +585,12 @@ begin
       skip := (t^.rlen >= 8) or (t^.rlen = 12);
     if not skip then
       if t^.uses = 2 then begin
-        if t^.op = 16 then
+        if t^.op = func_call_top then
           skip := true
-        else if (t^.op = 63) or (t^.op = 17) or (t^.op = 0) then
+        else if (t^.op = align_top) or (t^.op = value_top) or (t^.op = nop_top) then
           for i := 1 to t^.count do
             if g_opt_tree_ptr_t(t^.opnd[i])^.kind = tree_node then
-              if g_opt_tree_ptr_t(t^.opnd[i])^.op = 16 then begin
+              if g_opt_tree_ptr_t(t^.opnd[i])^.op = func_call_top then begin
                 skip := true;
                 exit;
               end;

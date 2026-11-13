@@ -145,7 +145,7 @@ function add_pn(
   they can be, and d may be changed.  0x0A1ABC, cc.a88k 0x0A349C; 52
   call sites (c_expr_sem, c_stmt_sem). }
 procedure add_tn(
-    op: integer;
+    op: il_$top_t;
     var d: univ add_node_$desc_t;
     l: integer;
     r: integer); options(val_param); extern;
@@ -155,7 +155,7 @@ procedure add_tn(
   cc.a88k 0x0A6634; 41 call sites (c_stmt_sem, commit_top_node, kfold,
   opt_inline, opt_livevar, opt_main, ...); result in A0. }
 function buildtreenode(
-    op: integer;
+    op: il_$top_t;
     in d: univ add_node_$desc_t;
     in ops: univ add_node_$opnds_t;
     count: integer): il_$node_ptr_t; options(val_param); extern;

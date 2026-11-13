@@ -271,7 +271,7 @@ begin
   case t^.kind of
     cmp_tree_node, tree_node: begin
       tr := g_opt_tree_ptr_t(t);
-      if tr^.op in [2, 4..6, 11, 15, 16, 21, 35, 37] then
+      if tr^.op in [sub_top, div_top..mod_top, bit_test_top, call_top, func_call_top, set_diff_top, f_sub_top, f_div_top] then
         for j := tr^.count downto 1 do begin
           saveparent_and_patch(stmt, tr^.opnd[j], t);
           walkopr(stmt, tr^.opnd[j]);
@@ -624,15 +624,15 @@ begin
     tree_node:
       if tr^.uses <> 0 then begin
         up := false;
-        if tr^.op in [2, 4..6, 11, 15, 16, 21, 35, 37] then
+        if tr^.op in [sub_top, div_top..mod_top, bit_test_top, call_top, func_call_top, set_diff_top, f_sub_top, f_div_top] then
           for j := tr^.count downto 1 do
             check_uplevel_and_moved_check(tr^.opnd[j], up)
         else
           for j := 1 to tr^.count do
             check_uplevel_and_moved_check(tr^.opnd[j], up);
-        if (tr^.op = 26) and (tr^.opnd[1]^.kind = tree_node) then
+        if (tr^.op = addr_top) and (tr^.opnd[1]^.kind = tree_node) then
           up := true;
-        if tr^.op = 26 then begin
+        if tr^.op = addr_top then begin
           x := tr^.opnd[1];
           if ((x^.kind = var_name) and ((x^.xw[17] & 16#1000) = 0)) or
              ((x^.kind = fortran_symbol) and ((x^.xw[13] & 16#1000) = 0)) then
@@ -640,7 +640,7 @@ begin
         end;
         if not up then
           if not (2 in tr^.flags) then
-            if not (tr^.op in [11, 12, 15, 16, 23, 24, 47, 63, 66]) then
+            if not (tr^.op in [bit_test_top, compare_top, call_top, func_call_top, set_compare_top, agg_compare_top, sr_top, align_top, cache_top]) then
               if tr^.count <= 4 then begin
                 ok := true;
                 sz := delay_378[tr^.rlen];
@@ -682,21 +682,21 @@ begin
                                  g_opt_blocks_ptr_t(il_11c)^[hoist[j]]) then
                             rel := j;
                 case tr^.op of
-                  39:
+                  f_extend_top:
                     descs[1].d.size := delay_378[tr^.w26];
-                  6, 5, 3: begin
+                  mod_top, divide_top, mul_top: begin
                     descs[1].d.size := tr^.w26;
                     descs[2].d.size := tr^.w28;
                   end;
-                  13:
+                  index_top:
                     descs[1].d.size := 4;
-                  14:
+                  unpack_top:
                     descs[1].d.size := tr^.w26;
-                  22, 18:
+                  set_extend_top, extend_top:
                     descs[1].d.size := tr^.w26;
-                  26:
+                  addr_top:
                     descs[1].d.class := 0;
-                  25: begin
+                  bit_set_top: begin
                     descs[2].d.size := 2;
                     descs[3].d.size := 2;
                   end;
@@ -922,7 +922,7 @@ begin
           if 2 in xt^.flags then
             goto 20;
           if xt^.uses <> 0 then begin
-            if (xt^.op = 15) or (xt^.op = 16) then begin
+            if (xt^.op = call_top) or (xt^.op = func_call_top) then begin
               if assert_disp_over_ptr(t) then
                 extra := 1
               else
@@ -955,7 +955,7 @@ begin
                 stop := true;
                 exit;
               end;
-          if (xt^.op = 17) and (t^.kind = ptr_node) and (t^.xp[6] = x) then
+          if (xt^.op = value_top) and (t^.kind = ptr_node) and (t^.xp[6] = x) then
             goto 90;
         end;
         dindex_node, disp_node, sym_disp_node, ptr_node: begin

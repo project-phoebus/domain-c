@@ -114,7 +114,7 @@ var
 begin
   if (off < 0) or (off > 3) then
     cgerr_no_source(28, integer32(strtk('invalid offset in merge_assignments', 35)));
-  if t^.asg_op in [0..5, 10, 15] then
+  if t^.asg_op in [scalar_aop..eor_to_aop, pack_aop, lshft_to_aop] then
     w := t^.asg_rhs^.int_value;
   v := s^.asg_rhs^.int_value;
   ssize := delay_378[s^.asg_rlen];
@@ -122,21 +122,21 @@ begin
   shift := (ssize - tsize - off) * 8;
   v := rshft(v, shift);
   case t^.asg_op of
-    0:
+    scalar_aop:
       v := w;
-    1:
+    add_to_aop:
       v := v + w;
-    2:
+    sub_from_aop:
       v := v - w;
-    3:
+    and_to_aop:
       v := v & w;
-    4:
+    or_to_aop:
       v := v ! w;
-    5:
+    eor_to_aop:
       v := xor(v, w);
-    15:
+    lshft_to_aop:
       v := lshft(v, w);
-    10: begin
+    pack_aop: begin
       bits := tsize * 8;
       pos := bits - t^.asg_w56 - t^.asg_w54;
       if tsize = 4 then
@@ -147,9 +147,9 @@ begin
                        pos), pos);
       v := (v & ~m) ! (lshft(w, pos) & full & m);
     end;
-    13:
+    not_to_aop:
       v := ~v;
-    14:
+    neg_to_aop:
       v := -v;
     otherwise
       cgerr_no_source(28, integer32(strtk('unknown aop in merge_assignments', 32)));
@@ -386,7 +386,7 @@ var
       return;
     if il_utils_$is_strength_reduction_temp(t^.asg_lhs) then
       return;
-    if t^.asg_op in [27..30] then
+    if t^.asg_op in [strcat_aop..strncpy_aop] then
       return;
     if t^.hdr.no_prune or t^.hdr.deleted then
       return;
@@ -414,24 +414,24 @@ var
     if (lhs^.kind = fortran_symbol) or (lhs^.kind = var_name) then
       if not var_is_ok(lhs) then
         return;
-    if t^.asg_op = 0 then
+    if t^.asg_op = scalar_aop then
       if target_properties.p_84 or (t^.asg_rlen <> 1) then begin
         ok_node := true;
         return;
       end;
-    if t^.asg_op = 11 then begin
+    if t^.asg_op = fp_aop then begin
       ok_node := true;
       return;
     end;
-    if t^.asg_op = 6 then
+    if t^.asg_op = agg_aop then
       if target_properties.p_84 or not t^.asg_flags.chars then begin
         ok_node := true;
         return;
       end;
     if consts then
-      if (t^.asg_op = 14) or (t^.asg_op = 13) then
+      if (t^.asg_op = neg_to_aop) or (t^.asg_op = not_to_aop) then
         ok_node := true
-      else if t^.asg_op in [0..5, 10, 15] then
+      else if t^.asg_op in [scalar_aop..eor_to_aop, pack_aop, lshft_to_aop] then
         if t^.asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
                                 binteger_ob] then
           ok_node := true;
@@ -528,7 +528,7 @@ begin
     src := nil
   else
     src := cur^.asg_rhs;
-  if (cur^.asg_op = 25) or (cur^.asg_op = 6) then
+  if (cur^.asg_op = agg_len_aop) or (cur^.asg_op = agg_aop) then
     size := cur^.asg_size
   else
     size := delay_378[cur^.asg_rlen];
@@ -539,7 +539,7 @@ begin
 20:
   while t^.kind = use_def_ob do
     t := t^.next;
-  both := (prev^.asg_op = 0) and
+  both := (prev^.asg_op = scalar_aop) and
           (prev^.asg_rhs^.kind in [blogical_ob..char_ob, char16_ob,
                                    binteger_ob]);
   if t^.kind = assign_node then begin
@@ -553,11 +553,11 @@ begin
     both := false;
   if not ok_node(t, both) then
     goto 30;
-  if (t^.asg_op = 25) or (t^.asg_op = 6) then
+  if (t^.asg_op = agg_len_aop) or (t^.asg_op = agg_aop) then
     tsize := t^.asg_size
   else
     tsize := delay_378[t^.asg_rlen];
-  if both and (t^.asg_op in [0..5, 10, 13..15]) then begin
+  if both and (t^.asg_op in [scalar_aop..eor_to_aop, pack_aop, not_to_aop..lshft_to_aop]) then begin
     if not assert_merge_would_produce_misleading_aliasing(prev, t) then
       if at_offset(prev^.asg_lhs, size_a, t^.asg_lhs, tsize, diff) = 2 then begin
         merge_assignments(prev, t, diff);
@@ -568,7 +568,7 @@ begin
         t := t^.next;
         goto 20;
       end;
-    if t^.asg_op <> 0 then
+    if t^.asg_op <> scalar_aop then
       goto 30;
     if not ok_node(t, false) then
       goto 30;
@@ -639,7 +639,7 @@ begin
           char_string_ob: begin
             for i := 1 to x^.str_len do
               cpbyte(x^.str_chars[i]);
-            if p^.asg_op = 6 then
+            if p^.asg_op = agg_aop then
               for i := x^.str_len + 1 to p^.asg_size do
                 cpbyte(' ');
           end;
@@ -697,7 +697,7 @@ begin
     else
       cur^.asg_rlen := 11;
     if cur^.asg_rlen = 11 then begin
-      cur^.asg_op := 6;
+      cur^.asg_op := agg_aop;
       cur^.asg_flags.chars := not isnum;
     end;
     q := cur^.next;

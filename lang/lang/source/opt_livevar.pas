@@ -573,7 +573,7 @@ begin
           end;
         if s^.kind <> assign_node then
           next;
-        if s^.asg_op in [27..30] then
+        if s^.asg_op in [strcat_aop..strncpy_aop] then
           next;
         vi := s^.vars^[v];
         if s^.vset <> nil then
@@ -621,7 +621,7 @@ begin
           end;
           if not keep then
             if s^.asg_rhs^.kind = tree_node then
-              if g_opt_tree_ptr_t(s^.asg_rhs)^.op = 26 then
+              if g_opt_tree_ptr_t(s^.asg_rhs)^.op = addr_top then
                 keep := true;
         end;
         if keep then
@@ -638,7 +638,7 @@ begin
           { An evaluation of the right side in its place. }
           x := s^.asg_rhs;
           if ph * [1, 2] <> [] then begin
-            x := buildtreenode(17, s^.asg_desc, x, 1);
+            x := buildtreenode(value_top, s^.asg_desc, x, 1);
             g_opt_tree_ptr_t(x)^.owner := opt_4009c[r];
           end;
           t := gspace(56);
@@ -828,9 +828,9 @@ begin
   case n^.kind of
     tree_node, cmp_tree_node:
       case g_opt_tree_ptr_t(n)^.op of
-        26:
+        addr_top:
           varcheck(g_opt_tree_ptr_t(n)^.opnd[1], bb, 8);
-        13: begin
+        index_top: begin
           varcheck(g_opt_tree_ptr_t(n)^.opnd[1], bb, 33);
           varcheck(g_opt_tree_ptr_t(n)^.opnd[2], bb, 34);
         end;
@@ -1124,10 +1124,10 @@ begin
           f := 34;
           varcheck(s^.asg_rhs, bb, f);
           f := 18;
-          if s^.asg_op in [1..5, 7..9, 13..24] then
+          if s^.asg_op in [add_to_aop..eor_to_aop, set_and_to_aop..set_diff_from_aop, not_to_aop..div_by_aop] then
             f := 50;
           varcheck(s^.asg_lhs, bb, f);
-          if s^.asg_op in [1..5, 7..9, 13..24] then begin
+          if s^.asg_op in [add_to_aop..eor_to_aop, set_and_to_aop..set_diff_from_aop, not_to_aop..div_by_aop] then begin
             if (s^.asg_lhs^.kind = fortran_symbol)
                 and (s^.asg_lhs^.xw[8] <> 0) then
               varcheck(s^.asg_lhs, bb, f);

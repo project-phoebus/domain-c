@@ -265,7 +265,7 @@ begin
               if (rr^.node^.kind = fortran_symbol)
                   or (rr^.node^.kind = var_name) then
                 if il_utils_$is_strength_reduction_temp(rr^.node) then
-                  if (st^.kind = assign_node) and (st^.asg_op = 0) and
+                  if (st^.kind = assign_node) and (st^.asg_op = scalar_aop) and
                      (st^.asg_rlen = 5) and (st^.asg_lhs = rr^.node) then
                     rr^.flags := rr^.flags + [2];
             if not test_stmt(rr, 2 * s) then

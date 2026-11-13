@@ -761,10 +761,14 @@ type
     w18: integer;                       { +18: an assignment's kind (29,
                                           30 with a third operand; 10) }
     desc: c_desc_t;                     { +20 }
-    op: integer;                        { +36: the operator (54 `=',
-                                          12, 13, 14, 16 a call, 18 and
-                                          39 conversions, 26 address,
-                                          51..57 the logical ones) }
+    op: il_$top_t;                      { +36: the operator (cc_assign_ptop
+                                          `=', compare_top, index_top,
+                                          unpack_top, func_call_top a
+                                          call, extend_top and
+                                          f_extend_top conversions,
+                                          addr_top address, cc_c3expr_ptop
+                                          .. cc_lognot_ptop the logical
+                                          ones) }
     count: integer;                     { +38: the operands }
     opnd: array [1..64] of il_$node_ptr_t;  { +40: from 1 }
   end;

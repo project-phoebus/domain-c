@@ -1101,7 +1101,7 @@ procedure coerce(
       want: integer;
       signed: boolean); options(val_param);
   var
-    op: integer;
+    op: il_$top_t;
     i: integer;
     d: oi_desc_t;
     n: il_$node_ptr_t;
@@ -1127,9 +1127,9 @@ procedure coerce(
     d.d.flags.signed := signed;
     if (have = 6) or (have = 7) or (have = 8) or (have = 12) or
        (want = 6) or (want = 7) or (want = 12) or (want = 8) then
-      op := 39
+      op := f_extend_top
     else
-      op := 18;
+      op := extend_top;
     t := buildtreenode(op, d.d, t, 1);
   end;
 
@@ -2040,7 +2040,7 @@ begin
             d.d.size := 4;
             d.d.rlen := 4;
             ops1 := a;
-            adr := buildtreenode(26, d.d, ops1, 1);
+            adr := buildtreenode(addr_top, d.d, ops1, 1);
           end;
           pv := ptr_variable(e, f);
           pv^.xp[8] := f^.xp[8];
@@ -2070,7 +2070,7 @@ begin
             ops2 := a;
             d.d.size := 4;
             d.d.rlen := 5;
-            adr := buildtreenode(26, d.d, ops2, 1);
+            adr := buildtreenode(addr_top, d.d, ops2, 1);
           end;
           pv := ptr_variable(e, f);
           put_on_il_stream(assign(e, pv, adr, 0));
@@ -2145,7 +2145,7 @@ begin
           d.d.rlen := 4
         else
           d.d.rlen := 5;
-        val := buildtreenode(26, d.d, val, 1);
+        val := buildtreenode(addr_top, d.d, val, 1);
       end;
     end
     else if sub = 1 then begin
@@ -2184,7 +2184,7 @@ begin
       else
         d.d.rlen := 5;
       ops3 := v;
-      v := buildtreenode(26, d.d, ops3, 1);
+      v := buildtreenode(addr_top, d.d, ops3, 1);
     end;
     put_hash_info(e, f, v, fl, empty_info);
   end;

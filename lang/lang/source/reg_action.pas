@@ -800,7 +800,7 @@ begin
              (rshft(ord(il_180^.xc[377]) & 16#70, 4) <> 2) or
              (2 in rr^.flags) then begin
             desc.rlen := rr^.rlen;
-            rr^.node := buildtreenode(26, desc, rr^, 1);
+            rr^.node := buildtreenode(addr_top, desc, rr^, 1);
             g_opt_cse_ptr_t(rr^.node)^.u_hdr := g_opt_cse_ptr_t(rr^.node)^.u_hdr;
             for j := 1 to st^.eval_count do
               if g_opt_tree_ptr_t(rr^.node)^.opnd[1] = st^.eval_opnd[j] then

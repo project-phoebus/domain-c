@@ -194,7 +194,7 @@ var
   i: integer;
   m: il_$node_ptr_t;
   d: cg_desc_t;
-  op: integer;
+  op: il_$top_t;
   p: il_$node_ptr_t;
 begin
   r := true;
@@ -263,14 +263,14 @@ begin
                   ((n^.xw[3] & 16#4000) = 0) then begin
                 m := cg_tree_ptr_t(n)^.opnd[1];
                 if m^.kind = tree_node then
-                  if (((cg_tree_ptr_t(n)^.op = 2) or
-                       (cg_tree_ptr_t(n)^.op = 1)) and
-                      ((cg_tree_ptr_t(m)^.op = 2) or
-                       (cg_tree_ptr_t(m)^.op = 1))) or
-                     (((cg_tree_ptr_t(n)^.op = 35) or
-                       (cg_tree_ptr_t(n)^.op = 34)) and
-                      ((cg_tree_ptr_t(m)^.op = 35) or
-                       (cg_tree_ptr_t(m)^.op = 34))) then begin
+                  if (((cg_tree_ptr_t(n)^.op = sub_top) or
+                       (cg_tree_ptr_t(n)^.op = add_top)) and
+                      ((cg_tree_ptr_t(m)^.op = sub_top) or
+                       (cg_tree_ptr_t(m)^.op = add_top))) or
+                     (((cg_tree_ptr_t(n)^.op = f_sub_top) or
+                       (cg_tree_ptr_t(n)^.op = f_add_top)) and
+                      ((cg_tree_ptr_t(m)^.op = f_sub_top) or
+                       (cg_tree_ptr_t(m)^.op = f_add_top))) then begin
                     d := cg_tree_ptr_t(n)^.desc;
                     op := cg_tree_ptr_t(n)^.op;
                     p := cg_tree_ptr_t(n)^.opnd[2];
@@ -336,7 +336,7 @@ begin
           2: begin
             tleftright(cg_tree_ptr_t(n)^.opnd[1], (n^.xw[3] & 16#4000) <> 0);
             tleftright(cg_tree_ptr_t(n)^.opnd[2], (n^.xw[3] & 16#2000) <> 0);
-            if (cg_tree_ptr_t(n)^.op in [1, 3, 9, 10, 34, 36, 44]) and
+            if (cg_tree_ptr_t(n)^.op in [add_top, mul_top, and_top, or_top, f_add_top, f_mul_top, eor_top]) and
                 ((n^.xw[3] & 16#2000) <> 0) then begin
               n^.xw[3] := (n^.xw[3] & ~16#2000) ! 16#4000;
               w := cg_tree_ptr_t(n)^.desc.w6;

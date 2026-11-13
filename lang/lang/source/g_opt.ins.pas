@@ -142,7 +142,7 @@ type
           asg_lhs: il_$node_ptr_t;      { +64 }
           asg_rhs: il_$node_ptr_t;      { +68 }
           asg_x: il_$node_ptr_t;        { +72 }
-          asg_op: integer);             { +76 }
+          asg_op: il_$aop_t);           { +76 }
       { 141, 142, 150: the branch's target; 142's condition. }
       3: (br_target: il_$node_ptr_t;    { +48 }
           br_unused_52: integer32;      { +52 }
@@ -203,7 +203,7 @@ type
       b31: 0..255;                      { +31 }
     end;
     unused_32: integer32;               { +32 }
-    op: integer;                        { +36 }
+    op: il_$top_t;                      { +36 }
     count: integer;                     { +38 }
     opnd: array [1..64] of il_$node_ptr_t;  { +40 }
   end;
@@ -745,7 +745,7 @@ function opt_str_$opmod_of_operand(
   signed; reuse (when not nil) is the tree to fill (opt_main's
   distrib_mul, opt_strength).  0x0E63D2: the result in A0. }
 function opt_str_$product_of(
-    op: integer;
+    op: il_$top_t;
     a: il_$node_ptr_t;
     b: il_$node_ptr_t;
     rlen: integer;

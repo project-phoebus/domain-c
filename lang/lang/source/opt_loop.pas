@@ -777,7 +777,7 @@ begin
           if not ((hb^.first_stmt^.kind = label_node) and
                   (rshft(ord(il_$node_ptr_t(hb^.first_stmt)^.xc[72]) & 16#3E, 1) = 2) and
                   (t^.kind = tree_node) and
-                  (g_opt_tree_ptr_t(t)^.op in [4..6, 37, 41])) then begin
+                  (g_opt_tree_ptr_t(t)^.op in [div_top..mod_top, f_div_top, f_math_top])) then begin
             if notalreadymoved(t) then
               movenode(t);
             h2 := opt_loop_hoist^[g_opt_tree_ptr_t(t)^.stmt];
@@ -1048,7 +1048,7 @@ var
   ok: boolean;
   n: g_opt_num_t;
   t: g_opt_stmt_ptr_t;
-  c: integer;
+  c: il_$top_t;
   j: integer;
   first: g_opt_num_t;
   last: g_opt_num_t;
@@ -1092,7 +1092,7 @@ begin
           leave := false;
           if t^.kind = tree_node then begin
             c := g_opt_tree_ptr_t(t)^.op;
-            if (c = 15) or (c = 47) or (c = 16) then
+            if (c = call_top) or (c = sr_top) or (c = func_call_top) then
               leave := true;
           end;
           if not leave then
@@ -1227,7 +1227,7 @@ var
         else
           for k := 1 to g_opt_tree_ptr_t(t)^.count do begin
             walkt(g_opt_tree_ptr_t(t)^.opnd[k]);
-            if g_opt_tree_ptr_t(t)^.op = 41 then
+            if g_opt_tree_ptr_t(t)^.op = f_math_top then
               if 4 in cargs_$options.cpu then
                 if cargs_$options.cpu * [5, 9] = [] then
                   if (g_opt_tree_ptr_t(t)^.rlen = 7) or

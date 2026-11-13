@@ -564,8 +564,8 @@ begin
     case n^.kind of
       assign_node:
         case n^.as_op of
-          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 19, 20, 21,
-          22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36:
+          scalar_aop, add_to_aop, sub_from_aop, and_to_aop, or_to_aop, eor_to_aop, agg_aop, set_and_to_aop, set_or_to_aop, set_diff_from_aop, pack_aop, fp_aop, not_to_aop, neg_to_aop, lshft_to_aop, rshft_to_aop, f_add_to_aop, f_sub_from_aop, f_mul_to_aop,
+          f_div_by_aop, mul_to_aop, div_by_aop, agg_len_aop, isc_mul_to_aop, strcat_aop, strcpy_aop, strncat_aop, strncpy_aop, isc_agg_aop, isc_slice_aop, isc_agg_zero_aop, isc_fill_aop, range_check_to_aop, f_range_check_to_aop:
             n := n^.xp[2];
           otherwise
             bug_check('ISC: source line %wd: apply_pass_1_and_choose_to_list: An object inside a visit list did not have a next.%$',

@@ -674,12 +674,6 @@ P1_TYPES = '''type
     rlen_arith: array [0..25] of integer;   { +0x140 }
   end;
 
-  { The tree and assignment operators, as the image names them
-    (isc_unrecognized_il_node writes them and the IL node kinds,
-    il.ins.pas's il_$kind_t: the name tables at 0x0DB7E6, 0x0DC290,
-    0x0DC7B0; isc_user_routines' ur_top_t and ur_aop_t). }
-@ENUMS@
-
 { Routines of other units the operator routines call that no insert
   declares. }
 procedure pattern_matcher(
@@ -776,11 +770,11 @@ begin
   writeln;
   case isc_node_ptr_t(il)^.kind of
     assign_node:
-      write('ISC: The unsupported IL node kind is: ', p1_aop_t(isc_node_ptr_t(il)^.as_op), '.');
+      write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.as_op, '.');
     cmp_tree_node:
-      write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
+      write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.tr_op, '.');
     tree_node:
-      write('ISC: The unsupported IL node kind is: ', p1_top_t(isc_node_ptr_t(il)^.tr_op), '.');
+      write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.tr_op, '.');
     otherwise
       write('ISC: The unsupported IL node kind is: ', isc_node_ptr_t(il)^.kind, '.');
   end;
@@ -818,7 +812,7 @@ procedure @NAME@(
     var solutions_made: boolean;
     var no_solutions: boolean); options(val_param);
 begin
-  @TABLE@[isc_node_ptr_t(il)^.@FIELD@]^(il, inh, depth, permissible, il_kind,
+  @TABLE@[ord(isc_node_ptr_t(il)^.@FIELD@)]^(il, inh, depth, permissible, il_kind,
       number_of_children, solutions, children, solutions_made, no_solutions);
 end;'''
 

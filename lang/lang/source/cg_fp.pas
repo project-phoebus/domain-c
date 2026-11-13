@@ -419,7 +419,7 @@ begin
   m := skip_zero_disps(n);
   if ((op = 77) or (op = 75)) and (size <= 4) and (m <> nil) then
     if (m^.kind = gen_tree_node) or (m^.kind = tree_node) then
-      if (cg_tree_ptr_t(m)^.op = 41) and
+      if (cg_tree_ptr_t(m)^.op = f_math_top) and
           (cg_tree_ptr_t(m)^.desc.w6 = 11) then
         if (fops[cg_fp_count].op = 130) or (fops[cg_fp_count].op = 129)
             then
@@ -603,11 +603,11 @@ var
   m: il_$node_ptr_t;
 begin
   t := cg_tree_ptr_t(n);
-  if t^.op = 40 then
+  if t^.op = f_compare_top then
     rlen := t^.desc.w6
   else
     rlen := t^.desc.rlen;
-  if (t^.op = 41) and (t^.desc.w6 = 11) then
+  if (t^.op = f_math_top) and (t^.desc.w6 = 11) then
     rlen1 := t^.desc.w8
   else
     rlen1 := rlen;

@@ -919,7 +919,7 @@ begin
   while s <> nil do begin
     if s^.hdr.vnum <> 0 then
       reg_nest := reg_nest + 1;
-    if (s^.kind = assign_node) and (s^.asg_op = 0) then
+    if (s^.kind = assign_node) and (s^.asg_op = scalar_aop) then
       if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
         reg_nest := reg_nest + 1;
     b := s^.block;
@@ -960,7 +960,7 @@ begin
                                            reloc_absolute_addr_con] then
                 add_con_range(s^.hdr.region, s^.eval_opnd[i]);
       end;
-      if (s^.kind = assign_node) and (s^.asg_op = 0) then
+      if (s^.kind = assign_node) and (s^.asg_op = scalar_aop) then
         if il_utils_$is_strength_reduction_temp(s^.asg_lhs) then
           add_con_range(s^.hdr.region, s^.asg_lhs);
       s := s^.next;

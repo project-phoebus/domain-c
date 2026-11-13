@@ -70,48 +70,11 @@ module isc_debug;
 
 type
 
-  { The tree operators (a tree node's +36; the name table at
-
-    0x20FD9A, 90 names). }
-  pin_top_t = (
-    nop_top, add_top, sub_top, mul_top, div_top, divide_top, mod_top,
-    neg_top, not_top, and_top, or_top, bit_test_top, compare_top,
-    index_top, unpack_top, call_top, func_call_top, value_top,
-    extend_top, set_and_top, set_or_top, set_diff_top, set_extend_top,
-    set_compare_top, agg_compare_top, bit_set_top, addr_top, lshf_top,
-    rshf_top, abs_top, isc_call_top, isc_func_call_top,
-    isc_func_call_hidden_temp_top, isc_mul_top, f_add_top, f_sub_top,
-    f_mul_top, f_div_top, f_neg_top, f_extend_top, f_compare_top,
-    f_math_top, f_expon_top, expon_top, eor_top, max_top, min_top,
-    sr_top, chk_top, alshf_top, arshf_top, cc_c3expr_ptop, cc_logor_ptop,
-    cc_logand_ptop, cc_assign_ptop, cc_post_id_ptop, cc_comma_ptop,
-    cc_lognot_ptop, ref_expr_top, signed_div_top, unsigned_div_top,
-    signed_mod_top, unsigned_mod_top, align_top, isc_addr_top,
-    allocate_dynamic_space_top, cache_top, isc_fio_init, strcmp_top,
-    strlen_top, strncmp_top, isc_select, set_bit_in_set_top,
-    set_range_in_set_top, isc_signed_rem_top, isc_unsigned_rem_top,
-    isc_signed_mod_top, isc_unsigned_mod_top, isc_agg_cmp_top,
-    isc_agg_lex_cmp_top, range_check_top, f_range_check_top,
-    mark_dynamic_space_top, extract_bit_field_top, bit_field_cmp_top,
-    physical_top, ada_expon_top, f_ada_expon_top, pas_get_chk_ptop,
-    illegal_top);
-
-  { The assignment operators (an assignment's +76; the name tables at
-    0x210354 and 0x0BE472, 38 names). }
-  pin_aop_t = (
-    scalar_aop, add_to_aop, sub_from_aop, and_to_aop, or_to_aop,
-    eor_to_aop, agg_aop, set_and_to_aop, set_or_to_aop,
-    set_diff_from_aop, pack_aop, fp_aop, field_aop, not_to_aop,
-    neg_to_aop, lshft_to_aop, rshft_to_aop, bset_to_aop, bclr_to_aop,
-    f_add_to_aop, f_sub_from_aop, f_mul_to_aop, f_div_by_aop,
-    mul_to_aop, div_by_aop, agg_len_aop, isc_mul_to_aop, strcat_aop,
-    strcpy_aop, strncat_aop, strncpy_aop, isc_agg_aop, isc_slice_aop,
-    isc_agg_zero_aop, isc_fill_aop, range_check_to_aop,
-    f_range_check_to_aop, illegal_aop);
-  { The FORTRAN symbol kinds, data classes, variables' and blocks'
-    allocation kinds and address constants' keys, as the image names
-    them (isc_print_il_node's identifier tables 0x0C8A5A, 0x0C8AD2,
-    0x0C7A7C, 0x0C8500, 0x0BD23A). }
+  { The FORTRAN symbol kinds, data classes and address constants' keys,
+    as the image names them (isc_print_il_node's identifier tables
+    0x0C8A5A, 0x0C8AD2, 0x0BD23A; the tree and assignment operators and
+    the variables' and blocks' allocation kinds are il.ins.pas's
+    il_$top_t, il_$aop_t, il_$vat_t and il_$bat_t). }
   pin_fsym_kind_t = (
     xnone, routine, symbolic_constant, variable, alternate_return,
     common, xlabel, namelist_groupname, stmt_func);
@@ -119,12 +82,6 @@ type
     none, xbinteger, xsinteger, xlinteger, xreal, xdoubleprecision,
     xcomplex, xcharacter, xblogical, xslogical, xllogical, xaddress,
     nomore, xdpcomplex);
-  pin_vat_t = (
-    local_vat, static_vat, dynm_vat, extern_vat, externdef_vat,
-    param_vat, xdynm_vat, xstatic_vat, xextrndef_vat, based_vat,
-    sect_vat, absolute_vat);
-  pin_bat_t = (
-    local_bat, forward_bat, extern_bat, param_bat);
   pin_ac_t = (
     xsb_ac, xdb_ac, extern_ac, common_ac, ext_proc_arg_ac,
     lcl_proc_arg_ac, proc_ac, jmp_ac, nil_ac, lcl_proc_ac, db_ac,
@@ -193,7 +150,7 @@ type
       x58_5: 0..16383;
       end;
     x60: array [60..75] of char;    { +60 }
-    op: pin_aop_t;                  { +76 }
+    op: il_$aop_t;                  { +76 }
   end;
 
   { binteger_ob }
@@ -380,7 +337,7 @@ type
       x30_1: 0..1023;
       end;
     x32: array [32..35] of char;    { +32 }
-    op: pin_top_t;                  { +36 }
+    op: il_$top_t;                  { +36 }
   end;
 
   { complex_ob }
@@ -413,7 +370,7 @@ type
     kind: il_$kind_t;               { +2 }
     x4: array [4..15] of char;      { +4 }
     disp: integer32;                { +16 }
-    vat: pin_vat_t;                 { +20 }
+    vat: il_$vat_t;                 { +20 }
     size: integer;                  { +22 }
   end;
 
@@ -931,7 +888,7 @@ type
             x30_1: 0..1023;
             end;
           x32: array [32..35] of char; { +32 }
-          op: pin_top_t;            { +36 }
+          op: il_$top_t;            { +36 }
           oc: integer);             { +38 }
       2: (
           a2_x0: array [0..27] of char; { +0 }
@@ -955,7 +912,7 @@ type
           x46: array [46..55] of char; { +46 }
           address: integer32;       { +56 }
           x60: array [60..71] of char; { +60 }
-          vat: pin_vat_t);          { +72 }
+          vat: il_$vat_t);          { +72 }
       2: (
           a2_x0: array [0..55] of char; { +0 }
           disp: integer32);         { +56 }
@@ -2328,7 +2285,7 @@ begin
       entry_blk:
         begin
         indent(depth);
-        write('static bat: ', pin_bat_t(ord(pin_entry_blk_ptr_t(node)^.f376.bat)):1);
+        write('static bat: ', il_$bat_t(ord(pin_entry_blk_ptr_t(node)^.f376.bat)):1);
         writeln('.');
         indent(depth);
         write('static dsect: ', il_node_to_string(pin_entry_blk_ptr_t(node)^.dsect));
@@ -2394,7 +2351,7 @@ begin
         write('static lbl_root: ', il_node_to_empty_string(pin_fortran_symbol_ptr_t(node)^.lbl_root));
         writeln('.');
         indent(depth);
-        write('static vat: ', pin_vat_t(ord(pin_fortran_symbol_ptr_t(node)^.f10.vat)):1);
+        write('static vat: ', il_$vat_t(ord(pin_fortran_symbol_ptr_t(node)^.f10.vat)):1);
         writeln('.');
         indent(depth);
         write('static vattributes: ', vatt_set_to_string(pin_fortran_symbol_ptr_t(node)^.vattributes));
@@ -2403,7 +2360,7 @@ begin
       function_blk:
         begin
         indent(depth);
-        write('static bat: ', pin_bat_t(ord(pin_function_blk_ptr_t(node)^.f376.bat)):1);
+        write('static bat: ', il_$bat_t(ord(pin_function_blk_ptr_t(node)^.f376.bat)):1);
         writeln('.');
         indent(depth);
         write('static dsect: ', il_node_to_string(pin_function_blk_ptr_t(node)^.dsect));
@@ -2511,7 +2468,7 @@ begin
       procedure_blk:
         begin
         indent(depth);
-        write('static bat: ', pin_bat_t(ord(pin_procedure_blk_ptr_t(node)^.f376.bat)):1);
+        write('static bat: ', il_$bat_t(ord(pin_procedure_blk_ptr_t(node)^.f376.bat)):1);
         writeln('.');
         indent(depth);
         write('static dsect: ', il_node_to_string(pin_procedure_blk_ptr_t(node)^.dsect));
